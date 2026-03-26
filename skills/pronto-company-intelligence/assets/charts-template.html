@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>[Company] Intelligence Report — Charts</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: -apple-system, sans-serif; background: #0f1117; color: #e1e4e8; padding: 20px; }
+    h1 { border-bottom: 2px solid #6AA64A; padding-bottom: 8px; color: #f0f0f0; }
+    p { color: #9ca3af; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1200px; }
+    .chart-box { background: #1c1f26; border: 1px solid #2d3139; border-radius: 8px; padding: 16px; }
+    .chart-box h3 { margin-top: 0; font-size: 14px; color: #6AA64A; }
+    canvas { width: 100% !important; height: 300px !important; }
+    @media print { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <h1>[Company Name] ([Ticker]) — Intelligence Charts</h1>
+  <p>Generated: [Date] | Pronto Company ID: [companyId]</p>
+  <div class="grid">
+    <div class="chart-box"><h3>Sentiment Score Over Time</h3><canvas id="c1"></canvas></div>
+    <div class="chart-box"><h3>Investment Score Over Time</h3><canvas id="c2"></canvas></div>
+    <div class="chart-box"><h3>Stock Reaction After Earnings</h3><canvas id="c3"></canvas></div>
+    <div class="chart-box"><h3>Sentiment vs Stock Price</h3><canvas id="c4"></canvas></div>
+    <div class="chart-box"><h3>1-Year Stock Price</h3><canvas id="c5"></canvas></div>
+    <div class="chart-box"><h3>Competitor Performance (1Y)</h3><canvas id="c6"></canvas></div>
+    <div class="chart-box"><h3>Top Trends by Score</h3><canvas id="c7"></canvas></div>
+    <div class="chart-box"><h3>Positive vs Negative Events</h3><canvas id="c8"></canvas></div>
+    <div class="chart-box"><h3>Analyst Sentiment</h3><canvas id="c9"></canvas></div>
+    <div class="chart-box"><h3>Executive vs Analyst Sentiment</h3><canvas id="c10"></canvas></div>
+  </div>
+  <script>
+    // Dark mode defaults for all charts
+    Chart.defaults.color = '#9ca3af';
+    Chart.defaults.borderColor = '#374151';
+
+    // DATA — fill these arrays from Pronto tool results
+    const quarters = ['Q1 2025', 'Q2 2025', 'Q3 2025', 'Q4 2025'];  // replace with actual quarter labels
+    const sentimentScores = [/* e.g. 0.32, 0.38, 0.35, 0.41 */];
+    const investmentScores = [/* e.g. 6.1, 6.5, 6.8, 7.1 */];
+    const stockReactions = [/* e.g. 2.0, 4.3, -1.3, 3.5 — % change 1 week after vs before call */];
+    const weeklyDates = [/* date strings from getStockPrices weekly */];
+    const weeklyPrices = [/* price values from getStockPrices weekly */];
+    const earningsCallIndices = [/* indices in weeklyDates where earnings calls occurred */];
+    const competitorNames = [/* 'TargetCo', 'Competitor1', ..., 'S&P 500' */];
+    const competitorReturns = [/* 1Y % change for each — target co first */];
+    const trendNames = [/* top 10 trend names from getTrends */];
+    const trendScores = [/* significance scores from getTrends */];
+    const trendChanges = [/* % change per trend — positive = rising, negative = declining */];
+    const positiveEvents = [/* per-quarter positive event counts from getAnalytics */];
+    const negativeEvents = [/* per-quarter negative event counts from getAnalytics */];
+    const analystNames = [/* analyst names from getSpeakers, sorted by sentiment desc */];
+    const analystSentiments = [/* sentiment scores per analyst */];
+    const speakerLabels = ['CEO', 'CFO', 'Exec Avg', 'Analyst Avg'];
+    const speakerSentiments = [/* CEO score, CFO score, exec avg, analyst avg */];
+
+    // Chart 1: Sentiment Score Over Time
+    new Chart(document.getElementById('c1'), {
+      type: 'line',
+      data: { labels: quarters, datasets: [{
+        label: 'Sentiment Score', data: sentimentScores,
+        borderColor: '#6AA64A', backgroundColor: '#6AA64A20',
+        fill: true, tension: 0.3, pointRadius: 6
+      }]},
+      options: { scales: { y: { min: 0, max: 1, title: { display: true, text: 'Score' }}}}
+    });
+
+    // Chart 2: Investment Score Over Time
+    new Chart(document.getElementById('c2'), {
+      type: 'line',
+      data: { labels: quarters, datasets: [{
+        label: 'Investment Score', data: investmentScores,
+        borderColor: '#6AA64A', backgroundColor: '#6AA64A20',
+        fill: true, tension: 0.3, pointRadius: 6
+      }]},
+      options: { scales: { y: { min: 0, max: 10, title: { display: true, text: 'Score' }}}}
+    });
+
+    // Chart 3: Stock Reaction After Earnings (green = positive, red = negative)
+    new Chart(document.getElementById('c3'), {
+      type: 'bar',
+      data: { labels: quarters, datasets: [{
+        label: 'Stock % Change After Call', data: stockReactions,
+        backgroundColor: stockReactions.map(v => v >= 0 ? '#22c55e' : '#ef4444')
+      }]},
+      options: { scales: { y: { title: { display: true, text: '% Change' }}}}
+    });
+
+    // Chart 4: Sentiment vs Stock Price (dual-axis overlay)
+    new Chart(document.getElementById('c4'), {
+      type: 'line',
+      data: { labels: quarters, datasets: [
+        { label: 'Sentiment', data: sentimentScores, borderColor: '#6AA64A', yAxisID: 'y', tension: 0.3, pointRadius: 5 },
+        { label: 'Stock Reaction %', data: stockReactions, borderColor: '#f97316', yAxisID: 'y1', tension: 0.3, pointRadius: 5 }
+      ]},
+      options: { scales: {
+        y:  { position: 'left',  title: { display: true, text: 'Sentiment' }},
+        y1: { position: 'right', title: { display: true, text: 'Stock %' }, grid: { drawOnChartArea: false }}
+      }}
+    });
+
+    // Chart 5: 1-Year Stock Price (weekly, earnings call dates marked)
+    new Chart(document.getElementById('c5'), {
+      type: 'line',
+      data: { labels: weeklyDates, datasets: [{
+        label: 'Stock Price ($)', data: weeklyPrices,
+        borderColor: '#6AA64A', borderWidth: 2, pointRadius: 0, fill: false
+      }]},
+      options: { scales: { y: { title: { display: true, text: 'Price ($)' }}}}
+    });
+    // Note: add vertical line annotations at earningsCallIndices using chartjs-plugin-annotation if desired
+
+    // Chart 6: Competitor Performance — horizontal bar, sorted desc, target highlighted
+    new Chart(document.getElementById('c6'), {
+      type: 'bar',
+      data: { labels: competitorNames, datasets: [{
+        label: '1Y Return %', data: competitorReturns,
+        backgroundColor: competitorNames.map((n, i) => i === 0 ? '#6AA64A' : (n === 'S&P 500' ? '#f97316' : '#4b5563'))
+      }]},
+      options: { indexAxis: 'y', scales: { x: { title: { display: true, text: '% Change' }}}}
+    });
+
+    // Chart 7: Top Trends by Score — green = rising, red = declining
+    new Chart(document.getElementById('c7'), {
+      type: 'bar',
+      data: { labels: trendNames, datasets: [{
+        label: 'Trend Score', data: trendScores,
+        backgroundColor: trendChanges.map(v => v >= 0 ? '#22c55e' : '#ef4444')
+      }]},
+      options: { indexAxis: 'y', scales: { x: { title: { display: true, text: 'Score' }}}}
+    });
+
+    // Chart 8: Positive vs Negative Events Per Quarter (stacked bar)
+    new Chart(document.getElementById('c8'), {
+      type: 'bar',
+      data: { labels: quarters, datasets: [
+        { label: 'Positive Events', data: positiveEvents, backgroundColor: '#22c55e' },
+        { label: 'Negative Events', data: negativeEvents, backgroundColor: '#ef4444' }
+      ]},
+      options: { scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: 'Count' }}}}
+    });
+
+    // Chart 9: Analyst Sentiment Distribution
+    new Chart(document.getElementById('c9'), {
+      type: 'bar',
+      data: { labels: analystNames, datasets: [{
+        label: 'Sentiment', data: analystSentiments,
+        backgroundColor: analystSentiments.map(v => v >= 0 ? '#22c55e' : '#ef4444')
+      }]},
+      options: { scales: { y: { title: { display: true, text: 'Sentiment Score' }}}}
+    });
+
+    // Chart 10: Executive vs Analyst Sentiment (grouped bar)
+    new Chart(document.getElementById('c10'), {
+      type: 'bar',
+      data: { labels: speakerLabels, datasets: [{
+        label: 'Sentiment Score', data: speakerSentiments,
+        backgroundColor: ['#6AA64A', '#6AA64A', '#8DC96E', '#f97316']
+      }]},
+      options: { scales: { y: { min: -1, max: 1, title: { display: true, text: 'Sentiment Score' }}}}
+    });
+  </script>
+</body>
+</html>

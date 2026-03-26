@@ -1,0 +1,97 @@
+{
+  "skill_name": "pronto-company-intelligence",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Can you give me a full company intelligence report on Apple? I want to understand how their earnings sentiment has been trending, how the stock is doing vs competitors, and what analysts are saying.",
+      "expected_output": "A full company intelligence report plan/outline that: (1) calls getEssentialInstructions first, (2) runs getCompanyDescription + getCompanyCompetitors in parallel to get companyId and competitor IDs, (3) runs getAnalytics separately for each of the past 4 quarters using individual documentIDs, (4) builds a quarter-over-quarter comparison table with RISING/FALLING labels for sentiment, investment score, and stock reaction, (5) includes speaker analysis comparing executives vs analysts, (6) produces a structured 11-section report with an Executive Summary that states sentiment direction explicitly.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "calls_essential_instructions_first",
+          "description": "getEssentialInstructions is the first tool called before any other Pronto tools"
+        },
+        {
+          "name": "parallel_foundation_batch",
+          "description": "getCompanyDescription and getCompanyCompetitors are called in the same batch (parallel)"
+        },
+        {
+          "name": "per_quarter_analytics",
+          "description": "getAnalytics is called 4 times separately (once per earnings call) with individual documentIDs, not one aggregate call"
+        },
+        {
+          "name": "rising_falling_verdict",
+          "description": "The plan/report explicitly states sentiment is RISING or FALLING with before/after values"
+        },
+        {
+          "name": "exec_vs_analyst_gap",
+          "description": "The plan includes comparing executive sentiment vs analyst sentiment with a gap verdict"
+        },
+        {
+          "name": "full_report_template_selected",
+          "description": "The Full Report template is selected (not Quick or other)"
+        },
+        {
+          "name": "chart_html_generated",
+          "description": "The plan includes generating an HTML charts file using Chart.js"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Give me a quick overview of Tesla right now — just the headlines on stock performance, financials, and sentiment. I'm in a meeting in 10 minutes.",
+      "expected_output": "A Quick Report plan that: (1) selects the Quick Report template (~13 tool calls), (2) skips competitors, per-quarter sentiment breakdown, speakers, and charts, (3) runs getCompanyDescription → getStockPrices + getStockChange ×3 + getPredictions ×6 + getAnalytics (scores only) in parallel, (4) produces only Sections 1–3 (Executive Summary, Stock, Financial Outlook).",
+      "files": [],
+      "assertions": [
+        {
+          "name": "quick_template_selected",
+          "description": "Quick Report template is selected (not Full Report)"
+        },
+        {
+          "name": "under_15_tool_calls",
+          "description": "The plan uses approximately 13 tool calls, not 40"
+        },
+        {
+          "name": "no_per_quarter_analytics",
+          "description": "getAnalytics is called only once for overall scores (not 4 separate per-quarter calls)"
+        },
+        {
+          "name": "sections_1_to_3_only",
+          "description": "Only Sections 1–3 are produced (Executive Summary, Stock Performance, Financial Outlook)"
+        },
+        {
+          "name": "parallel_batch_3_calls",
+          "description": "Stock, predictions, and analytics calls are batched in parallel in Batch 3"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "How does Microsoft stack up against its competitors? I want to see how MSFT's stock has performed relative to the peer group and S&P 500 over the past year.",
+      "expected_output": "A Competitive Report plan that: (1) selects Competitive Report template (~15 tool calls), (2) calls getCompanyCompetitors to get competitor companyIds, (3) calls getDeepResearchStockAverage with competitor IDs and includeSp500: true, (4) calls getStockChange per competitor for individual comparison, (5) focuses on Section 9 (Competitive Landscape) plus Section 2 (Stock Performance), and (6) notes MSFT's ranking vs peers.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "competitive_template_selected",
+          "description": "Competitive Report template is selected (not Full Report)"
+        },
+        {
+          "name": "get_competitors_called",
+          "description": "getCompanyCompetitors is called to get competitor companyIds"
+        },
+        {
+          "name": "deep_research_stock_average",
+          "description": "getDeepResearchStockAverage is called with competitor companyIds and includeSp500: true"
+        },
+        {
+          "name": "stock_change_per_competitor",
+          "description": "getStockChange is called individually per competitor (in parallel)"
+        },
+        {
+          "name": "competitive_section_present",
+          "description": "The output includes a competitive landscape / peer comparison section"
+        }
+      ]
+    }
+  ]
+}
