@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "prontonlp": {
+      "type": "http",
+      "url": "https://mcp-server.prontonlp.com/prontonlp",
+      "name": "ProntoNLP MCP"
+    }
+  }
+}
