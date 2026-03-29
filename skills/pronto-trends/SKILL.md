@@ -29,8 +29,17 @@ Use this skill when the user wants to see which topics, keywords, or themes are 
 Use `getTrends` **only when the user explicitly says "trends" or "trending"** — do not use it for general market or company analysis.
 
 ```
-getTrends    (companyName or sector + date range + sortBy: "score", limit: 20)
+getTrends
+  companyName: "Apple"          ← use for company-scoped trends (string, not "query")
+  sectors: ["Information Technology"]  ← use for sector-scoped trends (array of sector strings)
+  sinceDay: "YYYY-MM-DD"        ← 90 days ago by default
+  untilDay: "YYYY-MM-DD"        ← today
+  sortBy: "score"               ← always "score"
+  sortOrder: "desc"
+  limit: 20
 ```
+
+**There is NO `query` or `topic` parameter.** Use `companyName` for a company, `sectors` for a sector — never both. Omit both to get broad market trends.
 
 Present results as a table: Topic | Score | Hits | % Change | Direction (RISING / DECLINING).
 Always call out the fastest-rising themes — those are emerging stories worth watching.
@@ -41,7 +50,11 @@ Always call out the fastest-rising themes — those are emerging stories worth w
 *"Show me a mind map of AI in finance", "How does supply chain relate to other topics?"*
 
 ```
-getMindMap    (topic + date range)
+getMindMap
+  topic: "AI"                   ← the concept to map (string)
+  sinceDay: "YYYY-MM-DD"
+  untilDay: "YYYY-MM-DD"
+  sectors: ["Information Technology"]  ← optional sector filter
 ```
 
 Render the output as a nested markdown list, grouping related concepts under parent nodes.
@@ -52,7 +65,12 @@ Render the output as a nested markdown list, grouping related concepts under par
 *"Show term frequency heatmap for tariffs", "How often do companies mention inflation?"*
 
 ```
-getTermHeatmap    (term + companies or sector + date range)
+getTermHeatmap
+  term: "tariff"                ← the keyword to track (string, NOT "query")
+  sectors: ["Information Technology"]  ← optional sector scope
+  companyNames: ["Apple", "NVIDIA"]    ← optional company scope
+  sinceDay: "YYYY-MM-DD"
+  untilDay: "YYYY-MM-DD"
 ```
 
 Present as a table: Term | Company / Quarter | Frequency — sorted by frequency descending. Call out any companies where the term frequency is spiking.
