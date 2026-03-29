@@ -34,7 +34,6 @@ Evaluation criteria for assessing the quality of company intelligence reports ge
 - Are most bullish and most bearish analysts identified by name and firm?
 
 ### Tool Usage
-- Was getEssentialInstructions called before all other tools?
 - Were independent tools called in parallel?
 - Was companyId from getCompanyDescription passed to stock/prediction tools?
 - Were competitor companyIds from getCompanyCompetitors passed to getDeepResearchStockAverage?

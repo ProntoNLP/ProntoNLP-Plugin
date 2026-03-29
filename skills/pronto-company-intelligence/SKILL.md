@@ -29,19 +29,18 @@ See `reference/report-template-guide.md` for the batch plan of each template. De
 
 | # | Tool | Purpose | Company param |
 |---|------|---------|---------------|
-| 1 | `getEssentialInstructions` | **MUST call first** | n/a |
-| 2 | `getCompanyDescription` | Overview, risks, predictions | `companyNameOrTicker` |
-| 3 | `getCompanyCompetitors` | Competitor list | `companyNameOrTicker` |
-| 4 | `getCompanyDocuments` | Earnings calls, 10-K, 10-Q | `companyName` |
-| 5 | `getStockPrices` | Historical price series | `companyId` |
-| 6 | `getStockChange` | Price % change over period | `companyId` |
-| 7 | `getPredictions` | Analyst consensus estimates | `companyId` |
-| 8 | `getAnalytics` | Sentiment scores, events, aspects | `companyName` |
-| 9 | `getTrends` | Trending topics | `companyName` |
-| 10 | `getSpeakers` | Per-executive/analyst sentiment | `companyName` |
-| 11 | `getSpeakerCompanies` | Analyst firm sentiment | `companyName` |
-| 12 | `getDeepResearchStockAverage` | Competitor group avg stock | `companyIds` array |
-| 13 | `search` | Key quotes from filings | `companyName` or `companyIDs` |
+| 1 | `getCompanyDescription` | Overview, risks, predictions | `companyNameOrTicker` |
+| 2 | `getCompanyCompetitors` | Competitor list | `companyNameOrTicker` |
+| 3 | `getCompanyDocuments` | Earnings calls, 10-K, 10-Q | `companyName` |
+| 4 | `getStockPrices` | Historical price series | `companyId` |
+| 5 | `getStockChange` | Price % change over period | `companyId` |
+| 6 | `getPredictions` | Analyst consensus estimates | `companyId` |
+| 7 | `getAnalytics` | Sentiment scores, events, aspects | `companyName` |
+| 8 | `getTrends` | Trending topics | `companyName` |
+| 9 | `getSpeakers` | Per-executive/analyst sentiment | `companyName` |
+| 10 | `getSpeakerCompanies` | Analyst firm sentiment | `companyName` |
+| 11 | `getDeepResearchStockAverage` | Competitor group avg stock | `companyIds` array |
+| 12 | `search` | Key quotes from filings | `companyName` or `companyIDs` |
 
 ### ID Flow (critical)
 
@@ -59,18 +58,13 @@ When a tool accepts both `companyName` and `companyId`, prefer `companyId` for p
 
 Run each batch in sequence; within a batch, fire all calls simultaneously.
 
-**Batch 1** — mandatory setup:
-```
-getEssentialInstructions
-```
-
-**Batch 2** — foundation (no dependencies):
+**Batch 1** — foundation (no dependencies):
 ```
 getCompanyDescription    → save companyId, sector, risks
 getCompanyCompetitors    → save competitor companyIds[]
 ```
 
-**Batch 3** — data collection (needs companyId):
+**Batch 2** — data collection (needs companyId):
 ```
 getCompanyDocuments      → save transcriptId per earnings call
 getStockPrices           (1-year weekly)
@@ -79,7 +73,7 @@ getPredictions ×6        (revenue, epsGaap, ebitda, netIncomeGaap, freeCashFlow
 getTrends
 ```
 
-**Batch 4** — deep analysis (needs transcriptIds and companyId):
+**Batch 3** — deep analysis (needs transcriptIds and companyId):
 ```
 getAnalytics ×4          (one per earnings call, pass documentID)
 getStockPrices ×4        (1 week before/after each call date, interval: "day")
@@ -92,7 +86,7 @@ getDeepResearchStockAverage  (competitor companyIds, includeSp500: true)
 getStockChange per competitor
 ```
 
-**Batch 5** — quotes and forecasts (needs transcriptIds):
+**Batch 4** — quotes and forecasts (needs transcriptIds):
 ```
 search ×4                (forecast/guidance per earnings call, topicSearchQuery: "forecast guidance outlook")
 search                   (positive executive quotes, sentiment: "positive")
@@ -100,7 +94,7 @@ search                   (negative/risk quotes, sentiment: "negative")
 search                   (analyst Q&A, sections: ["EarningsCalls_Question"])
 ```
 
-**Batch 6** — write charts HTML, open for user.
+**Batch 5** — write charts HTML, open for user.
 
 ---
 
@@ -370,16 +364,15 @@ Past 6 months: sinceDay = 6 months ago, untilDay = today
 | `getDeepResearchStockAverage` fails | Fall back to individual `getStockChange` per competitor |
 | No quotes from search | Note "No matching quotes found" — never fabricate |
 | Private/unlisted company | ProntoNLP covers public companies only — tell the user |
-| companyId not in response | Check for `id` or nested field; see `getEssentialInstructions` output for exact schema |
+| companyId not in response | Check for `id` or nested field in the tool response |
 
 ---
 
 ## Best Practices
 
-1. Call `getEssentialInstructions` before every other Pronto tool — no exceptions
-2. Save `companyId` the moment you get it from `getCompanyDescription`
-3. Maximize parallelism — batch all independent calls per the strategy above
-4. Never fabricate data — if a tool returns nothing, say so honestly
-5. Always cite quotes: `"Quote text" — [Name], [Role], [Company] ([Date])`
-6. Present both sides — always pair positive findings with negative/risk findings
-7. Prefer `companyId` over `companyName` when a tool accepts both
+1. Save `companyId` the moment you get it from `getCompanyDescription`
+2. Maximize parallelism — batch all independent calls per the strategy above
+3. Never fabricate data — if a tool returns nothing, say so honestly
+4. Always cite quotes: `"Quote text" — [Name], [Role], [Company] ([Date])`
+5. Present both sides — always pair positive findings with negative/risk findings
+6. Prefer `companyId` over `companyName` when a tool accepts both

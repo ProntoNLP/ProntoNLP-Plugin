@@ -28,9 +28,8 @@ Is this a quick lookup or a full analysis?
 Every template starts the same way:
 
 ```
-1. getEssentialInstructions
-2. getCompanyDescription → SAVE companyId
-3. getCompanyCompetitors → SAVE competitor companyIds (skip for Quick Report)
+1. getCompanyDescription → SAVE companyId
+2. getCompanyCompetitors → SAVE competitor companyIds (skip for Quick Report)
 ```
 
 Then use these IDs:
@@ -45,15 +44,14 @@ Then use these IDs:
 
 **Phases**: All (1-9)
 **Sections**: All (1-11)
-**Batches**: 6
+**Batches**: 5
 
 ### Batch plan:
-1. `getEssentialInstructions`
-2. `getCompanyDescription` + `getCompanyCompetitors` (parallel)
-3. `getCompanyDocuments` + `getStockPrices` + `getStockChange` x3 + `getPredictions` x6 + `getTrends` (parallel)
-4. `getAnalytics` x4 (per quarter) + `getStockPrices` x4 (around calls) + `getSpeakers` x2 + `getSpeakerCompanies` + `getDeepResearchStockAverage` + `getStockChange` per competitor (parallel)
-5. `search` x4 (forecast per quarter) + `search` (positive) + `search` (negative) + `search` (analyst Q&A) (parallel)
-6. Write HTML charts file
+1. `getCompanyDescription` + `getCompanyCompetitors` (parallel)
+2. `getCompanyDocuments` + `getStockPrices` + `getStockChange` x3 + `getPredictions` x6 + `getTrends` (parallel)
+3. `getAnalytics` x4 (per quarter) + `getStockPrices` x4 (around calls) + `getSpeakers` x2 + `getSpeakerCompanies` + `getDeepResearchStockAverage` + `getStockChange` per competitor (parallel)
+4. `search` x4 (forecast per quarter) + `search` (positive) + `search` (negative) + `search` (analyst Q&A) (parallel)
+5. Write HTML charts file
 
 ---
 
@@ -63,9 +61,8 @@ Then use these IDs:
 **Sections**: 1-3 (Executive Summary, Stock, Predictions)
 
 ### Batch plan:
-1. `getEssentialInstructions`
-2. `getCompanyDescription` (save companyId)
-3. `getStockPrices` + `getStockChange` x3 + `getPredictions` x6 + `getAnalytics` with `analyticsType: ["scores"]` only (parallel, using companyId)
+1. `getCompanyDescription` (save companyId)
+2. `getStockPrices` + `getStockChange` x3 + `getPredictions` x6 + `getAnalytics` with `analyticsType: ["scores"]` only (parallel, using companyId)
 
 ---
 
@@ -75,11 +72,10 @@ Then use these IDs:
 **Sections**: 1, 4-7 (Earnings Comparison, Forecast, Trends, Commentary)
 
 ### Batch plan:
-1. `getEssentialInstructions`
-2. `getCompanyDescription`
-3. `getCompanyDocuments` + `getTrends` (parallel)
-4. `getAnalytics` x4 (per quarter) + `getStockPrices` x4 (around calls) + `getSpeakers` (executives) + `getSpeakers` (analysts) + `getSpeakerCompanies` (parallel)
-5. `search` x4 (forecast per quarter) + `search` (positive) + `search` (negative) (parallel)
+1. `getCompanyDescription`
+2. `getCompanyDocuments` + `getTrends` (parallel)
+3. `getAnalytics` x4 (per quarter) + `getStockPrices` x4 (around calls) + `getSpeakers` (executives) + `getSpeakers` (analysts) + `getSpeakerCompanies` (parallel)
+4. `search` x4 (forecast per quarter) + `search` (positive) + `search` (negative) (parallel)
 
 ---
 
@@ -89,9 +85,8 @@ Then use these IDs:
 **Sections**: 1-2, 9 (Executive Summary, Stock, Competitive Landscape)
 
 ### Batch plan:
-1. `getEssentialInstructions`
-2. `getCompanyDescription` + `getCompanyCompetitors` (parallel → save all companyIds)
-3. `getStockPrices` + `getStockChange` (target company) + `getStockChange` per competitor + `getDeepResearchStockAverage` (all parallel, using companyIds)
+1. `getCompanyDescription` + `getCompanyCompetitors` (parallel → save all companyIds)
+2. `getStockPrices` + `getStockChange` (target company) + `getStockChange` per competitor + `getDeepResearchStockAverage` (all parallel, using companyIds)
 
 ---
 
@@ -101,11 +96,10 @@ Then use these IDs:
 **Sections**: 1, 4, 7, 9, 10 (Earnings Comparison, Commentary, Competitors, Risks)
 
 ### Batch plan:
-1. `getEssentialInstructions`
-2. `getCompanyDescription` + `getCompanyCompetitors` (parallel — extract risk factors + competitor IDs)
-3. `getCompanyDocuments`
-4. `getAnalytics` x4 (per quarter) + `getAnalytics` (10-K risk factors) + `getSpeakers` (analysts, sortOrder: "asc" for bears) + `getDeepResearchStockAverage` + `getStockChange` per competitor (parallel)
-5. `search` (negative quotes) + `search` (analyst negative questions) (parallel)
+1. `getCompanyDescription` + `getCompanyCompetitors` (parallel — extract risk factors + competitor IDs)
+2. `getCompanyDocuments`
+3. `getAnalytics` x4 (per quarter) + `getAnalytics` (10-K risk factors) + `getSpeakers` (analysts, sortOrder: "asc" for bears) + `getDeepResearchStockAverage` + `getStockChange` per competitor (parallel)
+4. `search` (negative quotes) + `search` (analyst negative questions) (parallel)
 
 Key: Sort analysts by `sortOrder: "asc"` to find most bearish first.
 

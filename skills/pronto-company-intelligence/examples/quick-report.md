@@ -4,13 +4,7 @@ Abbreviated workflow — Sections 1-3 only, minimal tool calls, fast turnaround.
 
 ---
 
-## Batch 1: Setup
-```
-Tool: Pronto:getEssentialInstructions
-→ Loaded
-```
-
-## Batch 2: Foundation
+## Batch 1: Foundation
 ```
 Tool: Pronto:getCompanyDescription
 Params: { companyNameOrTicker: "TSLA" }
@@ -23,7 +17,7 @@ Params: { companyNameOrTicker: "TSLA" }
     risks: [...]
 ```
 
-## Batch 3: Stock + Financials + Quick Sentiment (all parallel, using companyId "7890")
+## Batch 2: Stock + Financials + Quick Sentiment (all parallel, using companyId "7890")
 ```
 Tool: Pronto:getStockPrices
 Params: { companyId: "7890", fromDate: "2025-03-03", toDate: "2026-03-03", interval: "week" }
@@ -102,7 +96,6 @@ Params: {
 
 | Batch | Calls | What |
 |-------|-------|------|
-| 1 | 1 | getEssentialInstructions |
-| 2 | 1 | getCompanyDescription → companyId |
-| 3 | 11 | stock prices + 3 stock changes + 6 predictions + analytics (scores only) |
-| **Total** | **~13** | **3 sequential batches** |
+| 1 | 1 | getCompanyDescription → companyId |
+| 2 | 11 | stock prices + 3 stock changes + 6 predictions + analytics (scores only) |
+| **Total** | **~12** | **2 sequential batches** |

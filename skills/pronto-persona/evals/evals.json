@@ -1,0 +1,109 @@
+{
+  "skill_name": "pronto-persona",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "What are the main negative events for financial companies that reported in the past 2 weeks?",
+      "expected_output": "A plan that: (1) uses getAnalytics with sectors: ['Financials'], sentiment: ['negative'], and a 2-week date range to get top negative event types, (2) calls searchTopCompanies once per event type to find companies with the most occurrences of each event, (3) uses search to retrieve supporting quotes per company, (4) includes citation links in format [N][N] pointing to https://dev.prontonlp.com/#/ref/<ID>.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "uses_get_analytics_first",
+          "description": "getAnalytics is called with sectors: ['Financials'] and sentiment: ['negative'] to identify event types"
+        },
+        {
+          "name": "search_top_companies_per_event",
+          "description": "searchTopCompanies is called once per event type (not once for all events combined)"
+        },
+        {
+          "name": "citations_present",
+          "description": "Response includes reference-style markdown links [N][N] pointing to https://dev.prontonlp.com/#/ref/<ID>"
+        },
+        {
+          "name": "at_least_5_examples",
+          "description": "Response includes at least 5 companies or events as examples with supporting quotes"
+        },
+        {
+          "name": "no_tool_names_in_response",
+          "description": "Tool names (getAnalytics, searchTopCompanies, etc.) do not appear in the user-facing response"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "What companies might benefit from generative AI?",
+      "expected_output": "A plan that: (1) uses search with searchQuery: 'generative AI' and synonyms: ['Gen AI', 'Artificial Intelligence'] and sentiment: 'positive', (2) if fewer than 30 results, re-runs with deepSearch: true, (3) uses addContext on the most relevant result IDs, (4) returns at least 5 companies as examples with supporting quotes and citation links.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "search_used_as_fallback",
+          "description": "search tool is used since no more specific tool fits a broad AI beneficiary question"
+        },
+        {
+          "name": "deep_search_on_sparse_results",
+          "description": "If fewer than 30 results are returned, search is re-run with deepSearch: true"
+        },
+        {
+          "name": "add_context_called",
+          "description": "addContext is called on relevant result IDs to get richer content"
+        },
+        {
+          "name": "citations_present",
+          "description": "Response includes [N][N] reference-style links pointing to https://dev.prontonlp.com/#/ref/<ID>"
+        },
+        {
+          "name": "at_least_5_company_examples",
+          "description": "At least 5 companies are named as examples with supporting quotes or sentences"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "What are the top movers this week? Which stocks are worth watching?",
+      "expected_output": "A plan that: (1) calls getTopMovers to get companies with investment score, sentiment change, and stock price change, (2) calls getCompanyDescription for the top 10-15 most relevant companies from results, (3) optionally uses search for recent positive/negative info, (4) presents companies with empty markdown links containing the company id: 'Company Name [](id)', (5) avoids the words 'hot', 'underperforming', 'overperforming' — uses 'worth monitoring', 'potential buying opportunities', 'potential sell signals' instead.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "get_top_movers_called",
+          "description": "getTopMovers is the primary tool called"
+        },
+        {
+          "name": "get_company_description_for_top_companies",
+          "description": "getCompanyDescription is called for the top 10-15 companies returned by getTopMovers"
+        },
+        {
+          "name": "company_id_links_present",
+          "description": "Companies are presented with empty markdown links containing the company id: 'Name [](id)'"
+        },
+        {
+          "name": "avoids_banned_words",
+          "description": "Response does not use the words 'hot', 'underperforming', or 'overperforming'"
+        },
+        {
+          "name": "uses_approved_language",
+          "description": "Response uses 'worth monitoring', 'potential buying opportunities', or 'potential sell signals'"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Who were the most positive speakers in Apple's last earnings call? And which companies did they talk about most?",
+      "expected_output": "A plan that: (1) calls getSpeakers for Apple with speakerTypes: ['Analysts'], sortBy: 'sentiment', sortOrder: 'desc', (2) extracts speakerIds from results, (3) calls searchTopCompanies ONCE PER speakerId (never batched in one call), (4) surfaces top companies per speaker individually.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "get_speakers_called",
+          "description": "getSpeakers is called for Apple with Analysts speaker type sorted by sentiment"
+        },
+        {
+          "name": "search_top_companies_per_speaker_id",
+          "description": "searchTopCompanies is called once per speakerId — never passing multiple speakerIds in one call"
+        },
+        {
+          "name": "speaker_ids_extracted_and_passed",
+          "description": "speakerIds from getSpeakers results are correctly extracted and passed to searchTopCompanies"
+        }
+      ]
+    }
+  ]
+}

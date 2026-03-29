@@ -4,13 +4,7 @@ Complete workflow showing companyId flow and the per-quarter earnings comparison
 
 ---
 
-## Batch 1: Setup
-```
-Tool: Pronto:getEssentialInstructions
-→ Loaded
-```
-
-## Batch 2: Foundation (parallel)
+## Batch 1: Foundation (parallel)
 ```
 Tool: Pronto:getCompanyDescription
 Params: { companyNameOrTicker: "AAPL" }
@@ -26,7 +20,7 @@ Params: { companyNameOrTicker: "AAPL" }
     { companyId: "2345", name: "Dell Technologies" }
 ```
 
-## Batch 3: Documents + Stock + Predictions (all parallel, using companyId "4567")
+## Batch 2: Documents + Stock + Predictions (all parallel, using companyId "4567")
 ```
 Tool: Pronto:getCompanyDocuments
 Params: { companyName: "Apple", documentTypes: ["Earnings Calls", "10-K", "10-Q"] }
@@ -68,7 +62,7 @@ Params: { companyName: "Apple", sinceDay: "2025-12-03", untilDay: "2026-03-03", 
     { name: "Wearables Growth", score: 47, hits: 76, change: -5% }
 ```
 
-## Batch 4: Per-Quarter Sentiment + Stock Around Calls + Speakers + Competitors (all parallel)
+## Batch 3: Per-Quarter Sentiment + Stock Around Calls + Speakers + Competitors (all parallel)
 
 ### Per-quarter analytics (4 calls, one per earnings call)
 ```
@@ -169,7 +163,7 @@ Params: { companyId: "5678", fromDate: "2025-03-03", toDate: "2026-03-03" }  // 
 Params: { companyId: "2345", fromDate: "2025-03-03", toDate: "2026-03-03" }  // Dell
 ```
 
-## Batch 5: Forecast Sentences + Key Quotes (all parallel)
+## Batch 4: Forecast Sentences + Key Quotes (all parallel)
 
 ### Forecast search per quarter (4 calls)
 ```
@@ -386,10 +380,9 @@ Populate the data arrays from tool results:
 
 | Batch | Calls | What |
 |-------|-------|------|
-| 1 | 1 | getEssentialInstructions |
-| 2 | 2 | getCompanyDescription + getCompanyCompetitors |
-| 3 | 12 | docs + stock prices + 3 stock changes + 6 predictions + trends |
-| 4 | 19 | 4 analytics (per quarter) + 4 stock around calls + 5 speakers (all execs, CEO, CFO, analysts, firms) + deep research avg + 4 competitor changes |
-| 5 | 7 | 4 forecast searches + positive quotes + negative quotes + analyst Q&A |
-| 6 | 1 | Write HTML charts file |
-| **Total** | **~42** | **6 sequential batches, heavily parallelized** |
+| 1 | 2 | getCompanyDescription + getCompanyCompetitors |
+| 2 | 12 | docs + stock prices + 3 stock changes + 6 predictions + trends |
+| 3 | 19 | 4 analytics (per quarter) + 4 stock around calls + 5 speakers (all execs, CEO, CFO, analysts, firms) + deep research avg + 4 competitor changes |
+| 4 | 7 | 4 forecast searches + positive quotes + negative quotes + analyst Q&A |
+| 5 | 1 | Write HTML charts file |
+| **Total** | **~41** | **5 sequential batches, heavily parallelized** |

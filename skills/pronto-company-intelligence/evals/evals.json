@@ -4,13 +4,9 @@
     {
       "id": 1,
       "prompt": "Can you give me a full company intelligence report on Apple? I want to understand how their earnings sentiment has been trending, how the stock is doing vs competitors, and what analysts are saying.",
-      "expected_output": "A full company intelligence report plan/outline that: (1) calls getEssentialInstructions first, (2) runs getCompanyDescription + getCompanyCompetitors in parallel to get companyId and competitor IDs, (3) runs getAnalytics separately for each of the past 4 quarters using individual documentIDs, (4) builds a quarter-over-quarter comparison table with RISING/FALLING labels for sentiment, investment score, and stock reaction, (5) includes speaker analysis comparing executives vs analysts, (6) produces a structured 11-section report with an Executive Summary that states sentiment direction explicitly.",
+      "expected_output": "A full company intelligence report plan/outline that: (1) runs getCompanyDescription + getCompanyCompetitors in parallel to get companyId and competitor IDs, (2) runs getAnalytics separately for each of the past 4 quarters using individual documentIDs, (3) builds a quarter-over-quarter comparison table with RISING/FALLING labels for sentiment, investment score, and stock reaction, (4) includes speaker analysis comparing executives vs analysts, (5) produces a structured 11-section report with an Executive Summary that states sentiment direction explicitly.",
       "files": [],
       "assertions": [
-        {
-          "name": "calls_essential_instructions_first",
-          "description": "getEssentialInstructions is the first tool called before any other Pronto tools"
-        },
         {
           "name": "parallel_foundation_batch",
           "description": "getCompanyDescription and getCompanyCompetitors are called in the same batch (parallel)"
@@ -60,8 +56,8 @@
           "description": "Only Sections 1–3 are produced (Executive Summary, Stock Performance, Financial Outlook)"
         },
         {
-          "name": "parallel_batch_3_calls",
-          "description": "Stock, predictions, and analytics calls are batched in parallel in Batch 3"
+          "name": "parallel_batch_2_calls",
+          "description": "Stock, predictions, and analytics calls are batched in parallel in Batch 2"
         }
       ]
     },

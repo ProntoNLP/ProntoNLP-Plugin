@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Speaker & Analyst Analysis — Charts</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: -apple-system, sans-serif; background: #0f1117; color: #e1e4e8; padding: 20px; }
+    h1 { border-bottom: 2px solid #6AA64A; padding-bottom: 8px; color: #f0f0f0; }
+    p { color: #9ca3af; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1200px; }
+    .chart-box { background: #1c1f26; border: 1px solid #2d3139; border-radius: 8px; padding: 16px; }
+    .chart-box h3 { margin-top: 0; font-size: 14px; color: #6AA64A; }
+    canvas { width: 100% !important; height: 320px !important; }
+    @media print { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <h1>Speaker & Analyst Analysis — Charts</h1>
+  <p>Generated: [Date] | Company: [Company Name] | Period: [Date Range]</p>
+  <div class="grid">
+    <div class="chart-box"><h3>Analyst Sentiment Distribution</h3><canvas id="c1"></canvas></div>
+    <div class="chart-box"><h3>Executive vs Analyst Sentiment</h3><canvas id="c2"></canvas></div>
+    <div class="chart-box"><h3>Analyst Firm Ranking</h3><canvas id="c3"></canvas></div>
+    <div class="chart-box"><h3>Top Executives — Sentiment & Activity</h3><canvas id="c4"></canvas></div>
+  </div>
+  <script>
+    Chart.defaults.color = '#9ca3af';
+    Chart.defaults.borderColor = '#374151';
+
+    // DATA — fill these arrays from Pronto tool results
+
+    // From getSpeakers (Analysts, sortBy: sentiment desc)
+    const analystNames = [/* analyst names sorted most bullish → most bearish */];
+    const analystSentiments = [/* sentiment score per analyst, range -1 to +1 */];
+
+    // From getSpeakers (Executives_CEO, Executives_CFO) + averages
+    const speakerLabels = ['CEO', 'CFO', 'Exec Avg', 'Analyst Avg'];
+    const speakerSentiments = [/* CEO score, CFO score, exec avg, analyst avg */];
+
+    // From getSpeakerCompanies (Analysts, sortBy: sentiment desc)
+    const firmNames = [/* firm names sorted most bullish → most bearish */];
+    const firmSentiments = [/* sentiment score per firm */];
+
+    // From getSpeakers (Executives, sortBy: count desc) — top executives
+    const execNames = [/* executive names sorted by sentence count */];
+    const execSentiments = [/* sentiment score per executive */];
+    const execCounts = [/* sentence count per executive */];
+
+    // Chart 1: Analyst Sentiment Distribution (bar sorted desc — green positive, red negative)
+    new Chart(document.getElementById('c1'), {
+      type: 'bar',
+      data: {
+        labels: analystNames,
+        datasets: [{
+          label: 'Sentiment Score',
+          data: analystSentiments,
+          backgroundColor: analystSentiments.map(v => v >= 0 ? '#22c55e' : '#ef4444')
+        }]
+      },
+      options: {
+        scales: {
+          y: { min: -1, max: 1, title: { display: true, text: 'Sentiment Score' } }
+        }
+      }
+    });
+
+    // Chart 2: Executive vs Analyst Sentiment (grouped bar)
+    new Chart(document.getElementById('c2'), {
+      type: 'bar',
+      data: {
+        labels: speakerLabels,
+        datasets: [{
+          label: 'Sentiment Score',
+          data: speakerSentiments,
+          backgroundColor: ['#6AA64A', '#6AA64A', '#8DC96E', '#f97316']
+        }]
+      },
+      options: {
+        scales: {
+          y: { min: -1, max: 1, title: { display: true, text: 'Sentiment Score' } }
+        }
+      }
+    });
+
+    // Chart 3: Analyst Firm Ranking (horizontal bar — green/red by sentiment)
+    new Chart(document.getElementById('c3'), {
+      type: 'bar',
+      data: {
+        labels: firmNames,
+        datasets: [{
+          label: 'Firm Sentiment',
+          data: firmSentiments,
+          backgroundColor: firmSentiments.map(v => v >= 0 ? '#22c55e' : '#ef4444')
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        scales: {
+          x: { min: -1, max: 1, title: { display: true, text: 'Sentiment Score' } }
+        }
+      }
+    });
+
+    // Chart 4: Top Executives — Sentiment Score (bar, colored by sentiment; tooltip shows sentence count)
+    new Chart(document.getElementById('c4'), {
+      type: 'bar',
+      data: {
+        labels: execNames,
+        datasets: [
+          {
+            label: 'Sentiment Score',
+            data: execSentiments,
+            backgroundColor: execSentiments.map(v => v >= 0 ? '#22c55e' : '#ef4444'),
+            yAxisID: 'y'
+          },
+          {
+            label: 'Sentences',
+            data: execCounts,
+            type: 'line',
+            borderColor: '#f97316',
+            backgroundColor: '#f9731620',
+            fill: false,
+            tension: 0.3,
+            pointRadius: 5,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        scales: {
+          y:  { min: -1, max: 1, position: 'left',  title: { display: true, text: 'Sentiment' } },
+          y1: {               position: 'right', title: { display: true, text: 'Sentences' }, grid: { drawOnChartArea: false } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
