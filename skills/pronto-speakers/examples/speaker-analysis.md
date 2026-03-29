@@ -122,10 +122,37 @@ suggesting a hardware/devices-first perspective.
 
 ---
 
+## Batch 3: Generate Charts
+
+After all data is collected, write the HTML charts file:
+
+```
+Write file: /tmp/speakers-charts.html
+Copy assets/charts-template.html and populate:
+
+  analystNames      = ['Erik Woodring', 'Samik Chatterjee', 'Wamsi Mohan', ..., 'Toni Sacconaghi', 'Rod Hall']
+  analystSentiments = [0.58, 0.51, 0.45, ..., -0.12, -0.18]
+  speakerLabels     = ['CEO', 'CFO', 'Exec Avg', 'Analyst Avg']
+  speakerSentiments = []   ← leave empty if executives were not queried
+  firmNames         = ['Morgan Stanley', 'JPMorgan', ..., 'Goldman Sachs', 'Bernstein']
+  firmSentiments    = [0.55, 0.48, ..., -0.15, -0.22]
+  execNames         = []   ← leave empty if getSpeakers Executives was not called
+  execSentiments    = []
+  execSentenceCounts= []
+```
+
+Then open it:
+```
+open /tmp/speakers-charts.html
+```
+
+---
+
 ## Tool Call Summary
 
 | Batch | Calls | What |
 |-------|-------|------|
 | 1 | 2 | getSpeakers + getSpeakerCompanies (parallel) |
 | 2 | 3 | searchTopCompanies × 3 (one per speakerId — sequential within batch but individually fast) |
-| **Total** | **5** | **2 sequential batches** |
+| 3 | 1 | Write HTML charts file |
+| **Total** | **6** | **3 sequential batches** |

@@ -376,3 +376,4 @@ Past 6 months: sinceDay = 6 months ago, untilDay = today
 4. Always cite quotes: `"Quote text" — [Name], [Role], [Company] ([Date])`
 5. Present both sides — always pair positive findings with negative/risk findings
 6. Prefer `companyId` over `companyName` when a tool accepts both
+7. Do not mention tool names in responses — describe the action instead (e.g. "I analyzed 4 earnings calls" not "I called getAnalytics 4 times")

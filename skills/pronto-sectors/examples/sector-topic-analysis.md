@@ -114,6 +114,30 @@ impact" ([3][3]).
 
 ---
 
+## Batch 4: Generate Charts
+
+After all data is collected, write the HTML charts file:
+
+```
+Write file: /tmp/sectors-charts.html
+Copy assets/charts-template.html and populate:
+
+  sectorNames      = []    ← leave empty (searchSectors not called in this flow)
+  sectorSentiments = []
+  sectorMentions   = []
+  companyNames     = ['Company D', 'Company A', 'Company B', 'Company E', 'Company C']
+  companySentiments= [0.92, 0.88, 0.81, 0.77, 0.74]
+  eventTypes       = ['FinancialPerformance', 'Operations', 'Forecast']
+  eventCounts      = [8500, 2400, 5000]   ← totalPositives from getAnalytics
+```
+
+Then open it:
+```
+open /tmp/sectors-charts.html
+```
+
+---
+
 ## Tool Call Summary
 
 | Batch | Calls | What |
@@ -121,4 +145,5 @@ impact" ([3][3]).
 | 1 | 1 | getAnalytics → event types + aspects |
 | 2 | 2 | searchTopCompanies per event type (parallel) |
 | 3 | 1 | search → supporting quotes |
-| **Total** | **4** | **3 sequential batches** |
+| 4 | 1 | Write HTML charts file |
+| **Total** | **5** | **4 sequential batches** |

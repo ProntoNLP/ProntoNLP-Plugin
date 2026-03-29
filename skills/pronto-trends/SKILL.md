@@ -121,6 +121,31 @@ For trending topics always include:
 
 Minimum **10 topics** for trends — a short list misses the picture.
 
+Do not mention tool names in responses — describe the action instead (e.g. "I analyzed trending topics" not "I called getTrends").
+
+---
+
+## Date Handling
+
+```
+Past quarter:  sinceDay = 90 days ago,  untilDay = today
+Past 6 months: sinceDay = 6 months ago, untilDay = today
+Past year:     sinceDay = 1 year ago,   untilDay = today
+```
+
+Default to **90 days** unless the user specifies a longer window.
+
+---
+
+## Error Handling
+
+| Problem | What to do |
+|---------|-----------|
+| `getTrends` returns fewer than 10 results | Widen date range or remove sector/company filter |
+| No mind map results | Try a broader or simpler topic term |
+| `getTermHeatmap` returns empty | Check spelling; try a shorter root word (e.g. "tariff" not "tariffs") |
+| Trends look stale | Ensure `untilDay` is set to today's date |
+
 ---
 
 ## Reference Docs

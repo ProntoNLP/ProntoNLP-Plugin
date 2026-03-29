@@ -101,4 +101,31 @@ For sector/topic results always include:
 3. **Interpretation** — what the distribution means (e.g. "Tech sector is most exposed, led by Apple and NVIDIA")
 4. **HTML charts** — open `/tmp/sectors-charts.html` so the user can see the visualization
 
-Minimum **5 companies or sectors** as examples — sparse answers miss nuance.
+Minimum **5 companies or sectors** — sparse answers miss nuance.
+
+Do not mention tool names in responses — describe the action instead (e.g. "I scanned across sectors" not "I called searchSectors").
+
+---
+
+## Date Handling
+
+```
+Past 2 weeks:  sinceDay = 14 days ago,  untilDay = today
+Past quarter:  sinceDay = 90 days ago,  untilDay = today
+Past 6 months: sinceDay = 6 months ago, untilDay = today
+Past year:     sinceDay = 1 year ago,   untilDay = today
+```
+
+`getAnalytics` max date range is 1 year — split longer requests into yearly chunks.
+
+---
+
+## Error Handling
+
+| Problem | What to do |
+|---------|-----------|
+| No sectors returned | Broaden the topic query or remove sentiment filter |
+| `getAnalytics` returns no event types | Try without `documentIDs`; widen date range |
+| Fewer than 30 search results | Re-run `search` with `deepSearch: true` |
+| Company not found in `searchTopCompanies` | Try without sector filter; topic may be cross-sector |
+| No quotes from `search` | Say "No matching quotes found" — never fabricate |

@@ -106,3 +106,29 @@ Always include:
 6. **HTML charts** — open `/tmp/speakers-charts.html` so the user can see the visualization
 
 Minimum **5 speakers or firms** — sparse answers miss nuance.
+
+Do not mention tool names in responses — describe the action instead (e.g. "I ranked analysts by sentiment" not "I called getSpeakers").
+
+---
+
+## Date Handling
+
+```
+Past quarter:  sinceDay = 90 days ago,  untilDay = today
+Past 6 months: sinceDay = 6 months ago, untilDay = today
+Past year:     sinceDay = 1 year ago,   untilDay = today
+```
+
+Default to **1 year** unless the user specifies a shorter window.
+
+---
+
+## Error Handling
+
+| Problem | What to do |
+|---------|-----------|
+| Speaker not found | Try `companyName` without date filter; widen the window |
+| No executives returned | Try `speakerTypes: ["Executives"]` instead of a specific role |
+| Fewer than 5 speakers | Lower `limit` is fine — show what's available, note the small sample |
+| `speakerId` not in `getSpeakers` output | Check for `id` or `speakerId` field in the raw response |
+| No quotes from `search` | Say "No matching quotes found" — never fabricate |

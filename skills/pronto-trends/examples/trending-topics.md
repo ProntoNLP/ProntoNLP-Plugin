@@ -63,9 +63,33 @@ Params: {
 
 ---
 
+## Batch 2: Generate Charts
+
+After the trends data is collected, write the HTML charts file:
+
+```
+Write file: /tmp/trends-charts.html
+Copy assets/charts-template.html and populate:
+
+  trendNames    = ['AI Agents', 'Apple Intelligence', 'Inference Workloads', 'Data Center Capacity', ...]
+  trendScores   = [95, 92, 84, 88, 79, 74, 52, 61, 68, 57]
+  trendChanges  = [72, 45, 55, 38, 22, 18, 5, -8, -12, -15]
+  trendHits     = [412, 312, 267, 298, 243, 198, 112, 143, 187, 131]
+  termNames     = []   ← leave empty if getTermHeatmap was not called
+  termFreqs     = []
+```
+
+Then open it:
+```
+open /tmp/trends-charts.html
+```
+
+---
+
 ## Tool Call Summary
 
 | Batch | Calls | What |
 |-------|-------|------|
 | 1 | 1 | getTrends |
-| **Total** | **1** | **Single call** |
+| 2 | 1 | Write HTML charts file |
+| **Total** | **2** | **2 sequential batches** |

@@ -82,10 +82,35 @@ is seen more as an operational tool than a growth driver in energy companies.
 
 ---
 
+## Batch 3: Generate Charts
+
+After all data is collected, write the HTML charts file:
+
+```
+Write file: /tmp/sectors-charts.html
+Copy assets/charts-template.html and populate:
+
+  sectorNames      = ['Information Technology', 'Communication Services', 'Health Care', ...]
+  sectorSentiments = [0.72, 0.65, 0.58, 0.51, 0.47, 0.44, 0.38]
+  sectorMentions   = [4820, 2140, 1380, 980, 760, 510, 290]
+  companyNames     = ['NVIDIA', 'Microsoft', 'Alphabet', 'Meta Platforms', 'Netflix']
+  companySentiments= [0.89, 0.81, 0.76, 0.78, 0.61]
+  eventTypes       = []   ← leave empty if getAnalytics was not called
+  eventCounts      = []
+```
+
+Then open it:
+```
+open /tmp/sectors-charts.html
+```
+
+---
+
 ## Tool Call Summary
 
 | Batch | Calls | What |
 |-------|-------|------|
 | 1 | 1 | searchSectors → sector distribution |
 | 2 | 2 | searchTopCompanies per top sector (parallel) |
-| **Total** | **3** | **2 sequential batches** |
+| 3 | 1 | Write HTML charts file |
+| **Total** | **4** | **3 sequential batches** |
