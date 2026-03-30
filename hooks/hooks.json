@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["-e", "const now = new Date(); console.log(`[ProntoNLP Context] Current date and time: ${now.toISOString().replace('T', ' ').substring(0, 19)} UTC`);"]
+          }
+        ]
+      }
+    ]
+  }
+}
