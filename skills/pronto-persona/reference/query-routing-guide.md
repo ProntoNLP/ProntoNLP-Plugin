@@ -21,7 +21,7 @@ Does the question mention a specific company or ticker?
     ├── Asks about top movers / investment opportunities / stocks worth watching → getTopMovers
     ├── Asks about topic sentiment across sectors → searchSectors
     ├── Asks about top companies for a topic → searchTopCompanies
-    ├── Asks about topic mention volume or sentiment distribution across companies → getTopicMentionsAndSentimentMap
+    ├── Asks about topic mention volume or sentiment distribution across companies → searchTopCompanies (with searchQuery)
     ├── Asks about analytics / event types for a sector → getAnalytics (with sectors filter)
     └── General topic search → search (fallback)
 ```
@@ -64,7 +64,7 @@ If the user asks about a specific event type or aspect, use `getAnalytics` to fi
 | "Top negative events in [sector] this week" | `getAnalytics` (sectors filter) | `searchTopCompanies` per event |
 | "Which companies discussed [topic] most positively?" | `searchTopCompanies` | `search` (quotes) |
 | "Sentiment for [topic] across sectors" | `searchSectors` | — |
-| "Which companies mention [topic] most?" | `getTopicMentionsAndSentimentMap` | — |
+| "Which companies mention [topic] most?" | `searchTopCompanies` (with searchQuery) | `search` (quotes) |
 | "What are the market trends?" | `getTrends` (only if "trends" is in the query) | — |
 | "Top stocks / movers / worth watching" | `getTopMovers` | `getCompanyDescription` (top 10-15) |
 | "How did basket of stocks perform?" | `getDeepResearchStockAverage` | — |

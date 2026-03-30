@@ -70,6 +70,23 @@ getSpeakers({ companyName: "Apple", speakerTypes: ["Analysts"], ... })
 ### Prediction Metrics
 `revenue` | `netIncomeGaap` | `epsGaap` | `ebitda` | `capitalExpenditure` | `freeCashFlow`
 
+### getTopMovers — sortBy values (pass as array, supports multi-sort)
+| Value | Meaning |
+|-------|---------|
+| `investmentScore` | Normalized investment score |
+| `investmentScoreChange` | Change in investment score vs prior period |
+| `sentimentScore` | Raw sentiment score |
+| `sentimentScoreChange` | Change in sentiment vs prior period |
+| `stockChange` | Stock price % change |
+| `aspectScore` | Raw aspect score |
+| `marketcap` | Market capitalization (default) |
+
+Pass multiple values to get **independent ranked lists per criterion** in one call:
+- `["investmentScoreChange"]` → one ranked list
+- `["investmentScoreChange", "sentimentScoreChange"]` → two separate ranked lists
+
+Response structure: `{ "investmentScoreChange": { topMovers, underperforming, overperforming }, "sentimentScoreChange": { ... } }`
+
 ### Sort Orders
 `asc` | `desc`
 

@@ -60,16 +60,24 @@
     {
       "id": 3,
       "prompt": "What are the top movers this week? Which stocks are worth watching?",
-      "expected_output": "A plan that: (1) calls getTopMovers to get companies with investment score, sentiment change, and stock price change, (2) calls getCompanyDescription for the top 10-15 most relevant companies from results, (3) optionally uses search for recent positive/negative info, (4) presents companies with empty markdown links containing the company id: 'Company Name [](id)', (5) avoids the words 'hot', 'underperforming', 'overperforming' — uses 'worth monitoring', 'potential buying opportunities', 'potential sell signals' instead.",
+      "expected_output": "A plan that: (1) calls getTopMovers ONCE with sortBy as an array (e.g. ['investmentScoreChange', 'sentimentScoreChange']) to receive independent ranked lists per criterion in a single call — response is keyed by criterion: { 'investmentScoreChange': { topMovers, underperforming, overperforming }, 'sentimentScoreChange': { ... } }, (2) calls getCompanyDescription in parallel for the top 10-15 most relevant companies across all lists (deduplicated), (3) optionally uses search for supporting quotes on top movers, (4) presents each criterion as its own section, (5) presents companies with empty markdown links containing the company id: 'Company Name [](id)', (6) avoids the words 'hot', 'underperforming', 'overperforming' — uses 'worth monitoring', 'potential buying opportunities', 'potential sell signals' instead.",
       "files": [],
       "assertions": [
         {
-          "name": "get_top_movers_called",
-          "description": "getTopMovers is the primary tool called"
+          "name": "get_top_movers_called_once",
+          "description": "getTopMovers is called exactly once with sortBy as an array of criteria — not multiple calls for different sorts"
+        },
+        {
+          "name": "sortby_is_array",
+          "description": "sortBy parameter is passed as an array (e.g. ['investmentScoreChange', 'sentimentScoreChange']), not a single string"
+        },
+        {
+          "name": "separate_sections_per_criterion",
+          "description": "Response presents a separate section for each sort criterion (e.g. one for investment score change, one for sentiment score change)"
         },
         {
           "name": "get_company_description_for_top_companies",
-          "description": "getCompanyDescription is called for the top 10-15 companies returned by getTopMovers"
+          "description": "getCompanyDescription is called (in parallel, deduplicated) for the top 10-15 companies across all criterion lists"
         },
         {
           "name": "company_id_links_present",
