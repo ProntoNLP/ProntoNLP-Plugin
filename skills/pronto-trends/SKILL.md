@@ -1,6 +1,6 @@
 ---
 name: pronto-trends
-description: "Use this skill when the user asks about trending keywords, topics, or themes across the market — e.g. 'what are the trending topics right now?', 'what themes are rising in tech?', 'show a mind map of AI in finance', 'term frequency heatmap for supply chain', 'what keywords are companies using most?', 'which topics are gaining momentum?', 'show me how often tariffs are mentioned across companies'. This skill covers keyword and topic trends only — getTrends, getMindMap, getTermHeatmap. Always load pronto-persona first."
+description: "Use this skill when the user asks about trending keywords, topics, or themes across the market — e.g. 'what are the trending topics right now?', 'what themes are rising in tech?', 'show a mind map of AI in finance', 'term frequency heatmap for supply chain', 'what keywords are companies using most?', 'which topics are gaining momentum?', 'show me how often tariffs are mentioned across companies'. This skill covers keyword and topic trends only — getTrends, getMindMap, getTermHeatmap."
 ---
 
 # ProntoNLP — Keyword & Topic Trends

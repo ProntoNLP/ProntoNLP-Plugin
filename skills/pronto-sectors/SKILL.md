@@ -1,6 +1,6 @@
 ---
 name: pronto-sectors
-description: "Use this skill when the user asks about a sector, industry, or topic across multiple companies — e.g. 'which companies talked about tariffs most?', 'show AI sentiment across the tech sector', 'what industries are most exposed to rate hikes?', 'which sectors are bullish on EV adoption?', 'top companies discussing supply chain issues', or any question involving topic/sentiment distribution across markets. Also trigger when the user wants to see which companies are leading or lagging on a specific theme, event, or keyword. Always load pronto-persona first."
+description: "Use this skill when the user asks about a sector, industry, or topic across multiple companies — e.g. 'which companies talked about tariffs most?', 'show AI sentiment across the tech sector', 'what industries are most exposed to rate hikes?', 'which sectors are bullish on EV adoption?', 'top companies discussing supply chain issues', or any question involving topic/sentiment distribution across markets. Also trigger when the user wants to see which companies are leading or lagging on a specific theme, event, or keyword."
 ---
 
 # ProntoNLP — Sectors & Topic Analysis
@@ -20,12 +20,6 @@ Before making any tool calls, decide which mode fits the user's request:
 | **C — Event Drill-down** | "Top negative events in tech this week" | 3 | `getAnalytics` → `searchTopCompanies` → `search` |
 
 See `reference/report-template-guide.md` for the exact batch plan of each mode. Default to **Mode A** unless the user explicitly signals a narrower scope.
-
----
-
-## Prerequisite
-
-`pronto-persona` must already be loaded. It governs identity rules and citation format only — all tool parameters, ID flow, and error handling are defined in this skill.
 
 ---
 
