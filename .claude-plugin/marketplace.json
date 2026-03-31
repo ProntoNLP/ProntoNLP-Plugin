@@ -1,0 +1,11 @@
+{
+    "name": "prontonlp-tools",
+     "plugins": [
+    {
+      "name": "prontonlp-plugin",
+      "source": "./",
+      "description": "ProntoNLP's plugin for various financial analytics tools.",
+      "version": "1.0.0"
+    }
+  ]
+}
