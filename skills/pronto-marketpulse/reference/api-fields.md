@@ -85,24 +85,22 @@ response = {
 
 ## Market Cap Filter Reference
 
-The `marketCaps` parameter for `getTopMovers` accepts an array of range objects. `getTrends` and `getSpeakers` do not accept `marketCaps`.
+The `marketCaps` parameter for `getTopMovers` accepts an **array of key strings**. `getTrends` and `getSpeakers` do not accept `marketCaps`.
 
-| Tier | Range |
-|------|-------|
-| Micro-cap | < $300M |
-| Small-cap | $300M – $2B |
-| Mid-cap | $2B – $10B |
-| Large-cap | $10B – $200B |
-| Mega-cap | > $200B |
+Available keys:
 
-Default filter ($200M+):
+| Key | Range |
+|-----|-------|
+| `"Nano (under $50mln)"` | < $50M |
+| `"Micro ($50mln - $300mln)"` | $50M – $300M |
+| `"Small ($300mln - $2bln)"` | $300M – $2B |
+| `"Mid ($2bln - $10bln)"` | $2B – $10B |
+| `"Large ($10bln - $200bln)"` | $10B – $200B |
+| `"Mega ($200bln & more)"` | > $200B |
+
+Default filter ($300M+):
 ```json
-[
-  { "range": { "marketCap": { "gte": 200000000, "lte": 2000000000 } } },
-  { "range": { "marketCap": { "gte": 2000000000, "lte": 10000000000 } } },
-  { "range": { "marketCap": { "gte": 10000000000, "lte": 200000000000 } } },
-  { "range": { "marketCap": { "gte": 200000000000 } } }
-]
+["Small ($300mln - $2bln)", "Mid ($2bln - $10bln)", "Large ($10bln - $200bln)", "Mega ($200bln & more)"]
 ```
 
 To include everything (no cap filter), omit the `marketCaps` parameter entirely.

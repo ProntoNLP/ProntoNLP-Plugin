@@ -34,35 +34,33 @@ At the end of a Movers-only report, tell the user they can ask for a **full repo
 
 | User says | Market cap filter |
 |-----------|------------------|
-| Nothing specific (default) | **$200M+** — see filter below |
-| "large companies", "large caps", "big companies" | **$5B+** |
-| "mega cap", "only the biggest", "S&P 500 only" | **$50B+** |
+| Nothing specific (default) | **$300M+** — Small + Mid + Large + Mega |
+| "large companies", "large caps", "big companies" | **$10B+** — Large + Mega |
+| "mega cap", "only the biggest", "S&P 500 only" | **$200B+** — Mega only |
 | "small caps", "small companies", "micro cap" | Drop filter entirely; note it in the report |
-| Specifies a sector, country, or index | Apply those filters; keep the $200M+ default market cap floor |
+| Specifies a sector, country, or index | Apply those filters; keep the $300M+ default market cap floor |
 
-**Default filter ($200M+):**
+Pass `marketCaps` as an array of key strings. Available keys (from smallest to largest):
+- `"Nano (under $50mln)"`
+- `"Micro ($50mln - $300mln)"`
+- `"Small ($300mln - $2bln)"`
+- `"Mid ($2bln - $10bln)"`
+- `"Large ($10bln - $200bln)"`
+- `"Mega ($200bln & more)"`
+
+**Default filter ($300M+):**
 ```json
-[
-  { "range": { "marketCap": { "gte": 200000000, "lte": 2000000000 } } },
-  { "range": { "marketCap": { "gte": 2000000000, "lte": 10000000000 } } },
-  { "range": { "marketCap": { "gte": 10000000000, "lte": 200000000000 } } },
-  { "range": { "marketCap": { "gte": 200000000000 } } }
-]
+["Small ($300mln - $2bln)", "Mid ($2bln - $10bln)", "Large ($10bln - $200bln)", "Mega ($200bln & more)"]
 ```
 
-**Large companies filter ($5B+):**
+**Large companies filter ($10B+):**
 ```json
-[
-  { "range": { "marketCap": { "gte": 5000000000, "lte": 200000000000 } } },
-  { "range": { "marketCap": { "gte": 200000000000 } } }
-]
+["Large ($10bln - $200bln)", "Mega ($200bln & more)"]
 ```
 
-**Mega cap filter ($50B+):**
+**Mega cap filter ($200B+):**
 ```json
-[
-  { "range": { "marketCap": { "gte": 50000000000 } } }
-]
+["Mega ($200bln & more)"]
 ```
 
 ### C. Optional user-specified filters
