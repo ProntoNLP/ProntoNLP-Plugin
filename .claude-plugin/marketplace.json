@@ -1,5 +1,8 @@
 {
     "name": "prontonlp-tools",
+   "owner": {
+    "name": "Your Name"
+  },
      "plugins": [
     {
       "name": "prontonlp-plugin",
