@@ -64,7 +64,7 @@
     {
       "id": 3,
       "prompt": "How does Microsoft stack up against its competitors? I want to see how MSFT's stock has performed relative to the peer group and S&P 500 over the past year.",
-      "expected_output": "A Competitive Report plan that: (1) selects Competitive Report template (~15 tool calls), (2) calls getCompanyCompetitors to get competitor companyIds, (3) calls getDeepResearchStockAverage with competitor IDs and includeSp500: true, (4) calls getStockChange per competitor for individual comparison, (5) focuses on Section 9 (Competitive Landscape) plus Section 2 (Stock Performance), and (6) notes MSFT's ranking vs peers.",
+      "expected_output": "A Competitive Report plan that: (1) selects Competitive Report template (~15 tool calls), (2) calls getCompanyCompetitors to get competitor companyIds, (3) calls getStockChange per competitor for individual comparison, (4) focuses on Section 9 (Competitive Landscape) plus Section 2 (Stock Performance), and (5) notes MSFT's ranking vs peers.",
       "files": [],
       "assertions": [
         {
@@ -74,10 +74,6 @@
         {
           "name": "get_competitors_called",
           "description": "getCompanyCompetitors is called to get competitor companyIds"
-        },
-        {
-          "name": "deep_research_stock_average",
-          "description": "getDeepResearchStockAverage is called with competitor companyIds and includeSp500: true"
         },
         {
           "name": "stock_change_per_competitor",

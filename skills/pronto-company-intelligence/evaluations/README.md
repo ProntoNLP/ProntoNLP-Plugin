@@ -36,7 +36,7 @@ Evaluation criteria for assessing the quality of company intelligence reports ge
 ### Tool Usage
 - Were independent tools called in parallel?
 - Was companyId from getCompanyDescription passed to stock/prediction tools?
-- Were competitor companyIds from getCompanyCompetitors passed to getDeepResearchStockAverage?
+- Were competitor companyIds from getCompanyCompetitors passed to getStockChange (per competitor)?
 - Were documentIDs from getCompanyDocuments passed to per-quarter getAnalytics?
 - Was getTrends called with the companyName parameter?
 - Were forecast sentences searched per earnings call using documentIDs?
@@ -44,7 +44,7 @@ Evaluation criteria for assessing the quality of company intelligence reports ge
 - Were date ranges kept within the 1-year analytics limit?
 
 ### Charts & Visualization
-- Was an HTML file with Chart.js generated?
+- Were Chart.js charts rendered inline in the response?
 - Does it include all 10 charts (sentiment, investment, stock reaction, dual-axis overlay, 1Y price, competitors, trends, events, analysts, exec vs analyst)?
 - Are earnings call dates marked on the stock price chart?
 - Are positive/negative values color-coded correctly (green/red)?

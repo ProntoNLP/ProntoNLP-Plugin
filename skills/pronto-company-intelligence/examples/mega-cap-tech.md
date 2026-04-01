@@ -153,9 +153,6 @@ Params: { companyName: "Apple", speakerTypes: ["Analysts"], sortBy: "sentiment",
     { name: "Goldman Sachs", sentimentScore: -0.15, numOfSentences: 41 }
     { name: "Bernstein", sentimentScore: -0.22, numOfSentences: 38 }
 
-Tool: Pronto:getDeepResearchStockAverage
-Params: { companyIds: ["8901", "1234", "5678", "2345"], fromDate: "2025-03-03", toDate: "2026-03-03", includeSp500: true }
-
 Tool: Pronto:getStockChange (per competitor, parallel)
 Params: { companyId: "8901", fromDate: "2025-03-03", toDate: "2026-03-03" }  // Samsung
 Params: { companyId: "1234", fromDate: "2025-03-03", toDate: "2026-03-03" }  // Microsoft

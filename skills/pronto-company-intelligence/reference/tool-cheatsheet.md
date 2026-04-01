@@ -15,7 +15,6 @@ getCompanyDescription({ companyNameOrTicker: "AAPL" })
 
 getCompanyCompetitors({ companyNameOrTicker: "AAPL" })
   └→ competitor companyIds (e.g. ["8901", "1234", "5678"])
-       ├→ getDeepResearchStockAverage({ companyIds: ["8901", "1234", "5678"], ... })
        └→ getStockChange({ companyId: "8901", ... })  // per competitor
 
 getCompanyDocuments({ companyName: "Apple" })
@@ -31,7 +30,7 @@ getCompanyDocuments({ companyName: "Apple" })
 | getStockPrices | getAnalytics |
 | getStockChange | getTrends |
 | getPredictions | getSpeakers |
-| getDeepResearchStockAverage (`companyIds` array) | getSpeakerCompanies |
+| | getSpeakerCompanies |
 | | search (also accepts `companyIDs` array) |
 | | getCompanyDocuments |
 

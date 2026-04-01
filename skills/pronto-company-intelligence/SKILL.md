@@ -62,15 +62,14 @@ See `reference/report-template-guide.md` for the batch plan of each template. De
 | 8 | `getTrends` | Trending topics | `companyName` |
 | 9 | `getSpeakers` | Per-executive/analyst sentiment | `companyName` |
 | 10 | `getSpeakerCompanies` | Analyst firm sentiment | `companyName` |
-| 11 | `getDeepResearchStockAverage` | Competitor group avg stock | `companyIds` array |
-| 12 | `search` | Key quotes from filings | `companyName` or `companyIDs` |
+| 11 | `search` | Key quotes from filings | `companyName` or `companyIDs` |
 
 ### ID Flow (critical)
 
 IDs must be extracted and passed between tools. See `reference/tool-cheatsheet.md` for the full diagram. Summary:
 
 - `getCompanyDescription` → yields `companyId` → pass to `getStockPrices`, `getStockChange`, `getPredictions`
-- `getCompanyCompetitors` → yields competitor `companyId` list → pass to `getDeepResearchStockAverage`, `getStockChange` (per competitor)
+- `getCompanyCompetitors` → yields competitor `companyId` list → pass to `getStockChange` (per competitor)
 - `getCompanyDocuments` → yields `transcriptId` per document → pass to `getAnalytics` (per quarter), `search` (per quarter)
 
 When a tool accepts both `companyName` and `companyId`, prefer `companyId` for precision.
@@ -105,7 +104,6 @@ getSpeakers              (Executives_CEO)
 getSpeakers              (Executives_CFO)
 getSpeakers              (Analysts, sortBy: sentiment desc)
 getSpeakerCompanies      (Analysts)
-getDeepResearchStockAverage  (competitor companyIds, includeSp500: true)
 getStockChange per competitor
 ```
 
@@ -339,7 +337,7 @@ Chart 10 | CEO vs CFO table | Top executives by sentence volume | Key quotes wit
 Chart 9 | Most bullish/bearish analysts (top/bottom 5) | Firm ranking | Exec vs Analyst gap table + interpretation
 
 ### Section 9: Competitive Landscape
-1Y stock vs competitors + S&P 500 (from `getDeepResearchStockAverage`)
+1Y stock % change vs competitors (from `getStockChange` per competitor)
 
 ### Section 10: Risk Factors
 Risks from `getCompanyDescription` + negative event types from analytics + analyst concerns
@@ -387,7 +385,6 @@ Past 6 months: sinceDay = 6 months ago, untilDay = today
 | No predictions for a metric | Show "N/A" in that cell; skip gracefully |
 | Analytics returns empty | Verify date range ≤ 1 year; try without `documentIDs` filter as fallback |
 | No competitors returned | Skip competitive section; note it in the report |
-| `getDeepResearchStockAverage` fails | Fall back to individual `getStockChange` per competitor |
 | No quotes from search | Note "No matching quotes found" — never fabricate |
 | Private/unlisted company | ProntoNLP covers public companies only — tell the user |
 | companyId not in response | Check for `id` or nested field; inspect the full response object |

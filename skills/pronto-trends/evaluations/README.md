@@ -8,7 +8,7 @@ Evaluation criteria for assessing the quality of keyword and topic trend respons
 - Was `getTrends` used only when the user explicitly said "trends" or "trending"?
 - Was `getMindMap` used for relationship/concept map requests?
 - Was `getTermHeatmap` used for term frequency requests?
-- Were movers tools (`getTopMovers`, `getDeepResearchStockAverage`) correctly NOT used here?
+- Were movers tools (`getTopMovers`) correctly NOT used here?
 
 ### Execution Correctness
 - Was `getTrends` sorted by `score` descending with limit 20?

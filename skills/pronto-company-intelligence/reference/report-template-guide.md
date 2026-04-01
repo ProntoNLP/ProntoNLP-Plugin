@@ -34,7 +34,7 @@ Every template starts the same way:
 
 Then use these IDs:
 - `companyId` → getStockPrices, getStockChange, getPredictions
-- competitor `companyIds` → getDeepResearchStockAverage, getStockChange (per competitor)
+- competitor `companyIds` → getStockChange (per competitor)
 - `transcriptId` from getCompanyDocuments → getAnalytics (per quarter), search (per quarter)
 - `companyName` → getAnalytics, getTrends, getSpeakers, getSpeakerCompanies, search
 
@@ -49,7 +49,7 @@ Then use these IDs:
 ### Batch plan:
 1. `getCompanyDescription` + `getCompanyCompetitors` (parallel)
 2. `getCompanyDocuments` + `getStockPrices` + `getStockChange` x3 + `getPredictions` x6 + `getTrends` (parallel)
-3. `getAnalytics` x4 (per quarter) + `getStockPrices` x4 (around calls) + `getSpeakers` x2 + `getSpeakerCompanies` + `getDeepResearchStockAverage` + `getStockChange` per competitor (parallel)
+3. `getAnalytics` x4 (per quarter) + `getStockPrices` x4 (around calls) + `getSpeakers` x2 + `getSpeakerCompanies` + `getStockChange` per competitor (parallel)
 4. `search` x4 (forecast per quarter) + `search` (positive) + `search` (negative) + `search` (analyst Q&A) (parallel)
 5. Write HTML charts file
 
@@ -86,7 +86,7 @@ Then use these IDs:
 
 ### Batch plan:
 1. `getCompanyDescription` + `getCompanyCompetitors` (parallel → save all companyIds)
-2. `getStockPrices` + `getStockChange` (target company) + `getStockChange` per competitor + `getDeepResearchStockAverage` (all parallel, using companyIds)
+2. `getStockPrices` + `getStockChange` (target company) + `getStockChange` per competitor (all parallel, using companyIds)
 
 ---
 
@@ -98,7 +98,7 @@ Then use these IDs:
 ### Batch plan:
 1. `getCompanyDescription` + `getCompanyCompetitors` (parallel — extract risk factors + competitor IDs)
 2. `getCompanyDocuments`
-3. `getAnalytics` x4 (per quarter) + `getAnalytics` (10-K risk factors) + `getSpeakers` (analysts, sortOrder: "asc" for bears) + `getDeepResearchStockAverage` + `getStockChange` per competitor (parallel)
+3. `getAnalytics` x4 (per quarter) + `getAnalytics` (10-K risk factors) + `getSpeakers` (analysts, sortOrder: "asc" for bears) + `getStockChange` per competitor (parallel)
 4. `search` (negative quotes) + `search` (analyst negative questions) (parallel)
 
 Key: Sort analysts by `sortOrder: "asc"` to find most bearish first.
