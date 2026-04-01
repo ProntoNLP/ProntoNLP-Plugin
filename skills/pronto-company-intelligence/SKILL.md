@@ -94,7 +94,7 @@ search                   (negative/risk quotes, sentiment: "negative")
 search                   (analyst Q&A, sections: ["EarningsCalls_Question"])
 ```
 
-**Batch 5** — write charts HTML, open for user.
+**Batch 5** — render charts as inline HTML directly in the response.
 
 ---
 
@@ -328,13 +328,36 @@ Documents analyzed (title, date, transcriptId) | Pronto company ID | Date ranges
 
 ## Charts
 
-Copy `assets/charts-template.html`, fill in the data arrays at the top of the `<script>` block, write to `/tmp/[company]-charts.html`, then open it:
+Output the charts as an **inline HTML fragment directly in your response** — do not write to a file. This renders inside the chat.
 
-```
-open /tmp/[company]-charts.html
+**Non-negotiable constraints:**
+- **No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags** — output only a `<style>` block, HTML content, and `<script>` blocks
+- Load Chart.js via CDN: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
+- Use Claude's native CSS design tokens: `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--border-radius-lg)`
+- For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
+- All chart data embedded as inline JS constants at the top of the `<script>` block
+
+Use `assets/charts-template.html` as a reference for the 10 chart configurations (canvas IDs, Chart.js setup). Adapt styles to use Claude's design tokens instead of hardcoded dark-mode colors.
+
+**Output structure:**
+```html
+<style>
+  /* chart grid and card styles using var(--color-background-primary) etc. */
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="chart-grid">
+  <!-- 10 canvas elements (c1–c10) -->
+</div>
+<script>
+  const quarters = [...];        // quarter labels
+  const sentimentScores = [...]; // from getAnalytics per quarter
+  // ... all other data arrays ...
+
+  // Chart.js chart definitions (c1–c10)
+</script>
 ```
 
-The template has 10 Chart.js graphs pre-wired. Just populate the `const` arrays with your tool results.
+Place this HTML block inline within **Section 4** (Earnings Call Comparison), after the quarter comparison table. Charts referenced in other sections (e.g., Chart 5 in Section 2, Chart 9 in Section 8) should be noted there with "(see charts above/below)" rather than re-rendered.
 
 ---
 
@@ -364,7 +387,7 @@ Past 6 months: sinceDay = 6 months ago, untilDay = today
 | `getDeepResearchStockAverage` fails | Fall back to individual `getStockChange` per competitor |
 | No quotes from search | Note "No matching quotes found" — never fabricate |
 | Private/unlisted company | ProntoNLP covers public companies only — tell the user |
-| companyId not in response | Check for `id` or nested field in the tool response |
+| companyId not in response | Check for `id` or nested field; inspect the full response object |
 
 ---
 
