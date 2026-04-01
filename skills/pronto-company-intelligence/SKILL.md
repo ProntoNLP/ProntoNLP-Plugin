@@ -9,6 +9,29 @@ Produces company intelligence reports using ProntoNLP tools. The centerpiece is 
 
 ---
 
+## Output Format — Inline HTML (mandatory)
+
+Generate the **entire report as an inline HTML fragment directly in your response** — not as a file, not as markdown. This renders inside the chat.
+
+**Non-negotiable constraints:**
+- **No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags** — output only a `<style>` block followed by HTML content and `<script>` blocks
+- Use Claude's native CSS design tokens:
+  - `var(--color-text-primary)` — main text
+  - `var(--color-text-secondary)` — muted/label text
+  - `var(--color-text-tertiary)` — dim text
+  - `var(--color-background-primary)` — card/surface background
+  - `var(--color-background-secondary)` — subtle background / row stripes
+  - `var(--color-border-tertiary)` — borders and dividers
+  - `var(--font-sans)` — body font
+  - `var(--border-radius-lg)` — card border radius
+  - `var(--border-radius-md)` — inner element radius
+- For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
+- Load Chart.js for charts: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
+- All chart data embedded as inline JS constants — never reference external data files
+- Design the layout and visual style to be clean and readable — cards, tables, badges, section headers
+
+---
+
 ## Step 0: Choose Your Report Mode
 
 Before making any tool calls, decide which template fits the user's request:
@@ -328,36 +351,16 @@ Documents analyzed (title, date, transcriptId) | Pronto company ID | Date ranges
 
 ## Charts
 
-Output the charts as an **inline HTML fragment directly in your response** — do not write to a file. This renders inside the chat.
+The charts are part of the inline HTML report — no separate file. Use `assets/charts-template.html` as a reference for the 10 Chart.js configurations (canvas IDs c1–c10, chart types, options). Populate the data arrays from tool results.
 
-**Non-negotiable constraints:**
-- **No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags** — output only a `<style>` block, HTML content, and `<script>` blocks
-- Load Chart.js via CDN: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
-- Use Claude's native CSS design tokens: `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--border-radius-lg)`
-- For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
-- All chart data embedded as inline JS constants at the top of the `<script>` block
-
-Use `assets/charts-template.html` as a reference for the 10 chart configurations (canvas IDs, Chart.js setup). Adapt styles to use Claude's design tokens instead of hardcoded dark-mode colors.
-
-**Output structure:**
-```html
-<style>
-  /* chart grid and card styles using var(--color-background-primary) etc. */
-</style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<div class="chart-grid">
-  <!-- 10 canvas elements (c1–c10) -->
-</div>
-<script>
-  const quarters = [...];        // quarter labels
-  const sentimentScores = [...]; // from getAnalytics per quarter
-  // ... all other data arrays ...
-
-  // Chart.js chart definitions (c1–c10)
-</script>
-```
-
-Place this HTML block inline within **Section 4** (Earnings Call Comparison), after the quarter comparison table. Charts referenced in other sections (e.g., Chart 5 in Section 2, Chart 9 in Section 8) should be noted there with "(see charts above/below)" rather than re-rendered.
+**Chart placement:**
+- Load Chart.js once near the top of the HTML output: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
+- Place Charts 1–4 and 8 inside **Section 4** (Earnings Call Comparison), after the quarter comparison table
+- Place Chart 5 inside **Section 2** (Stock Performance)
+- Place Charts 6 inside **Section 9** (Competitive Landscape)
+- Place Chart 7 inside **Section 6** (Trending Topics)
+- Place Charts 9–10 inside **Section 8** (Analyst & Investor Sentiment) and **Section 7** (Executive Sentiment)
+- All chart data defined as JS constants at the point of use (or collected into one `<script>` block near the end)
 
 ---
 
