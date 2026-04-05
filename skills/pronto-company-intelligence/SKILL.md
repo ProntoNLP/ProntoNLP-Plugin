@@ -11,7 +11,7 @@ metadata:
 # Company Intelligence Report Generator
 
 > ⚠️ **OUTPUT RULE — READ FIRST:**
-> Before rendering, detect the environment: if the `Bash` tool is available in this session, write the report as a **markdown file** (Claude Cowork). If `Bash` is NOT available, output as **inline HTML** rendered directly in the chat (claude.ai). Never mix formats.
+> Before rendering, detect the environment: if the `Bash` tool is available in this session, write the report as an **HTML file** (Claude Cowork). If `Bash` is NOT available, output as **inline HTML** rendered directly in the chat (claude.ai). Same HTML format either way — the only difference is inline vs written to file.
 
 Produces company intelligence reports using ProntoNLP tools. The centerpiece is a **quarter-over-quarter comparison of every earnings call in the past year** — explicitly showing whether sentiment, investment scores, and stock price reaction are RISING or FALLING. Layered on top: analyst forecasts, competitive benchmarks, trending topics, management quotes, and risk factors.
 
@@ -24,9 +24,9 @@ Produces company intelligence reports using ProntoNLP tools. The centerpiece is 
 | Environment | Detection | Output format |
 |-------------|-----------|---------------|
 | **claude.ai** | `Bash` tool is NOT available | Inline HTML fragment rendered in chat |
-| **Claude Cowork** | `Bash` tool IS available | Markdown written to file |
+| **Claude Cowork** | `Bash` tool IS available | HTML written to file |
 
-### claude.ai — inline HTML rules:
+### HTML rules (apply to BOTH environments — only delivery differs):
 - No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags — output only a `<style>` block followed by HTML content and `<script>` blocks
 - Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-text-tertiary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--border-radius-lg)`, `var(--border-radius-md)`
 - For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
@@ -34,13 +34,12 @@ Produces company intelligence reports using ProntoNLP tools. The centerpiece is 
 - All chart data as inline JS constants — never reference external files
 - Clean layout: styled cards, HTML tables, badges, section headers
 
-### Claude Cowork — markdown file rules:
-- Write the report to a file named `[ticker]-report.md` (e.g. `NVDA-report.md`) in the current directory using the `Write` or `Edit` tool
-- Use `##` and `###` headings for all sections
-- Use markdown tables for all data grids
-- Use `**bold**` for key values and RISING/FALLING signal labels
-- Replace charts with a ranked text summary (e.g. "Top 5 by investment score: …")
-- After writing the file, tell the user the filename and open it
+### claude.ai delivery:
+- Output the HTML fragment directly inline in the chat response
+
+### Claude Cowork delivery:
+- Write the full HTML to a file named `[ticker]-report.html` (e.g. `NVDA-report.html`) using the `Write` tool
+- After writing, tell the user the filename and open it
 
 ---
 
@@ -127,7 +126,7 @@ search                   (negative/risk quotes, sentiment: "negative")
 search                   (analyst Q&A, sections: ["EarningsCalls_Question"])
 ```
 
-**Batch 5** — render the full report using the output format determined in Step 0 (inline HTML on claude.ai, formatted markdown in Claude Cowork).
+**Batch 5** — render the full HTML report: inline in chat on claude.ai, written to `[ticker]-report.html` file in Claude Cowork.
 
 ---
 
@@ -362,7 +361,7 @@ Documents analyzed (title, date, transcriptId) | Pronto company ID | Date ranges
 ## Charts
 
 **On claude.ai:** Charts render as inline HTML — no separate file. Use `assets/charts-template.html` as a reference for the 10 Chart.js configurations (canvas IDs c1–c10, chart types, options). Populate the data arrays from tool results.
-**In Claude Cowork:** Replace each chart with a ranked text summary of the underlying data (e.g. "Top 5 by investment score: …").
+**In Claude Cowork:** Charts are included in the HTML file exactly as on claude.ai — no changes needed.
 
 **Chart placement:**
 - Load Chart.js once near the top of the HTML output: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
@@ -406,7 +405,7 @@ Past 6 months: sinceDay = 6 months ago, untilDay = today
 
 ## Best Practices
 
-1. **Detect environment first** — inline HTML on claude.ai (`Bash` not available), markdown written to file in Claude Cowork (`Bash` available)
+1. **Detect environment first** — inline HTML on claude.ai (`Bash` not available), HTML written to `[ticker]-report.html` file in Claude Cowork (`Bash` available)
 2. Save `companyId` the moment you get it from `getCompanyDescription`
 3. Maximize parallelism — batch all independent calls per the strategy above
 4. Never fabricate data — if a tool returns nothing, say so honestly

@@ -185,11 +185,11 @@ See `reference/api-fields.md` for the complete field reference.
 | Environment | Detection | Output format |
 |-------------|-----------|---------------|
 | **claude.ai** | `Bash` tool is NOT available | Inline HTML fragment rendered in chat |
-| **Claude Cowork** | `Bash` tool IS available | Markdown written to file |
+| **Claude Cowork** | `Bash` tool IS available | HTML written to file |
 
 **Design the layout and visual style yourself.** Read `reference/html-spec.md` for the required sections and data fields.
 
-### claude.ai — inline HTML constraints:
+### HTML rules (apply to BOTH environments — only delivery differs):
 - **No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags** — output only a `<style>` block followed by the HTML content
 - Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-text-tertiary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--font-mono)`, `var(--border-radius-lg)`, `var(--border-radius-md)`
 - For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
@@ -197,15 +197,12 @@ See `reference/api-fields.md` for the complete field reference.
 - Company names must link to ProntoNLP (see Company Link Format below)
 - **Only include sections the user asked for.** Use flex or grid so removing a section never breaks the layout.
 
-### Claude Cowork — markdown file constraints:
-- Write the report to a file named `market-pulse-report.md` in the current directory using the `Write` or `Edit` tool
-- Use `##` and `###` headings for all sections
-- Use markdown tables for leaderboards and data grids
-- Use `**bold**` for key values and signal labels
-- Replace charts with ranked text summaries
-- Company links as markdown links: `[Company Name](https://prontonlp.prontonlp.com/#/ref/$COMPANY{id})`
-- Only include sections the user asked for
-- After writing the file, tell the user the filename and open it
+### claude.ai delivery:
+- Output the HTML fragment directly inline in the chat response
+
+### Claude Cowork delivery:
+- Write the full HTML to a file named `market-pulse-report.html` using the `Write` tool
+- After writing, tell the user the filename and open it
 
 ### Sections to include:
 

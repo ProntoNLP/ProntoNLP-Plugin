@@ -21,9 +21,9 @@ Produces sector intelligence reports using ProntoNLP tools. The centerpiece is a
 | Environment | Detection | Output format |
 |-------------|-----------|---------------|
 | **claude.ai** | `Bash` tool is NOT available | Inline HTML fragment rendered in chat |
-| **Claude Cowork** | `Bash` tool IS available | Markdown written to file |
+| **Claude Cowork** | `Bash` tool IS available | HTML written to file |
 
-### claude.ai — inline HTML rules:
+### HTML rules (apply to BOTH environments — only delivery differs):
 - No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags — output only a `<style>` block followed by HTML content and `<script>` blocks
 - Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-text-tertiary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--border-radius-lg)`, `var(--border-radius-md)`
 - For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
@@ -31,14 +31,12 @@ Produces sector intelligence reports using ProntoNLP tools. The centerpiece is a
 - All chart data as inline JS constants — never reference external files
 - Clean layout: cards, tables, badges, section headers
 
-### Claude Cowork — markdown file rules:
-- Write the report to a file named `[sector]-report.md` (e.g. `information-technology-report.md`) in the current directory using the `Write` or `Edit` tool
-- Use `##` and `###` headings for all sections
-- Use markdown tables for leaderboards and data grids
-- Use `**bold**` for key values and RISING/FALLING signal labels
-- Replace charts with ranked text summaries (e.g. "Top companies by investment score: …")
-- Include the same sections and same data — formatted as markdown only
-- After writing the file, tell the user the filename and open it
+### claude.ai delivery:
+- Output the HTML fragment directly inline in the chat response
+
+### Claude Cowork delivery:
+- Write the full HTML to a file named `[sector]-report.html` (e.g. `information-technology-report.html`) using the `Write` tool
+- After writing, tell the user the filename and open it
 
 ---
 
@@ -152,7 +150,7 @@ search(companyName: "<top company 2>", topicSearchQuery: "<top trend>", sentimen
 search(companyName: "<top company 2>", sections: ["EarningsCalls_Question"], size: 3, sinceDay, untilDay)
 ```
 
-**Batch 5** — render the full report using the output format determined in Step 0 (inline HTML on claude.ai, formatted markdown in Claude Cowork).
+**Batch 5** — render the full HTML report: inline in chat on claude.ai, written to `[sector]-report.html` file in Claude Cowork.
 
 ---
 
@@ -264,7 +262,7 @@ State explicitly:
 ## Charts
 
 **On claude.ai:** Output all charts as inline HTML — no file writing. Load Chart.js once near the top: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
-**In Claude Cowork:** Replace each chart with a ranked text summary (e.g. "Top companies by investment score: …").
+**In Claude Cowork:** Charts are included in the HTML file exactly as on claude.ai — no changes needed.
 
 | Chart | Data source | Type |
 |-------|------------|------|

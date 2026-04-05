@@ -21,23 +21,21 @@ Produces a side-by-side intelligence comparison of two or more named companies. 
 | Environment | Detection | Output format |
 |-------------|-----------|---------------|
 | **claude.ai** | `Bash` tool is NOT available | Inline HTML fragment rendered in chat |
-| **Claude Cowork** | `Bash` tool IS available | Markdown written to file |
+| **Claude Cowork** | `Bash` tool IS available | HTML written to file |
 
-### claude.ai — inline HTML rules:
+### HTML rules (apply to BOTH environments — only delivery differs):
 - No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags — output only a `<style>` block followed by HTML content and `<script>` blocks
 - Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--border-radius-lg)`
 - For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
 - Load Chart.js once: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
 - All chart data as inline JS constants
 
-### Claude Cowork — markdown file rules:
-- Write the report to a file named `[tickerA]-vs-[tickerB]-report.md` (e.g. `NVDA-vs-AMD-report.md`) in the current directory using the `Write` or `Edit` tool
-- Use `##` and `###` headings for all sections
-- Use markdown tables for the scorecard, financials, and all data grids
-- Use `**bold**` for key values, 🏆 for winners, and RISING/FALLING signal labels
-- Replace charts with ranked text summaries per company
-- Include the same sections and same data — formatted as markdown only
-- After writing the file, tell the user the filename and open it
+### claude.ai delivery:
+- Output the HTML fragment directly inline in the chat response
+
+### Claude Cowork delivery:
+- Write the full HTML to a file named `[tickerA]-vs-[tickerB]-report.html` (e.g. `NVDA-vs-AMD-report.html`) using the `Write` tool
+- After writing, tell the user the filename and open it
 
 ---
 
@@ -115,7 +113,7 @@ Tally the wins per company across all dimensions. The company with the most wins
 
 ## Step 4: Render the Comparison Report
 
-Generate a single unified report using the output format determined at the start (inline HTML on claude.ai, formatted markdown in Claude Cowork). Include the following sections:
+Generate a single unified HTML report. On claude.ai output it inline in the chat; in Claude Cowork write it to `[tickerA]-vs-[tickerB]-report.html`. Include the following sections:
 
 ### Title
 ```
@@ -197,7 +195,7 @@ Place each chart within its corresponding section.
 
 ## Best Practices
 
-1. **Detect environment first** — inline HTML on claude.ai (`Bash` not available), markdown written to file in Claude Cowork (`Bash` available)
+1. **Detect environment first** — inline HTML on claude.ai (`Bash` not available), HTML written to `[tickerA]-vs-[tickerB]-report.html` file in Claude Cowork (`Bash` available)
 2. **NEVER call MCP tools directly** — the Skill tool calling `pronto-company-intelligence` is the only allowed data source per company; no `getAnalytics`, no `getCompanyDescription`, no `getSpeakers`, nothing else
 3. Run the `pronto-company-intelligence` Skill tool for every company before moving to synthesis — do not partially collect data
 3. Always produce an explicit winner per dimension — never leave a row without a verdict
