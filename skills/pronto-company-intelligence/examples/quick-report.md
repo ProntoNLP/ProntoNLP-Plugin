@@ -47,7 +47,7 @@ Params: {
   untilDay: "2026-03-03",
   analyticsType: ["scores", "patternSentiment"]
 }
-→ { sentimentScore: 0.28, investmentScore: 6.3, patternSentiment: "Positive" }
+→ { sentimentScore: 0.28, investmentScore: [X.X — raw value from API], patternSentiment: "Positive" }
 ```
 
 ## Compile: Quick Report
@@ -88,7 +88,7 @@ Params: {
 
 ## Sentiment Snapshot
 - **Sentiment Score**: 0.28
-- **Investment Score**: 6.3
+- **Investment Score**: [raw value from API]
 - **Pattern Sentiment**: Positive
 ```
 

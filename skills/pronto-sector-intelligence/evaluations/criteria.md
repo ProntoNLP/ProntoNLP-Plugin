@@ -102,7 +102,7 @@ This file defines what a correct, high-quality response from `pronto-sector-inte
 | Criterion | Pass condition |
 |-----------|---------------|
 | Sentiment scores: 2 decimal places | 0.48, not 0.5 or 0.480 |
-| Investment scores: 1 decimal place | 7.2, not 7 or 7.20 |
+| Investment scores: display raw value from API as-is | Do not assume a scale |
 | Stock changes with sign | +38.4%, −12.3% |
 | Trend change with sign and % | +84%, −18% |
 | Quotes cited correctly | `"[text]" — [Name], [Role], [Company] ([Date])` format |

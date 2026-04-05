@@ -74,7 +74,7 @@ Params: {
   sinceDay: "2025-04-01", untilDay: "2025-04-30",
   analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment", "importance"]
 }
-→ sentimentScore: 0.32, investmentScore: 6.1
+→ sentimentScore: 0.32, investmentScore: [X.X — raw value from API]
 
 Tool: Pronto:getAnalytics (Q2)
 Params: {
@@ -84,15 +84,15 @@ Params: {
   sinceDay: "2025-07-01", untilDay: "2025-07-31",
   analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment", "importance"]
 }
-→ sentimentScore: 0.38, investmentScore: 6.5
+→ sentimentScore: 0.38, investmentScore: [X.X — raw value from API]
 
 Tool: Pronto:getAnalytics (Q3)
 Params: { ... documentIDs: ["doc_q3"], sinceDay: "2025-10-01", untilDay: "2025-10-31" ... }
-→ sentimentScore: 0.35, investmentScore: 6.8
+→ sentimentScore: 0.35, investmentScore: [X.X — raw value from API]
 
 Tool: Pronto:getAnalytics (Q4)
 Params: { ... documentIDs: ["doc_q4"], sinceDay: "2026-01-01", untilDay: "2026-01-31" ... }
-→ sentimentScore: 0.41, investmentScore: 7.1
+→ sentimentScore: 0.41, investmentScore: [X.X — raw value from API]
 ```
 
 ### Stock price around each earnings call (4 calls, using companyId "4567")
@@ -216,7 +216,7 @@ Over the past year, the stock gained +22.1%, outperforming both the peer average
 and S&P 500 (+11.8%).
 
 **Sentiment score is RISING — from 0.32 (Q1) to 0.41 (Q4).**
-**Investment score is RISING — from 6.1 (Q1) to 7.1 (Q4).**
+**Investment score is RISING — Q1 to Q4 (use raw values from API).**
 **Stock price reacted positively to 3 of 4 earnings calls.**
 **Management's forecast tone is IMPROVING — guidance was raised in Q2 and Q4.**
 **Executives are MORE POSITIVE than analysts by 0.08 (0.37 vs 0.29) — modest, healthy gap.**
@@ -353,7 +353,7 @@ Write file: /tmp/apple-report-charts.html
 
 Populate the data arrays from tool results:
   sentimentScores = [0.32, 0.38, 0.35, 0.41]
-  investmentScores = [6.1, 6.5, 6.8, 7.1]
+  investmentScores = [Q1_score, Q2_score, Q3_score, Q4_score]  // raw values from API
   stockReactions = [2.0, 4.3, -1.3, 3.5]
   weeklyDates = [... 52 weekly dates from getStockPrices ...]
   weeklyPrices = [... 52 weekly prices ...]

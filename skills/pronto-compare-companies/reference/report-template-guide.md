@@ -207,6 +207,6 @@ All charts inline — no file writing. Load Chart.js once at top of HTML output.
 - Company names in column headers: use ticker if available (e.g. "NVDA" not "NVIDIA Corporation")
 - Direction arrows: ↑ for RISING (green), ↓ for FALLING (red)
 - Sentiment scores: 2 decimal places (e.g. 0.38)
-- Investment scores: 1 decimal place (e.g. 6.8)
+- Investment scores: display raw value from API as-is — do not assume a scale
 - Stock changes: 1 decimal place with sign (e.g. +12.4%, −3.1%)
 - Never show a row with all N/A — if data is fully missing for all companies, skip the row and note it in a footnote

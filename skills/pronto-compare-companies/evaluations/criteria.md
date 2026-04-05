@@ -86,7 +86,7 @@ This file defines what a correct, high-quality response from `pronto-compare-com
 | Criterion | Pass condition |
 |-----------|---------------|
 | Sentiment scores: 2 decimal places | 0.38, not 0.4 or 0.380 |
-| Investment scores: 1 decimal place | 6.8, not 7 or 6.80 |
+| Investment scores: display raw value from API as-is | Do not round or truncate |
 | Stock changes: 1 decimal place with sign | +12.4%, −3.1% |
 | Tickers used in headers | Column headers use NVDA not NVIDIA Corporation |
 | No all-N/A rows | If all companies have no data for a metric, row is omitted with footnote |

@@ -51,10 +51,10 @@ most bullish analyst (name + firm + score), most bearish analyst (name + firm + 
 | Sentiment Q3 | 0.61 |
 | Sentiment Q4 | 0.67 |
 | Sentiment Direction | RISING |
-| Investment Q1 | 7.8 |
-| Investment Q2 | 8.1 |
-| Investment Q3 | 8.4 |
-| Investment Q4 | 8.7 |
+| Investment Q1 | [raw] |
+| Investment Q2 | [raw] |
+| Investment Q3 | [raw] |
+| Investment Q4 | [raw] |
 | Investment Direction | RISING |
 | Stock Reaction — Q1 | +4.2% |
 | Stock Reaction — Q2 | +6.1% |
@@ -89,10 +89,10 @@ most bullish analyst (name + firm + score), most bearish analyst (name + firm + 
 | Sentiment Q3 | 0.43 |
 | Sentiment Q4 | 0.39 |
 | Sentiment Direction | FALLING |
-| Investment Q1 | 6.4 |
-| Investment Q2 | 6.1 |
-| Investment Q3 | 6.3 |
-| Investment Q4 | 6.0 |
+| Investment Q1 | [raw] |
+| Investment Q2 | [raw] |
+| Investment Q3 | [raw] |
+| Investment Q4 | [raw] |
 | Investment Direction | FALLING |
 | Stock Reaction — Q1 | +1.8% |
 | Stock Reaction — Q2 | −2.3% |
@@ -123,7 +123,7 @@ most bullish analyst (name + firm + score), most bearish analyst (name + firm + 
 | Dimension | NVDA | AMD | Winner |
 |-----------|------|-----|--------|
 | Sentiment Trend | 0.67 ↑ RISING | 0.39 ↓ FALLING | 🏆 NVDA |
-| Investment Score | 8.7 | 6.0 | 🏆 NVDA |
+| Investment Score | [raw] | [raw] | 🏆 NVDA |
 | Stock Performance (YTD) | +38.4% | −12.3% | 🏆 NVDA |
 | Earnings Call Reaction | 4 of 4 | 2 of 4 | 🏆 NVDA |
 | Analyst Consensus | 0.54 | 0.38 | 🏆 NVDA |
@@ -133,7 +133,7 @@ most bullish analyst (name + firm + score), most bearish analyst (name + firm + 
 | Risk Profile | 3 risks (systemic) | 3 risks (1 NVDA-specific) | 🏆 NVDA |
 | **Overall Wins** | **9 / 9** | **0 / 9** | **🏆 NVDA** |
 
-**Divergence signal:** AMD has a high investment score (6.0) relative to its stock decline (−12.3% YTD) — the gap between fundamental signals and price performance suggests potential upside if the MI300 data center ramp materializes.
+**Divergence signal:** AMD has a relatively high investment score despite its stock decline (−12.3% YTD) — the gap between fundamental signals and price performance suggests potential upside if the MI300 data center ramp materializes.
 
 ---
 
@@ -166,6 +166,6 @@ The report renders as inline HTML with:
 - **Section 7:** Risk table — PC market softness marked ✅ for AMD, — for NVDA (idiosyncratic)
 - **Section 8:** Verdict
   - Leader: NVDA — wins all 9 dimensions
-  - Undervalued signal: AMD — investment score 6.0 but stock down 12.3%; MI300 ramp is the catalyst to watch
+  - Undervalued signal: AMD — high investment score relative to stock down 12.3%; MI300 ramp is the catalyst to watch
   - Highest risk: AMD — PC exposure is idiosyncratic vs NVDA
   - Bottom line: NVDA, because sentiment, investment score, and stock all align with an accelerating data center build-out that AMD is still trying to break into

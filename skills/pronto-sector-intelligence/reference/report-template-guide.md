@@ -304,7 +304,7 @@ All chart data embedded as inline JS constants — never reference external file
 ## Formatting Rules
 
 - Sentiment scores: 2 decimal places (e.g. 0.38)
-- Investment scores: 1 decimal place (e.g. 6.8)
+- Investment scores: display raw value from API as-is — do not assume a scale
 - Stock changes: 1 decimal place with sign (e.g. +12.4%, −3.1%)
 - Score change deltas: show sign (e.g. +0.07, −0.12)
 - Direction arrows: ↑ green for RISING, ↓ red for FALLING

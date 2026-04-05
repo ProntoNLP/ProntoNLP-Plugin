@@ -40,9 +40,9 @@ Period label: "Past Year (Apr 2025 – Apr 2026)"
 ```
 
 **Saved from response:**
-- Top by investment score: NVDA (8.7), MSFT (7.9), AAPL (7.4), AVGO (7.1), ORCL (6.8)
+- Top by investment score: NVDA, MSFT, AAPL, AVGO, ORCL (use raw scores from API)
 - Top by stock change: NVDA (+61.8%), AVGO (+38.2%), MSFT (+22.4%)
-- Underperforming (high investment, weak stock): INTC (score 5.8, stock −28.4%), AMD (score 6.0, stock −12.3%)
+- Underperforming (high investment, weak stock): INTC (stock −28.4%), AMD (stock −12.3%) — use raw scores from API
 - Top sentiment: NVDA (0.67), MSFT (0.58), AVGO (0.54)
 - Top companies for Batch 3: NVDA, MSFT, AAPL
 
@@ -77,7 +77,7 @@ Period label: "Past Year (Apr 2025 – Apr 2026)"
 
 **Saved from response:**
 - Sentiment score: 0.48 (RISING, +0.06 vs prior year)
-- Investment score: 7.2 (RISING, +0.4)
+- Investment score: [raw value from API] (RISING)
 - Positive pattern: +0.61
 - Negative pattern: −0.24
 - Top positive events: GrowthDriver (312 hits), CapexExpansion (187 hits), ProductLaunch (144 hits)
@@ -176,7 +176,7 @@ Calls for NVDA and MSFT:
 | Signal | Value |
 |--------|-------|
 | Sector direction | RISING — sentiment 0.48 (+0.06 YoY) |
-| Investment leaders | NVDA (8.7), MSFT (7.9), AAPL (7.4) |
+| Investment leaders | NVDA, MSFT, AAPL (raw scores from API) |
 | Top stock performer | NVDA +61.8% |
 | Dominant positive event | GrowthDriver (312 hits) |
 | Dominant negative event | RiskFactor (98 hits) |
