@@ -1,14 +1,14 @@
 {
     "name": "prontonlp-tools",
-   "owner": {
-    "name": "Your Name"
-  },
+    "owner": {
+      "name": "Your Name"
+    },
      "plugins": [
-    {
-      "name": "prontonlp-plugin",
-      "source": "./",
-      "description": "ProntoNLP's plugin for various financial analytics tools.",
-      "version": "1.0.0"
-    }
+      {
+        "name": "prontonlp-plugin",
+        "source": "./",
+        "description": "ProntoNLP's plugin for various financial analytics tools.",
+        "version": "1.0.0"
+      }
   ]
 }

@@ -1,0 +1,216 @@
+[
+  {
+    "id": "eval_001",
+    "name": "Full report — broad sector query",
+    "input": "Analyze the tech sector",
+    "expected_behavior": {
+      "skill_triggered": "pronto-sector-intelligence",
+      "sector_string": "Information Technology",
+      "report_mode": "Full Report",
+      "batches": 5,
+      "output_format": "inline_html"
+    },
+    "assertions": [
+      {
+        "id": "a1",
+        "description": "User says 'tech' — skill maps to 'Information Technology' exactly",
+        "check": "tool calls use sectors: ['Information Technology'] — not 'tech' or 'Technology'"
+      },
+      {
+        "id": "a2",
+        "description": "Output is inline HTML — no markdown",
+        "check": "response contains <style> and HTML elements; zero markdown table syntax (|---|)"
+      },
+      {
+        "id": "a3",
+        "description": "All 8 sections present",
+        "check": "response contains section headers for: Executive Summary, Sector Movers, Sentiment & Investment, Trending Topics, Event Analysis, Company Rankings, Executive & Analyst Voice, Risk Themes"
+      },
+      {
+        "id": "a4",
+        "description": "Sector direction explicitly stated",
+        "check": "response contains phrase 'Sector sentiment is RISING' or 'Sector sentiment is FALLING' with a numeric score"
+      },
+      {
+        "id": "a5",
+        "description": "Chart.js loaded exactly once",
+        "check": "cdn.jsdelivr.net/npm/chart.js appears exactly one time in response"
+      },
+      {
+        "id": "a6",
+        "description": "9 charts present (Chart 1 through Chart 9)",
+        "check": "response contains 9 Chart.js canvas elements with unique IDs"
+      },
+      {
+        "id": "a7",
+        "description": "Batch 1 fires all three calls simultaneously",
+        "check": "getTopMovers, getTrends, and getAnalytics are all called before any Batch 2 calls begin"
+      },
+      {
+        "id": "a8",
+        "description": "getTrends called without query parameter",
+        "check": "getTrends call does not include a query or topicSearchQuery field"
+      },
+      {
+        "id": "a9",
+        "description": "Most bullish executive explicitly named",
+        "check": "Section 7 contains 'Most bullish executive:' with a name, role, company, and score"
+      },
+      {
+        "id": "a10",
+        "description": "Potential Buy Signals leaderboard present",
+        "check": "Section 2 contains a Potential Buy Signals card with companies from underperforming[investmentScore]"
+      },
+      {
+        "id": "a11",
+        "description": "No tool names in visible report text",
+        "check": "response does not contain: getAnalytics, getSpeakers, getTopMovers, getTrends, searchTopCompanies, getSpeakerCompanies — in visible report text (OK in comments or JS)"
+      },
+      {
+        "id": "a12",
+        "description": "Company links use correct ProntoNLP URL format",
+        "check": "anchor hrefs match pattern: prontonlp.prontonlp.com/#/ref/$COMPANY{id}"
+      }
+    ]
+  },
+  {
+    "id": "eval_002",
+    "name": "Movers Report — performance-focused query",
+    "input": "Top movers in financials this month",
+    "expected_behavior": {
+      "skill_triggered": "pronto-sector-intelligence",
+      "sector_string": "Financials",
+      "report_mode": "Movers Report",
+      "batches": 2,
+      "date_range": "past 30 days",
+      "output_format": "inline_html"
+    },
+    "assertions": [
+      {
+        "id": "b1",
+        "description": "Mode is Movers Report — only Sections 1–2 rendered",
+        "check": "response contains Executive Summary and Sector Movers sections; does NOT contain Trending Topics or Voice of the Market sections"
+      },
+      {
+        "id": "b2",
+        "description": "Date range is approximately 30 days",
+        "check": "sinceDay passed to tools is approximately 30 days before today"
+      },
+      {
+        "id": "b3",
+        "description": "Sector string is 'Financials'",
+        "check": "tool calls use sectors: ['Financials']"
+      },
+      {
+        "id": "b4",
+        "description": "Leaderboard cards present in Section 2",
+        "check": "response contains multiple leaderboard cards for investment score, sentiment, and stock change"
+      },
+      {
+        "id": "b5",
+        "description": "Output is inline HTML",
+        "check": "response contains <style> block and HTML elements; no markdown"
+      }
+    ]
+  },
+  {
+    "id": "eval_003",
+    "name": "Theme Analysis — topic-focused query",
+    "input": "What are semiconductor companies talking about in earnings calls?",
+    "expected_behavior": {
+      "skill_triggered": "pronto-sector-intelligence",
+      "sector_string": "Information Technology-Semiconductors and Semiconductor Equipment",
+      "report_mode": "Theme Analysis",
+      "batches": 3,
+      "output_format": "inline_html"
+    },
+    "assertions": [
+      {
+        "id": "c1",
+        "description": "Sub-sector string used correctly",
+        "check": "tool calls use sectors: ['Information Technology-Semiconductors and Semiconductor Equipment']"
+      },
+      {
+        "id": "c2",
+        "description": "Mode is Theme Analysis — Sections 1, 4–6 rendered",
+        "check": "response contains Trending Topics, Event Analysis, Company Rankings — does NOT contain Sector Movers leaderboards or Speaker Voice section"
+      },
+      {
+        "id": "c3",
+        "description": "Trending topics table present with at least 15 rows",
+        "check": "Section 4 contains a table with at least 15 topic rows"
+      },
+      {
+        "id": "c4",
+        "description": "Fastest-rising and fastest-declining topics called out",
+        "check": "response identifies top 3 fastest-rising themes and top 2 fastest-declining"
+      },
+      {
+        "id": "c5",
+        "description": "Company rankings by top theme present",
+        "check": "Section 6 shows company ranking for at least one topic with sentiment scores and mention counts"
+      }
+    ]
+  },
+  {
+    "id": "eval_004",
+    "name": "Skill should NOT trigger — single company",
+    "input": "How is JPMorgan performing?",
+    "expected_behavior": {
+      "skill_triggered": "pronto-company-intelligence",
+      "skill_not_triggered": "pronto-sector-intelligence",
+      "output_format": "inline_html"
+    },
+    "assertions": [
+      {
+        "id": "d1",
+        "description": "pronto-sector-intelligence does NOT activate",
+        "check": "pronto-company-intelligence skill is invoked for JPMorgan; no sector leaderboard or trending topics table in response"
+      },
+      {
+        "id": "d2",
+        "description": "Response is a single-company intelligence report",
+        "check": "response is a standard company intelligence HTML report for JPMorgan — no sector movers section"
+      }
+    ]
+  },
+  {
+    "id": "eval_005",
+    "name": "Sentiment Report — sentiment-focused query",
+    "input": "How bullish is the energy sector right now?",
+    "expected_behavior": {
+      "skill_triggered": "pronto-sector-intelligence",
+      "sector_string": "Energy",
+      "report_mode": "Sentiment Report",
+      "batches": 3,
+      "output_format": "inline_html"
+    },
+    "assertions": [
+      {
+        "id": "e1",
+        "description": "Mode is Sentiment Report — Sections 1, 3, 6–7 rendered",
+        "check": "response contains Sentiment & Investment Scores and Speaker Voice sections; does NOT contain full trending topic table or event analysis"
+      },
+      {
+        "id": "e2",
+        "description": "Sector string is 'Energy'",
+        "check": "tool calls use sectors: ['Energy']"
+      },
+      {
+        "id": "e3",
+        "description": "Sector sentiment direction explicitly stated with score",
+        "check": "response contains 'RISING' or 'FALLING' and a numeric sentiment score for the Energy sector"
+      },
+      {
+        "id": "e4",
+        "description": "Executive and analyst voice sections present",
+        "check": "Section 7 present with most bullish exec and most bearish analyst identified"
+      },
+      {
+        "id": "e5",
+        "description": "Output is inline HTML",
+        "check": "response contains <style> and HTML structure; no markdown tables"
+      }
+    ]
+  }
+]

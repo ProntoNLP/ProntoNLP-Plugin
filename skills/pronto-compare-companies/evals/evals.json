@@ -1,0 +1,223 @@
+[
+  {
+    "id": "eval_001",
+    "name": "Basic two-company comparison — semiconductor peers",
+    "input": "Compare NVDA vs AMD",
+    "expected_behavior": {
+      "skill_triggered": "pronto-compare-companies",
+      "sub_skill_calls": [
+        {
+          "skill": "pronto-company-intelligence",
+          "company": "NVDA",
+          "mode": "comparison",
+          "fired_in_parallel": true
+        },
+        {
+          "skill": "pronto-company-intelligence",
+          "company": "AMD",
+          "mode": "comparison",
+          "fired_in_parallel": true
+        }
+      ],
+      "report_mode": "Full Comparison",
+      "output_format": "inline_html"
+    },
+    "assertions": [
+      {
+        "id": "a1",
+        "description": "Output is inline HTML — no markdown",
+        "check": "response contains <style> and <div or <table but zero markdown table syntax (|---|)"
+      },
+      {
+        "id": "a2",
+        "description": "Both companies have their own column in the scorecard",
+        "check": "scorecard table contains NVDA column and AMD column"
+      },
+      {
+        "id": "a3",
+        "description": "All 9 scoring dimensions present with a winner each",
+        "check": "scorecard has rows for: Sentiment Score, Investment Score, Stock YTD, Analyst Sentiment, Exec Sentiment, Revenue Growth, EPS, Risk Level, Overall Wins — each with a 🏆 winner"
+      },
+      {
+        "id": "a4",
+        "description": "With 2 companies, winner cell is green AND loser cell is red",
+        "check": "winner cells use background #dcfce7 or class matching green; loser cells use #fee2e2 or class matching red"
+      },
+      {
+        "id": "a5",
+        "description": "Section 2 contains quarter cards for both NVDA and AMD",
+        "check": "response contains two company-block elements, one per company, each with qtr-card elements"
+      },
+      {
+        "id": "a6",
+        "description": "Sentiment trend comparison callout present in Section 2",
+        "check": "response contains '📊 Comparison:' callout in Section 2 describing RISING/FALLING trajectories"
+      },
+      {
+        "id": "a7",
+        "description": "Chart 1 present in Section 3 (stock performance grouped bar)",
+        "check": "response contains a Chart.js canvas with labels YTD, 6M, 1Y and two dataset entries"
+      },
+      {
+        "id": "a8",
+        "description": "Chart.js loaded exactly once",
+        "check": "cdn.jsdelivr.net/npm/chart.js appears exactly one time in response"
+      },
+      {
+        "id": "a9",
+        "description": "Section 8 Verdict names an overall leader and a bottom-line pick",
+        "check": "Section 8 contains 'Overall leader:' and 'If you had to pick one' language"
+      },
+      {
+        "id": "a10",
+        "description": "No tool names mentioned in report",
+        "check": "response does not contain: getAnalytics, getSpeakers, getTopMovers, getStockChange, getPredictions, pronto-company-intelligence — in the visible report text"
+      }
+    ]
+  },
+  {
+    "id": "eval_002",
+    "name": "Three-company comparison — big tech",
+    "input": "Apple vs Microsoft vs Google — which is the best investment right now?",
+    "expected_behavior": {
+      "skill_triggered": "pronto-compare-companies",
+      "sub_skill_calls": [
+        {
+          "skill": "pronto-company-intelligence",
+          "company": "Apple",
+          "mode": "comparison",
+          "fired_in_parallel": true
+        },
+        {
+          "skill": "pronto-company-intelligence",
+          "company": "Microsoft",
+          "mode": "comparison",
+          "fired_in_parallel": true
+        },
+        {
+          "skill": "pronto-company-intelligence",
+          "company": "Google",
+          "mode": "comparison",
+          "fired_in_parallel": true
+        }
+      ],
+      "report_mode": "Full Comparison",
+      "output_format": "inline_html"
+    },
+    "assertions": [
+      {
+        "id": "b1",
+        "description": "Three company columns in scorecard",
+        "check": "scorecard contains columns for AAPL (or Apple), MSFT (or Microsoft), GOOGL (or Google)"
+      },
+      {
+        "id": "b2",
+        "description": "Three-company color rule: only winner gets green, no red loser cell",
+        "check": "with 3 companies, loser cells do NOT use #fee2e2 — only the winner cell uses #dcfce7"
+      },
+      {
+        "id": "b3",
+        "description": "Three company colors assigned correctly",
+        "check": "Company A (Apple) uses #3B82F6, Company B (Microsoft) uses #8B5CF6, Company C (Google) uses #F59E0B"
+      },
+      {
+        "id": "b4",
+        "description": "Single unified report — not three separate reports",
+        "check": "response contains exactly one scorecard table covering all three companies, not three separate HTML report sections"
+      },
+      {
+        "id": "b5",
+        "description": "Topics section shows shared and unique topics",
+        "check": "Section 6 identifies at least one topic present across all or multiple companies (e.g. AI) and flags company-specific topics"
+      },
+      {
+        "id": "b6",
+        "description": "Risk table uses ✅ and — symbols",
+        "check": "Section 7 table contains ✅ and — symbols per company per risk row"
+      },
+      {
+        "id": "b7",
+        "description": "Verdict names investment pick",
+        "check": "Section 8 includes phrase 'If you had to pick one' or equivalent direct recommendation"
+      },
+      {
+        "id": "b8",
+        "description": "Charts 3 and 4 show three lines (one per company)",
+        "check": "Multi-line charts in Section 2 have three datasets, one colored per company"
+      }
+    ]
+  },
+  {
+    "id": "eval_003",
+    "name": "Skill should NOT trigger — single company",
+    "input": "Tell me about NVIDIA's latest earnings",
+    "expected_behavior": {
+      "skill_triggered": "pronto-company-intelligence",
+      "skill_not_triggered": "pronto-compare-companies",
+      "output_format": "inline_html"
+    },
+    "assertions": [
+      {
+        "id": "c1",
+        "description": "pronto-compare-companies does NOT activate",
+        "check": "pronto-company-intelligence skill is invoked, not pronto-compare-companies; no comparison scorecard or vs-style header in response"
+      },
+      {
+        "id": "c2",
+        "description": "Response is a single-company intelligence report",
+        "check": "response is a standard company intelligence HTML report for NVIDIA — no comparison structure"
+      }
+    ]
+  },
+  {
+    "id": "eval_004",
+    "name": "Cross-sector comparison — Tesla vs Rivian",
+    "input": "Who wins between Tesla and Rivian?",
+    "expected_behavior": {
+      "skill_triggered": "pronto-compare-companies",
+      "sub_skill_calls": [
+        {
+          "skill": "pronto-company-intelligence",
+          "company": "Tesla",
+          "mode": "comparison",
+          "fired_in_parallel": true
+        },
+        {
+          "skill": "pronto-company-intelligence",
+          "company": "Rivian",
+          "mode": "comparison",
+          "fired_in_parallel": true
+        }
+      ],
+      "report_mode": "Full Comparison",
+      "output_format": "inline_html"
+    },
+    "assertions": [
+      {
+        "id": "d1",
+        "description": "Skill triggers on informal 'who wins between' phrasing",
+        "check": "pronto-compare-companies activates — no need for explicit 'compare' keyword"
+      },
+      {
+        "id": "d2",
+        "description": "Both companies included in scorecard",
+        "check": "scorecard table has Tesla and Rivian columns"
+      },
+      {
+        "id": "d3",
+        "description": "Both companies use 2-company coloring rules",
+        "check": "winner cells green (#dcfce7), loser cells red (#fee2e2)"
+      },
+      {
+        "id": "d4",
+        "description": "Risk divergence noted if one company has more risks",
+        "check": "Section 7 or Section 8 explicitly notes if one company carries idiosyncratic risk not shared by the other"
+      },
+      {
+        "id": "d5",
+        "description": "N/A handling if Rivian has limited analyst coverage",
+        "check": "if analyst data is sparse for Rivian, rows show 'N/A' rather than fabricated values"
+      }
+    ]
+  }
+]

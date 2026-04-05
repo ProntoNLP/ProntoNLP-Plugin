@@ -1,6 +1,11 @@
 ---
 name: pronto-marketpulse
 description: "Use when the user asks about the market broadly — not one specific company. Examples: 'what's moving', 'top movers', 'market recap', 'market summary', 'market overview', 'what happened in the market this week', 'what should I be watching', 'stocks to watch', 'best stocks this week', 'biggest sentiment shifts', 'highest investment scores', 'top large caps', 'earnings season highlights', 'what's trending in earnings calls', 'most bullish companies', 'most bullish executives', 'which analyst firms are bearish', 'market movers past 30 days', 'what large caps are outperforming'. Default to past 7 days if no time frame given. When in doubt — if the user wants a broad market view across many companies rather than a deep dive on one — use this skill."
+metadata:
+  author: ProntoNLP
+  version: 1.0.0
+  mcp-server: prontonlp-mcp-server
+  category: finance
 ---
 
 # Market Pulse — Recent Market Intelligence Dashboard

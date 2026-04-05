@@ -1,19 +1,29 @@
 ---
 name: pronto-company-intelligence
 description: "Use any time the user mentions a specific company name or ticker. Examples: 'NVDA', 'analyze TSLA', 'how is Microsoft doing', 'report on Google', 'outlook for Amazon', 'deep dive on Meta', 'Tesla earnings', 'Netflix sentiment', 'should I buy Nvidia', 'risks for Boeing', 'Goldman Sachs stock', 'is Apple a buy', 'show me MSFT', 'quick overview of Salesforce', 'what do analysts say about Disney', 'earnings breakdown for Uber', 'stock performance of Visa'. Use for any research, analysis, investment, sentiment, earnings, or financial question about a single named company. Do NOT use if the user asks to compare multiple companies — that is a different skill. When in doubt — if the user names one company or ticker — use this skill."
+metadata:
+  author: ProntoNLP
+  version: 1.0.0
+  mcp-server: prontonlp-mcp-server
+  category: finance
 ---
 
 # Company Intelligence Report Generator
+
+> ⚠️ **OUTPUT RULE — READ FIRST, NO EXCEPTIONS:**
+> The final response MUST be rendered as **inline HTML only**. NEVER write plain text, NEVER write markdown, NEVER write a mix. Every section, every table, every chart — all HTML, output directly in the chat. If you are about to write a markdown heading or a markdown table, STOP and write HTML instead. This applies to every report mode, every request, every time.
 
 Produces company intelligence reports using ProntoNLP tools. The centerpiece is a **quarter-over-quarter comparison of every earnings call in the past year** — explicitly showing whether sentiment, investment scores, and stock price reaction are RISING or FALLING. Layered on top: analyst forecasts, competitive benchmarks, trending topics, management quotes, and risk factors.
 
 ---
 
-## Output Format — Inline HTML (mandatory)
+## Output Format — Inline HTML (MANDATORY, NO EXCEPTIONS)
 
-Generate the **entire report as an inline HTML fragment directly in your response** — not as a file, not as markdown. This renders inside the chat.
+**ALWAYS** generate the entire report as an inline HTML fragment directly in your response.
+**NEVER** write markdown. **NEVER** write plain text. **NEVER** mix markdown and HTML.
+**NEVER** write to a file. The HTML renders directly inside the chat.
 
-**Non-negotiable constraints:**
+**Required structure:**
 - **No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags** — output only a `<style>` block followed by HTML content and `<script>` blocks
 - Use Claude's native CSS design tokens:
   - `var(--color-text-primary)` — main text
@@ -28,7 +38,7 @@ Generate the **entire report as an inline HTML fragment directly in your respons
 - For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
 - Load Chart.js for charts: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
 - All chart data embedded as inline JS constants — never reference external data files
-- Design the layout and visual style to be clean and readable — cards, tables, badges, section headers
+- Design the layout to be clean and readable — styled cards, HTML tables, badges, section headers
 
 ---
 
@@ -393,10 +403,11 @@ Past 6 months: sinceDay = 6 months ago, untilDay = today
 
 ## Best Practices
 
-1. Save `companyId` the moment you get it from `getCompanyDescription`
-2. Maximize parallelism — batch all independent calls per the strategy above
-3. Never fabricate data — if a tool returns nothing, say so honestly
-4. Always cite quotes: `"Quote text" — [Name], [Role], [Company] ([Date])`
-5. Present both sides — always pair positive findings with negative/risk findings
-6. Prefer `companyId` over `companyName` when a tool accepts both
-7. Do not mention tool names in responses — describe the action instead (e.g. "I analyzed 4 earnings calls" not "I called getAnalytics 4 times")
+1. **ALWAYS output the full report as inline HTML — NEVER markdown, NEVER plain text, no exceptions**
+2. Save `companyId` the moment you get it from `getCompanyDescription`
+3. Maximize parallelism — batch all independent calls per the strategy above
+4. Never fabricate data — if a tool returns nothing, say so honestly
+5. Always cite quotes: `"Quote text" — [Name], [Role], [Company] ([Date])`
+6. Present both sides — always pair positive findings with negative/risk findings
+7. Prefer `companyId` over `companyName` when a tool accepts both
+8. Do not mention tool names in responses — describe the action instead (e.g. "I analyzed 4 earnings calls" not "I called getAnalytics 4 times")
