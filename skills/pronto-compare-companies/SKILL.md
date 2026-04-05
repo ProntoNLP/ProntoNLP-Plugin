@@ -14,24 +14,30 @@ Produces a side-by-side intelligence comparison of two or more named companies. 
 
 ---
 
-## Output Format — Inline HTML (MANDATORY, NO EXCEPTIONS)
+## Output Format — Environment-Aware
 
-**ALWAYS** generate the final comparison report as an inline HTML fragment directly in your response.
-**NEVER** write markdown. **NEVER** write plain text. **NEVER** mix markdown and HTML.
+**Detect the environment before rendering:**
 
-**Required structure:**
-- **No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags**
-- Use Claude's native CSS design tokens:
-  - `var(--color-text-primary)` — main text
-  - `var(--color-text-secondary)` — muted/label text
-  - `var(--color-background-primary)` — card/surface background
-  - `var(--color-background-secondary)` — subtle background / row stripes
-  - `var(--color-border-tertiary)` — borders and dividers
-  - `var(--font-sans)` — body font
-  - `var(--border-radius-lg)` — card border radius
+| Environment | Detection | Output format |
+|-------------|-----------|---------------|
+| **claude.ai** | `Bash` tool is NOT available | Inline HTML fragment rendered in chat |
+| **Claude Cowork** | `Bash` tool IS available | Markdown written to file |
+
+### claude.ai — inline HTML rules:
+- No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags — output only a `<style>` block followed by HTML content and `<script>` blocks
+- Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--border-radius-lg)`
 - For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
 - Load Chart.js once: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
 - All chart data as inline JS constants
+
+### Claude Cowork — markdown file rules:
+- Write the report to a file named `[tickerA]-vs-[tickerB]-report.md` (e.g. `NVDA-vs-AMD-report.md`) in the current directory using the `Write` or `Edit` tool
+- Use `##` and `###` headings for all sections
+- Use markdown tables for the scorecard, financials, and all data grids
+- Use `**bold**` for key values, 🏆 for winners, and RISING/FALLING signal labels
+- Replace charts with ranked text summaries per company
+- Include the same sections and same data — formatted as markdown only
+- After writing the file, tell the user the filename and open it
 
 ---
 
@@ -43,14 +49,17 @@ Extract the list of companies from the user's request. Identify each by name or 
 
 ## Step 2: Run Company Intelligence for Each Company
 
-Invoke the **`pronto-company-intelligence`** skill for **all companies in parallel** using the Skill tool — fire all invocations simultaneously, do not wait for one to finish before starting the next:
+> ⚠️ **MANDATORY — NO EXCEPTIONS:**
+> You MUST invoke the **`pronto-company-intelligence`** skill for **every single company** in the list using the Skill tool. Do NOT call MCP tools directly. Do NOT skip any company. Do NOT use your own knowledge. The `pronto-company-intelligence` skill is the ONLY allowed data source for each company. If you do not call it for a company, that company cannot be included in the report.
+
+Fire **all** skill invocations **simultaneously in parallel** — do not wait for one to finish before starting the next:
 
 ```
 Skill: pronto-company-intelligence
 Args: "[Company Name or Ticker] — run in comparison mode: collect all data and metrics but do not render the HTML report yet. Return the raw findings: sentiment scores per quarter, investment scores per quarter, stock performance (YTD/6M/1Y), analyst estimates (revenue, EPS, EBITDA), speaker sentiment (exec avg, analyst avg, CEO, CFO), trending topics, risk factors, and competitor context."
 ```
 
-**One invocation per company, all fired simultaneously.** After all complete, record and save the key metrics for every company before moving to Step 3.
+**One `pronto-company-intelligence` invocation per company, all fired simultaneously.** After all complete, record and save the key metrics for every company before moving to Step 3.
 
 **Important:** This produces ONE single unified comparison report at the end — never separate per-company reports or pairwise reports. All companies are compared together in a single output.
 
@@ -99,9 +108,9 @@ Tally the wins per company across all dimensions. The company with the most wins
 
 ---
 
-## Step 4: Render the Comparison Report (inline HTML)
+## Step 4: Render the Comparison Report
 
-Generate a single unified inline HTML report with the following sections:
+Generate a single unified report using the output format determined at the start (inline HTML on claude.ai, formatted markdown in Claude Cowork). Include the following sections:
 
 ### Title
 ```
@@ -183,8 +192,9 @@ Place each chart within its corresponding section.
 
 ## Best Practices
 
-1. **ALWAYS output the final report as inline HTML — NEVER markdown, NEVER plain text**
-2. Run company-intelligence for each company fully before moving to synthesis — do not partially collect data
+1. **Detect environment first** — inline HTML on claude.ai (`Bash` not available), markdown written to file in Claude Cowork (`Bash` available)
+2. **ALWAYS call `pronto-company-intelligence` for every company** — it is the mandatory data source; never call MCP tools directly or use prior knowledge instead
+3. Run `pronto-company-intelligence` for all companies fully before moving to synthesis — do not partially collect data
 3. Always produce an explicit winner per dimension — never leave a row without a verdict
 4. Surface divergences — a company that looks strong on sentiment but weak on financials is more interesting than a simple winner/loser
 5. Never fabricate data — if a metric is missing for one company, show "N/A" honestly

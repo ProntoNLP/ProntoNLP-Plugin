@@ -178,29 +178,34 @@ See `reference/api-fields.md` for the complete field reference.
 
 ---
 
-## Step 4: Generate the HTML Report
+## Step 4: Generate the Report
 
-Output the dashboard as an **inline HTML fragment directly in your response** — not as a file. This renders inside the chat.
+**Detect the environment before rendering:**
 
-**Design the layout and visual style yourself.** Read `reference/html-spec.md` for the required sections and data fields. The visual design is yours.
+| Environment | Detection | Output format |
+|-------------|-----------|---------------|
+| **claude.ai** | `Bash` tool is NOT available | Inline HTML fragment rendered in chat |
+| **Claude Cowork** | `Bash` tool IS available | Markdown written to file |
 
-### Non-negotiable constraints:
+**Design the layout and visual style yourself.** Read `reference/html-spec.md` for the required sections and data fields.
+
+### claude.ai — inline HTML constraints:
 - **No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags** — output only a `<style>` block followed by the HTML content
-- Use Claude's native CSS design tokens:
-  - `var(--color-text-primary)` — main text
-  - `var(--color-text-secondary)` — muted/label text
-  - `var(--color-text-tertiary)` — dim text
-  - `var(--color-background-primary)` — card/surface background
-  - `var(--color-background-secondary)` — subtle background / row stripes
-  - `var(--color-border-tertiary)` — borders and dividers
-  - `var(--font-sans)` — body font
-  - `var(--font-mono)` — monospace font
-  - `var(--border-radius-lg)` — card border radius
-  - `var(--border-radius-md)` — inner element radius
+- Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-text-tertiary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--font-mono)`, `var(--border-radius-lg)`, `var(--border-radius-md)`
 - For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
 - All data embedded as inline JS constants at the top of the `<script>` block
 - Company names must link to ProntoNLP (see Company Link Format below)
 - **Only include sections the user asked for.** Use flex or grid so removing a section never breaks the layout.
+
+### Claude Cowork — markdown file constraints:
+- Write the report to a file named `market-pulse-report.md` in the current directory using the `Write` or `Edit` tool
+- Use `##` and `###` headings for all sections
+- Use markdown tables for leaderboards and data grids
+- Use `**bold**` for key values and signal labels
+- Replace charts with ranked text summaries
+- Company links as markdown links: `[Company Name](https://prontonlp.prontonlp.com/#/ref/$COMPANY{id})`
+- Only include sections the user asked for
+- After writing the file, tell the user the filename and open it
 
 ### Sections to include:
 
