@@ -1,6 +1,6 @@
 ---
 name: pronto-compare-companies
-description: "Trigger when the user wants to compare two or more specific named companies against each other. Examples: 'compare Apple vs Microsoft', 'Apple vs Google vs Meta', 'NVDA vs AMD', 'which is better Tesla or Rivian', 'compare the big 4 banks', 'Microsoft vs Salesforce vs Oracle', 'who wins between Nike and Adidas', 'compare FAANG stocks', 'Apple versus Samsung', 'side by side comparison of Netflix and Disney'. Do NOT trigger for a single company — use pronto-company-intelligence instead. Do NOT trigger for a broad market or sector question. Trigger only when two or more specific companies are being compared."
+description: "Generates a unified side-by-side comparison report for two or more named companies or tickers — scoring each across sentiment, investment score, stock performance, analyst and executive sentiment, financial forecasts, trending topics, and risk factors to determine an overall leader. Use when the user wants to compare specific named companies or tickers against each other. Triggers on phrases like: '[company] vs [company]', 'compare [company] and [company]', 'which is better [company] or [company]', 'side by side comparison of [company] and [company]', '[company] versus [company]', 'who wins between [company] and [company]'. Supports 2 to 5 companies. Do not use for a single named company — use the company intelligence skill. Do not use for sector-wide or broad market questions."
 metadata:
   author: ProntoNLP
   version: 1.0.0
