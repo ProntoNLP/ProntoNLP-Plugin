@@ -37,7 +37,7 @@ For each company, record these fields immediately after its invocation completes
 |-------|------------|-------|
 | `sentimentScore_Q1..Q4` | getAnalytics per quarter | Range: −1.0 to +1.0 |
 | `sentimentDirection` | computed | RISING if Q4 > Q1, FALLING if Q4 < Q1 |
-| `investmentScore_Q1..Q4` | getAnalytics per quarter | Range: 0–10 |
+| `investmentScore_Q1..Q4` | getAnalytics per quarter | Raw score from API |
 | `investmentDirection` | computed | RISING / FALLING |
 | `stockReaction_Q1..Q4` | getStockPrices around call | % change 1 week after vs before |
 | `positiveCallCount` | computed | Count of quarters where stockReaction > 0 |
@@ -124,4 +124,4 @@ Always flag:
 
 **Sentiment Score Range**: −1.0 (very negative) → +1.0 (very positive). Above +0.10 = notably positive. Below −0.10 = notably negative.
 
-**Investment Score Range**: 0–10. Above 7.0 = strong buy signal. Below 4.0 = weak/bearish.
+**Investment Score**: Raw score from the API. Higher = more attractive. Compare companies relative to each other — do not apply fixed thresholds. `investmentScore` (current score) and `investmentScoreChange` (change vs prior period) are two separate fields — never conflate them.

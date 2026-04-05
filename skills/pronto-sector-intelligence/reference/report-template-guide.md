@@ -143,15 +143,14 @@ From `getAnalytics`. Render a summary metrics row + aspect table:
 | Metric | Score | Direction | Interpretation |
 |--------|-------|-----------|---------------|
 | Sentiment Score | X.XX | RISING ↑ / FALLING ↓ | e.g. "Notably positive — above +0.10 threshold" |
-| Investment Score | X.X | RISING ↑ / FALLING ↓ | e.g. "Strong buy signal — above 7.0" |
+| Investment Score | X.X | RISING ↑ / FALLING ↓ | e.g. "Investment score rising — sector gaining momentum" |
 | Positive Pattern | +X.XX | — | e.g. "Strong positive language in guidance" |
 | Negative Pattern | −X.XX | — | e.g. "Risk language present but not dominant" |
 
 **Thresholds for interpretation:**
 - Sentiment > +0.10 → "notably positive"
 - Sentiment < −0.10 → "notably negative"
-- Investment > 7.0 → "strong buy signal"
-- Investment < 4.0 → "weak / bearish signal"
+- Investment score: use relative comparison (higher = more attractive) — do not apply fixed thresholds. Note direction (RISING/FALLING) and compare to prior period.
 
 **Top aspects table:**
 

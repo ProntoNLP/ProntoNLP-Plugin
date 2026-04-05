@@ -14,7 +14,7 @@ Here's your Market Pulse for **Mar 19 – Mar 26, 2026 (Past 7 Days)** — cover
 
 **Top stock mover:** Palantir (PLTR) — ▲ **+18.4%** this week, driven by government contract wins discussed in earnings.
 
-**Highest investment score:** Nvidia (NVDA) at **92.1** — also appeared in the Biggest Investment Gain and Sentiment leaderboards, making it the most consistent signal in this period.
+**Highest investment score:** Nvidia (NVDA) — also appeared in the Biggest Investment Gain and Sentiment leaderboards, making it the most consistent signal in this period.
 
 **Potential Buy signals** (stock down but strong fundamentals):
 - Pfizer (PFE) — stock −4.2% but investment score change +41%
@@ -35,7 +35,7 @@ Here's your full Market Pulse for **Mar 19 – Mar 26, 2026**, covering **63 uni
 
 **Top stock mover:** Palantir (PLTR) — ▲ +18.4%.
 
-**Highest investment score:** Nvidia (NVDA) at 92.1.
+**Highest investment score:** Nvidia (NVDA).
 
 **Top trend:** "AI infrastructure investment" — ▲ +187% change in mentions, significance 0.91. Dominant theme across 34 of 63 companies.
 
@@ -69,7 +69,7 @@ Here's your Top Stock Movers leaderboard for **Mar 19 – Mar 26, 2026** ($200M+
 
 Here's your Market Pulse for **Mar 19 – Mar 26, 2026** — **large companies only ($5B+ market cap)**, 7 leaderboards, top 10 each.
 
-**Top stock mover:** Tesla (TSLA) ▲ +12.7% · **Highest investment score:** Nvidia (NVDA) at 92.1.
+**Top stock mover:** Tesla (TSLA) ▲ +12.7% · **Highest investment score:** Nvidia (NVDA).
 
 ---
 

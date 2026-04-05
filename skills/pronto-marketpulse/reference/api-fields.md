@@ -21,7 +21,7 @@ response = {
 | Value | Meaning |
 |-------|---------|
 | `"stockChange"` | % change in stock price over the period |
-| `"investmentScore"` | Current investment attractiveness score (0–10) |
+| `"investmentScore"` | Current investment attractiveness score (raw value from API) |
 | `"investmentScoreChange"` | Change in investment score vs the prior period |
 | `"sentimentScore"` | Current sentiment score (−1 to +1) |
 | `"sentimentScoreChange"` | Change in sentiment score vs the prior period |

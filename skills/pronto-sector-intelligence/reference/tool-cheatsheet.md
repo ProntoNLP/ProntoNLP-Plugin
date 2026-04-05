@@ -73,7 +73,7 @@ Always use **exact strings** — tools will not match approximate names.
 | `subSector` | Sub-sector string |
 | `sentimentScore` | Current sentiment score (−1.0 to +1.0) |
 | `sentimentScoreChange` | Change vs prior period |
-| `investmentScore` | Investment score (0–10) |
+| `investmentScore` | Investment attractiveness score (raw value from API) |
 | `investmentScoreChange` | Change vs prior period |
 | `stockChange` | % stock change over period |
 | `marketCap` | Market cap label |
@@ -143,7 +143,7 @@ Always use **exact strings** — tools will not match approximate names.
 | Field | Description |
 |-------|-------------|
 | `scores.sentimentScore` | Aggregate sector sentiment (−1.0 to +1.0) |
-| `scores.investmentScore` | Aggregate sector investment score (0–10) |
+| `scores.investmentScore` | Aggregate sector investment score (raw value from API) |
 | `scores.sentimentScoreChange` | Direction indicator vs prior period |
 | `eventTypes[]` | Array of event types with name, count, sentiment |
 | `aspects[]` | Named aspects (products, strategy, guidance) with sentiment |
