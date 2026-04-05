@@ -47,21 +47,26 @@ Extract the list of companies from the user's request. Identify each by name or 
 
 ---
 
-## Step 2: Run Company Intelligence for Each Company
+## Step 2: Invoke pronto-company-intelligence for Each Company
 
-> ⚠️ **MANDATORY — NO EXCEPTIONS:**
-> You MUST invoke the **`pronto-company-intelligence`** skill for **every single company** in the list using the Skill tool. Do NOT call MCP tools directly. Do NOT skip any company. Do NOT use your own knowledge. The `pronto-company-intelligence` skill is the ONLY allowed data source for each company. If you do not call it for a company, that company cannot be included in the report.
+> ⚠️ **STOP — READ BEFORE DOING ANYTHING ELSE:**
+> Do NOT call `getAnalytics`, `getCompanyDescription`, `getSpeakers`, `getStockPrices`, or ANY other MCP tool directly in this step.
+> Do NOT search for tools. Do NOT use your own knowledge.
+> You MUST use the **Skill tool** to invoke **`pronto-company-intelligence`** as an actual tool call for every company. This is the ONLY allowed action in this step.
 
-Fire **all** skill invocations **simultaneously in parallel** — do not wait for one to finish before starting the next:
+**Invoke the Skill tool — one call per company, all fired simultaneously in parallel:**
 
-```
-Skill: pronto-company-intelligence
-Args: "[Company Name or Ticker] — run in comparison mode: collect all data and metrics but do not render the HTML report yet. Return the raw findings: sentiment scores per quarter, investment scores per quarter, stock performance (YTD/6M/1Y), analyst estimates (revenue, EPS, EBITDA), speaker sentiment (exec avg, analyst avg, CEO, CFO), trending topics, risk factors, and competitor context."
-```
+Use the Skill tool with:
+- `skill`: `pronto-company-intelligence`
+- `args`: `"[Company Name or Ticker] — comparison mode: run your full data collection but do NOT render any report. Return all raw metrics: sentiment score per quarter (Q1–Q4) and direction (RISING/FALLING), investment score per quarter and direction, stock reaction per earnings call, YTD/6M/1Y stock %, revenue/EPS/EBITDA/FCF estimates, exec avg sentiment, analyst avg sentiment, CEO sentiment, CFO sentiment, exec-analyst gap, top 3 topics, top 3 risks, most bullish analyst, most bearish analyst."`
 
-**One `pronto-company-intelligence` invocation per company, all fired simultaneously.** After all complete, record and save the key metrics for every company before moving to Step 3.
+Example — for a NVDA vs AMD comparison, fire these two Skill tool calls at the same time:
+- Skill tool → `pronto-company-intelligence`, args: `"NVDA — comparison mode…"`
+- Skill tool → `pronto-company-intelligence`, args: `"AMD — comparison mode…"`
 
-**Important:** This produces ONE single unified comparison report at the end — never separate per-company reports or pairwise reports. All companies are compared together in a single output.
+**After all Skill tool calls complete**, record the returned metrics for every company, then proceed to Step 3.
+
+**This produces ONE single unified comparison report — never separate per-company reports.**
 
 **Metrics to capture per company:**
 - Sector and sub-sector
@@ -193,8 +198,8 @@ Place each chart within its corresponding section.
 ## Best Practices
 
 1. **Detect environment first** — inline HTML on claude.ai (`Bash` not available), markdown written to file in Claude Cowork (`Bash` available)
-2. **ALWAYS call `pronto-company-intelligence` for every company** — it is the mandatory data source; never call MCP tools directly or use prior knowledge instead
-3. Run `pronto-company-intelligence` for all companies fully before moving to synthesis — do not partially collect data
+2. **NEVER call MCP tools directly** — the Skill tool calling `pronto-company-intelligence` is the only allowed data source per company; no `getAnalytics`, no `getCompanyDescription`, no `getSpeakers`, nothing else
+3. Run the `pronto-company-intelligence` Skill tool for every company before moving to synthesis — do not partially collect data
 3. Always produce an explicit winner per dimension — never leave a row without a verdict
 4. Surface divergences — a company that looks strong on sentiment but weak on financials is more interesting than a simple winner/loser
 5. Never fabricate data — if a metric is missing for one company, show "N/A" honestly
