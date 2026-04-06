@@ -289,22 +289,22 @@ Save: `sectorBullishAnalystFirm`
 
 ---
 
-## Batch 4 — Quotes
+## Batch 4 — Quotes via pronto-search-agent
 
-All Batch 4 calls fire simultaneously.
+All Batch 4 agents fire simultaneously via the Agent tool (subagent_type: `prontonlp-plugin:pronto-search-agent`). Each agent runs its searches independently and returns a clean quote summary — no raw search results in the parent context.
 
-### Companies — 3 calls per company:
+### Companies — 3 agents per company:
 ```
-search(companyName, sentiment: "positive", speakerTypes: ["Executives"], topicSearchQuery: "growth outlook guidance", size: 3, documentTypes: ["Earnings Calls"])
-search(companyName, sentiment: "negative", topicSearchQuery: "risk challenge headwind", size: 3, documentTypes: ["Earnings Calls"])
-search(companyName, sections: ["EarningsCalls_Question"], size: 3, documentTypes: ["Earnings Calls"])
+pronto-search-agent: "Find bullish executive quotes for [company] about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-agent: "Find bearish and risk quotes for [company] about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-agent: "Find notable analyst questions for [company]. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
 ```
 Save: 1 bullish exec quote, 1 risk quote, 1 notable analyst question per company
 
-### Sectors — 2 calls per sector (via top company):
+### Sectors — 2 agents per sector (via top company as representative):
 ```
-search(companyName: "[topCompanyName]", sentiment: "positive", speakerTypes: ["Executives"], topicSearchQuery: "sector growth momentum", size: 3)
-search(companyName: "[topCompanyName]", sentiment: "negative", topicSearchQuery: "sector risk headwind challenge", size: 3)
+pronto-search-agent: "Find bullish executive quotes from [topCompanyName] about sector growth and momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
+pronto-search-agent: "Find bearish and risk quotes from [topCompanyName] about sector risks and headwinds. Sentiment: negative. Size: 3"
 ```
 Save: 1 representative bullish quote, 1 representative risk quote for the sector
 

@@ -267,24 +267,28 @@ Use `sortOrder: "asc"` for most bearish. Use `speakerTypes: ["Analysts"]` for an
 
 ---
 
-### 8. `search`
+### 8. `pronto-search-agent`
 
-**Purpose:** Key quotes from earnings calls — supporting evidence for themes and risks.
+**Purpose:** Key quotes from earnings calls — supporting evidence for themes and risks. Delegated to the search subagent rather than calling `search` directly, keeping the parent context clean.
 
-**Parameters:**
-```json
-{
-  "companyName": "<company name>",
-  "topicSearchQuery": "<topic>",
-  "sentiment": "positive",
-  "size": 3,
-  "sinceDay": "YYYY-MM-DD",
-  "untilDay": "YYYY-MM-DD"
-}
+**How to invoke:** Use the Agent tool with `subagent_type: prontonlp-plugin:pronto-search-agent`. Pass a natural-language task description with the company, topic, sentiment, and any filters.
+
+**Task format:**
+```
+pronto-search-agent: "Find [positive/negative/analyst] quotes for [company] about [topic].
+  Company: [name], Topic: [topicSearchQuery], Sentiment: [positive/negative],
+  SpeakerTypes: [optional], Sections: [optional], DocumentIDs: [optional], Size: 3,
+  SinceDay: [YYYY-MM-DD], UntilDay: [YYYY-MM-DD]"
 ```
 
-For analyst questions: use `"sections": ["EarningsCalls_Question"]`
-For risk quotes: use `"sentiment": "negative"`
+**Examples:**
+```
+pronto-search-agent: "Find bullish quotes about AI Agents for NVIDIA. Sentiment: positive. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+pronto-search-agent: "Find risk quotes about Export Controls for NVIDIA. Sentiment: negative. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+pronto-search-agent: "Find notable analyst questions for Microsoft. Sections: EarningsCalls_Question. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+```
+
+→ Agent returns a clean summary with top quotes, speaker names, roles, and dates.
 
 **Report usage:** Section 5 / Section 8: supporting quotes per event or risk topic.
 

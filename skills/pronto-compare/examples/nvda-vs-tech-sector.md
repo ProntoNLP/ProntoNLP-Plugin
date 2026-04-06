@@ -152,17 +152,14 @@ getSpeakerCompanies("NVIDIA", speakerTypes: ["Analysts"],
 
 ## Step 5: Batch 4 — Quotes (all simultaneously)
 
-### NVDA (company):
-```
-search("NVIDIA", sentiment: "positive", speakerTypes: ["Executives"], topicSearchQuery: "growth outlook guidance", size: 3)
-search("NVIDIA", sentiment: "negative", topicSearchQuery: "risk challenge headwind", size: 3)
-search("NVIDIA", sections: ["EarningsCalls_Question"], size: 3)
-```
+### All agents fire simultaneously (5 total — 3 for NVDA company, 2 for IT Sector via MSFT):
 
-### IT Sector (use top company — NVDA already covered above; use MSFT as second voice):
 ```
-search("Microsoft", sentiment: "positive", speakerTypes: ["Executives"], topicSearchQuery: "sector growth momentum cloud AI", size: 3)
-search("Microsoft", sentiment: "negative", topicSearchQuery: "sector risk headwind challenge", size: 3)
+pronto-search-agent: "Find bullish executive quotes for NVIDIA about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-agent: "Find bearish and risk quotes for NVIDIA about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-agent: "Find notable analyst questions for NVIDIA. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-agent: "Find bullish executive quotes from Microsoft about sector growth, cloud, and AI momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
+pronto-search-agent: "Find bearish and risk quotes from Microsoft about sector risks and headwinds. Sentiment: negative. Size: 3"
 ```
 
 **Saved quotes:**

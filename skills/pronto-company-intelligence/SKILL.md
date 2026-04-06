@@ -122,13 +122,21 @@ getSpeakerCompanies      (Analysts)
 getStockChange per competitor
 ```
 
-**Batch 4** — quotes and forecasts (needs transcriptIds):
+**Batch 4** — quotes and forecasts via `pronto-search-agent` (fire all simultaneously via Agent tool):
+
+Delegate every search task to `pronto-search-agent` (subagent_type: `prontonlp-plugin:pronto-search-agent`). Fire all in parallel. Each agent runs the search independently, filters results, and returns a clean quote summary with speaker name, role, and date — without polluting the main context with raw results.
+
 ```
-search ×4                (forecast/guidance per earnings call, topicSearchQuery: "forecast guidance outlook")
-search                   (positive executive quotes, sentiment: "positive")
-search                   (negative/risk quotes, sentiment: "negative")
-search                   (analyst Q&A, sections: ["EarningsCalls_Question"])
+pronto-search-agent: "Find forecast and guidance quotes for [company] from Q1 earnings call. DocumentIDs: [doc_q1]. Topic: forecast guidance outlook. Sentiment: positive. Size: 3"
+pronto-search-agent: "Find forecast and guidance quotes for [company] from Q2 earnings call. DocumentIDs: [doc_q2]. Topic: forecast guidance outlook. Sentiment: positive. Size: 3"
+pronto-search-agent: "Find forecast and guidance quotes for [company] from Q3 earnings call. DocumentIDs: [doc_q3]. Topic: forecast guidance outlook. Sentiment: positive. Size: 3"
+pronto-search-agent: "Find forecast and guidance quotes for [company] from Q4 earnings call. DocumentIDs: [doc_q4]. Topic: forecast guidance outlook. Sentiment: positive. Size: 3"
+pronto-search-agent: "Find the most bullish executive quotes for [company]. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
+pronto-search-agent: "Find top risk and bearish quotes for [company]. Topic: risk challenge headwind. Sentiment: negative. Size: 3"
+pronto-search-agent: "Find notable analyst questions for [company]. Sections: EarningsCalls_Question. Size: 3"
 ```
+
+→ Each agent returns a clean summary. Save the top 1–2 quotes per task with speaker name, role, and date.
 
 **Batch 5** — render the full HTML report: inline in chat on claude.ai, written to `[ticker]-report.html` file in Claude Cowork.
 

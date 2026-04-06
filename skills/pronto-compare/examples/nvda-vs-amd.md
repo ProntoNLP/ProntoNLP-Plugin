@@ -126,15 +126,17 @@ getSpeakerCompanies("AMD", speakerTypes: ["Analysts"], sortBy: "sentiment", sort
 
 ---
 
-## Step 5: Batch 4 — Quotes (both companies simultaneously)
+## Step 5: Batch 4 — Quotes via pronto-search-agent (all 6 agents simultaneously)
+
+Delegate all to `pronto-search-agent` (subagent_type: `prontonlp-plugin:pronto-search-agent`) via Agent tool — fire all 6 in parallel:
 
 ```
-search("NVIDIA", sentiment: "positive", speakerTypes: ["Executives"], topicSearchQuery: "growth outlook guidance", size: 3)
-search("NVIDIA", sentiment: "negative", topicSearchQuery: "risk challenge headwind", size: 3)
-search("NVIDIA", sections: ["EarningsCalls_Question"], size: 3)
-search("AMD",    sentiment: "positive", speakerTypes: ["Executives"], topicSearchQuery: "growth outlook guidance", size: 3)
-search("AMD",    sentiment: "negative", topicSearchQuery: "risk challenge headwind", size: 3)
-search("AMD",    sections: ["EarningsCalls_Question"], size: 3)
+pronto-search-agent: "Find bullish executive quotes for NVIDIA about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-agent: "Find bearish and risk quotes for NVIDIA about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-agent: "Find notable analyst questions for NVIDIA. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-agent: "Find bullish executive quotes for AMD about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-agent: "Find bearish and risk quotes for AMD about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-agent: "Find notable analyst questions for AMD. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
 ```
 
 **Saved quotes:**

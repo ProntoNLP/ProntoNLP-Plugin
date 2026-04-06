@@ -157,12 +157,16 @@ Calls for NVDA and MSFT:
 
 ---
 
-## Step 5: Batch 4 — Supporting Quotes (fired simultaneously)
+## Step 5: Batch 4 — Supporting Quotes via pronto-search-agent (fired simultaneously)
 
-- `search` NVDA, "AI Agents", sentiment: positive, size: 3
-- `search` NVDA, "Export Controls", sentiment: negative, size: 3
-- `search` MSFT, "AI Agents", sentiment: positive, size: 3
-- `search` MSFT, sections: EarningsCalls_Question, size: 3
+Delegate all to `pronto-search-agent` (subagent_type: `prontonlp-plugin:pronto-search-agent`) via Agent tool — all 4 agents fire in parallel:
+
+```
+pronto-search-agent: "Find bullish quotes about AI Agents for NVIDIA. Sentiment: positive. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+pronto-search-agent: "Find risk quotes about Export Controls for NVIDIA. Sentiment: negative. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+pronto-search-agent: "Find bullish quotes about AI Agents for Microsoft. Sentiment: positive. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+pronto-search-agent: "Find notable analyst questions for Microsoft. Sections: EarningsCalls_Question. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+```
 
 **Saved quotes:**
 - "We are seeing accelerating demand for our Blackwell architecture across every geography" — Jensen Huang, CEO, NVDA

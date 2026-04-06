@@ -146,13 +146,18 @@ getSpeakerCompanies(companyName: "<top company 2>", speakerTypes: ["Analysts"], 
 ```
 Run for the top 2–3 companies by investment score from Batch 1. Aggregate across companies.
 
-**Batch 4** — supporting quotes (needs top company names and topic):
+**Batch 4** — supporting quotes via `pronto-search-agent` (fire all simultaneously via Agent tool):
+
+Delegate every search task to `pronto-search-agent` (subagent_type: `prontonlp-plugin:pronto-search-agent`). Fire all in parallel. Each agent runs the search independently and returns a clean quote summary — without polluting the main context with raw results.
+
 ```
-search(companyName: "<top company 1>", topicSearchQuery: "<top trend>", sentiment: "positive", size: 3, sinceDay, untilDay)
-search(companyName: "<top company 1>", topicSearchQuery: "<top risk>", sentiment: "negative", size: 3, sinceDay, untilDay)
-search(companyName: "<top company 2>", topicSearchQuery: "<top trend>", sentiment: "positive", size: 3, sinceDay, untilDay)
-search(companyName: "<top company 2>", sections: ["EarningsCalls_Question"], size: 3, sinceDay, untilDay)
+pronto-search-agent: "Find bullish quotes about [top trend topic] for [top company 1]. Sentiment: positive. Size: 3. SinceDay: [date]. UntilDay: [date]"
+pronto-search-agent: "Find bearish and risk quotes about [top risk event] for [top company 1]. Sentiment: negative. Size: 3. SinceDay: [date]. UntilDay: [date]"
+pronto-search-agent: "Find bullish quotes about [top trend topic] for [top company 2]. Sentiment: positive. Size: 3. SinceDay: [date]. UntilDay: [date]"
+pronto-search-agent: "Find notable analyst questions for [top company 2]. Sections: EarningsCalls_Question. Size: 3. SinceDay: [date]. UntilDay: [date]"
 ```
+
+→ Each agent returns a clean summary. Save the top 1–2 quotes per task with speaker name, role, and date.
 
 **Batch 5** — render the full HTML report: inline in chat on claude.ai, written to `[sector]-report.html` file in Claude Cowork.
 

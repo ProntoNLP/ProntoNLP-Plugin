@@ -50,7 +50,7 @@ Then use these IDs:
 1. `getCompanyDescription` + `getCompanyCompetitors` (parallel)
 2. `getCompanyDocuments` + `getStockPrices` + `getStockChange` x3 + `getPredictions` x6 + `getTrends` (parallel)
 3. `getAnalytics` x4 (per quarter) + `getStockPrices` x4 (around calls) + `getSpeakers` x2 + `getSpeakerCompanies` + `getStockChange` per competitor (parallel)
-4. `search` x4 (forecast per quarter) + `search` (positive) + `search` (negative) + `search` (analyst Q&A) (parallel)
+4. `pronto-search-agent` ×4 (forecast per quarter) + `pronto-search-agent` (positive) + `pronto-search-agent` (negative) + `pronto-search-agent` (analyst Q&A) — all via Agent tool in parallel
 5. Write HTML charts file
 
 ---
@@ -75,7 +75,7 @@ Then use these IDs:
 1. `getCompanyDescription`
 2. `getCompanyDocuments` + `getTrends` (parallel)
 3. `getAnalytics` x4 (per quarter) + `getStockPrices` x4 (around calls) + `getSpeakers` (executives) + `getSpeakers` (analysts) + `getSpeakerCompanies` (parallel)
-4. `search` x4 (forecast per quarter) + `search` (positive) + `search` (negative) (parallel)
+4. `pronto-search-agent` ×4 (forecast per quarter) + `pronto-search-agent` (positive) + `pronto-search-agent` (negative) — all via Agent tool in parallel
 
 ---
 
@@ -99,7 +99,7 @@ Then use these IDs:
 1. `getCompanyDescription` + `getCompanyCompetitors` (parallel — extract risk factors + competitor IDs)
 2. `getCompanyDocuments`
 3. `getAnalytics` x4 (per quarter) + `getAnalytics` (10-K risk factors) + `getSpeakers` (analysts, sortOrder: "asc" for bears) + `getStockChange` per competitor (parallel)
-4. `search` (negative quotes) + `search` (analyst negative questions) (parallel)
+4. `pronto-search-agent` (negative quotes) + `pronto-search-agent` (analyst negative questions) — via Agent tool in parallel
 
 Key: Sort analysts by `sortOrder: "asc"` to find most bearish first.
 
