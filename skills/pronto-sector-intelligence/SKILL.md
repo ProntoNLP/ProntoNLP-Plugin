@@ -12,6 +12,8 @@ metadata:
 
 Produces sector intelligence reports using ProntoNLP tools. The centerpiece is a **cross-company view of a sector** — ranking companies by sentiment, investment score, and stock performance, identifying dominant themes and events, surfacing the most bullish and bearish voices, and showing what's RISING or FALLING across the industry. This is the sector-level counterpart to company intelligence.
 
+> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, `deepResearch`, or any interactive visualization tool from this skill. These are user-triggered only. Only call the tools explicitly listed in the batches below.
+
 ---
 
 ## Output Format — Environment-Aware
@@ -146,21 +148,23 @@ getSpeakerCompanies(companyName: "<top company 2>", speakerTypes: ["Analysts"], 
 ```
 Run for the top 2–3 companies by investment score from Batch 1. Aggregate across companies.
 
-**Batch 4** — supporting quotes (fire all simultaneously):
+**Batch 4** — supporting quotes:
 
-**Environment-aware — detect before running Batch 4:**
+**Environment-aware — pick ONE path, do NOT run both:**
 
-| Environment | Detection | How to run Batch 4 |
-|-------------|-----------|-------------------|
-| **Claude Cowork** | `Bash` tool IS available | Delegate to `pronto-search-agent` via Agent tool |
-| **claude.ai** | `Bash` tool NOT available | Call `search` MCP tool directly |
+| Environment | Detection | Action |
+|-------------|-----------|--------|
+| **Claude Cowork** | `Bash` tool IS available | → delegate to ONE `pronto-search-agent` (stop here, do NOT also call `search`) |
+| **claude.ai** | `Bash` tool NOT available | → call `search` MCP tool directly |
 
-**Claude Cowork — delegate to `pronto-search-agent`** (subagent_type: `prontonlp-plugin:pronto-search-agent`), fire all in parallel:
+**Claude Cowork — delegate to ONE `pronto-search-agent`** (subagent_type: `prontonlp-plugin:pronto-search-agent`):
 ```
-pronto-search-agent: "Find bullish quotes about [top trend topic] for [top company 1]. Sentiment: positive. Size: 3. SinceDay: [date]. UntilDay: [date]"
-pronto-search-agent: "Find bearish and risk quotes about [top risk event] for [top company 1]. Sentiment: negative. Size: 3. SinceDay: [date]. UntilDay: [date]"
-pronto-search-agent: "Find bullish quotes about [top trend topic] for [top company 2]. Sentiment: positive. Size: 3. SinceDay: [date]. UntilDay: [date]"
-pronto-search-agent: "Find notable analyst questions for [top company 2]. Sections: EarningsCalls_Question. Size: 3. SinceDay: [date]. UntilDay: [date]"
+"Fetch all quotes needed for the [sector] sector intelligence report. Run these searches:
+1. Bullish quotes about [top trend topic] for [top company 1] — sentiment: positive, size: 3, sinceDay: [date], untilDay: [date]
+2. Bearish/risk quotes about [top risk event] for [top company 1] — sentiment: negative, size: 3, sinceDay: [date], untilDay: [date]
+3. Bullish quotes about [top trend topic] for [top company 2] — sentiment: positive, size: 3, sinceDay: [date], untilDay: [date]
+4. Notable analyst questions for [top company 2] — sections: EarningsCalls_Question, size: 3, sinceDay: [date], untilDay: [date]
+Return all results with speaker name, role, and date."
 ```
 
 **claude.ai — call `search` directly**, fire all in parallel:

@@ -12,6 +12,8 @@ metadata:
 
 Produces a self-contained side-by-side intelligence comparison of two or more entities — which may be named companies, market sectors, or a mix of both. Collects sentiment, investment scores, stock performance, trending topics, and risk factors for every entity using ProntoNLP MCP tools directly, then synthesizes all data into a single unified comparison report with scoring, charts, and a clear verdict.
 
+> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, `deepResearch`, or any interactive visualization tool from this skill. These are user-triggered only. Only call the tools explicitly listed in the batches below.
+
 ---
 
 ## Output Format — Environment-Aware
@@ -230,38 +232,32 @@ After Batch 3, compute per company:
 
 ---
 
-## Step 5: Batch 4 — Quotes (fire all simultaneously, all entities at once)
+## Step 5: Batch 4 — Quotes
 
-**Environment-aware — detect before running Batch 4:**
+**Environment-aware — pick ONE path, do NOT run both:**
 
-| Environment | Detection | How to run Batch 4 |
-|-------------|-----------|-------------------|
-| **Claude Cowork** | `Bash` tool IS available | Delegate to `pronto-search-agent` via Agent tool |
-| **claude.ai** | `Bash` tool NOT available | Call `search` MCP tool directly |
+| Environment | Detection | Action |
+|-------------|-----------|--------|
+| **Claude Cowork** | `Bash` tool IS available | → delegate to ONE `pronto-search-agent` (stop here, do NOT also call `search`) |
+| **claude.ai** | `Bash` tool NOT available | → call `search` MCP tool directly |
 
 ---
 
-### Claude Cowork — delegate to `pronto-search-agent` (subagent_type: `prontonlp-plugin:pronto-search-agent`), fire all in parallel:
+### Claude Cowork — delegate to ONE `pronto-search-agent` (subagent_type: `prontonlp-plugin:pronto-search-agent`):
 
-**Companies (3 agents per company):**
 ```
-pronto-search-agent: "Find bullish executive quotes for [company] about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
-  → save: top bullish executive quote
+"Fetch all quotes needed for the comparison report. Run these searches:
 
-pronto-search-agent: "Find bearish and risk quotes for [company] about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
-  → save: top risk/bearish quote
+For each company entity — [company 1], [company 2], ...:
+  - Bullish executive quotes: speakerTypes: Executives, sentiment: positive, topic: 'growth outlook guidance', documentTypes: Earnings Calls, size: 3
+  - Bearish/risk quotes: sentiment: negative, topic: 'risk challenge headwind', documentTypes: Earnings Calls, size: 3
+  - Notable analyst questions: sections: EarningsCalls_Question, documentTypes: Earnings Calls, size: 3
 
-pronto-search-agent: "Find notable analyst questions for [company]. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
-  → save: notable analyst question
-```
+For each sector entity — use [top company in sector] as the representative:
+  - Bullish quotes from [top company]: speakerTypes: Executives, sentiment: positive, topic: 'sector growth momentum', size: 3
+  - Bearish/risk quotes from [top company]: sentiment: negative, topic: 'sector risk headwind', size: 3
 
-**Sectors (2 agents per sector, using top company as representative):**
-```
-pronto-search-agent: "Find bullish executive quotes from [top company in sector] about sector growth and momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
-  → save: representative bullish quote for the sector
-
-pronto-search-agent: "Find bearish and risk quotes from [top company in sector] about sector risks and headwinds. Sentiment: negative. Size: 3"
-  → save: representative risk quote for the sector
+Return all results with speaker name, role, and date."
 ```
 
 ---
@@ -272,25 +268,20 @@ pronto-search-agent: "Find bearish and risk quotes from [top company in sector] 
 ```
 search(companyName: "<name>", sentiment: "positive", speakerTypes: ["Executives"],
   topicSearchQuery: "growth outlook guidance", size: 3, documentTypes: ["Earnings Calls"])
-  → save: top bullish executive quote
 
 search(companyName: "<name>", sentiment: "negative",
   topicSearchQuery: "risk challenge headwind", size: 3, documentTypes: ["Earnings Calls"])
-  → save: top risk/bearish quote
 
 search(companyName: "<name>", sections: ["EarningsCalls_Question"], size: 3, documentTypes: ["Earnings Calls"])
-  → save: notable analyst question
 ```
 
 **Sectors (2 calls per sector, using top company as representative):**
 ```
 search(companyName: "<top company in sector>", sentiment: "positive",
   speakerTypes: ["Executives"], topicSearchQuery: "sector growth momentum", size: 3)
-  → save: representative bullish quote for the sector
 
 search(companyName: "<top company in sector>", sentiment: "negative",
   topicSearchQuery: "sector risk headwind challenge", size: 3)
-  → save: representative risk quote for the sector
 ```
 
 ---

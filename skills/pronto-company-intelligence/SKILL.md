@@ -13,6 +13,8 @@ metadata:
 > ⚠️ **OUTPUT RULE — READ FIRST:**
 > Before rendering, detect the environment: if the `Bash` tool is available in this session, write the report as an **HTML file** (Claude Cowork). If `Bash` is NOT available, output as **inline HTML** rendered directly in the chat (claude.ai). Same HTML format either way — the only difference is inline vs written to file.
 
+> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, `deepResearch`, or any interactive visualization tool from this skill. These are user-triggered only. Only call the tools explicitly listed in the batches below.
+
 Produces company intelligence reports using ProntoNLP tools. The centerpiece is a **quarter-over-quarter comparison of every earnings call in the past year** — explicitly showing whether sentiment, investment scores, and stock price reaction are RISING or FALLING. Layered on top: analyst forecasts, competitive benchmarks, trending topics, management quotes, and risk factors.
 
 ---
@@ -122,32 +124,37 @@ getSpeakerCompanies      (Analysts)
 getStockChange per competitor
 ```
 
-**Batch 4** — quotes and forecasts (fire all simultaneously):
+**Batch 4** — quotes and forecasts:
 
-**Environment-aware — detect before running Batch 4:**
+**Environment-aware — pick ONE path, do NOT run both:**
 
-| Environment | Detection | How to run Batch 4 |
-|-------------|-----------|-------------------|
-| **Claude Cowork** | `Bash` tool IS available | Delegate to `pronto-search-agent` via Agent tool |
-| **claude.ai** | `Bash` tool NOT available | Call `search` MCP tool directly |
+| Environment | Detection | Action |
+|-------------|-----------|--------|
+| **Claude Cowork** | `Bash` tool IS available | → delegate to ONE `pronto-search-agent` (stop here, do NOT also call `search`) |
+| **claude.ai** | `Bash` tool NOT available | → call `search` MCP tool directly |
 
-**Claude Cowork — delegate to `pronto-search-agent`** (subagent_type: `prontonlp-plugin:pronto-search-agent`), fire all in parallel:
+**Claude Cowork — delegate to ONE `pronto-search-agent`** (subagent_type: `prontonlp-plugin:pronto-search-agent`):
 ```
-pronto-search-agent: "Find forecast and guidance quotes for [company] from Q1 earnings call. DocumentIDs: [doc_q1]. Topic: forecast guidance outlook. Sentiment: positive. Size: 3"
-pronto-search-agent: "Find forecast and guidance quotes for [company] from Q2 earnings call. DocumentIDs: [doc_q2]. Topic: forecast guidance outlook. Sentiment: positive. Size: 3"
-pronto-search-agent: "Find forecast and guidance quotes for [company] from Q3 earnings call. DocumentIDs: [doc_q3]. Topic: forecast guidance outlook. Sentiment: positive. Size: 3"
-pronto-search-agent: "Find forecast and guidance quotes for [company] from Q4 earnings call. DocumentIDs: [doc_q4]. Topic: forecast guidance outlook. Sentiment: positive. Size: 3"
-pronto-search-agent: "Find the most bullish executive quotes for [company]. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
-pronto-search-agent: "Find top risk and bearish quotes for [company]. Topic: risk challenge headwind. Sentiment: negative. Size: 3"
-pronto-search-agent: "Find notable analyst questions for [company]. Sections: EarningsCalls_Question. Size: 3"
+"Fetch all quotes needed for the [company] intelligence report. Run these searches:
+1. Forecast/guidance quotes — Q1 (documentIDs: [doc_q1]), topic: 'forecast guidance outlook', sentiment: positive, size: 3
+2. Forecast/guidance quotes — Q2 (documentIDs: [doc_q2]), topic: 'forecast guidance outlook', sentiment: positive, size: 3
+3. Forecast/guidance quotes — Q3 (documentIDs: [doc_q3]), topic: 'forecast guidance outlook', sentiment: positive, size: 3
+4. Forecast/guidance quotes — Q4 (documentIDs: [doc_q4]), topic: 'forecast guidance outlook', sentiment: positive, size: 3
+5. Most bullish executive quotes — speakerTypes: Executives, sentiment: positive, size: 3
+6. Top risk/bearish quotes — topic: 'risk challenge headwind', sentiment: negative, size: 3
+7. Notable analyst questions — sections: EarningsCalls_Question, size: 3
+Return all results with speaker name, role, and date."
 ```
 
 **claude.ai — call `search` directly**, fire all in parallel:
 ```
-search ×4                (forecast/guidance per earnings call, topicSearchQuery: "forecast guidance outlook")
-search                   (positive executive quotes, sentiment: "positive")
-search                   (negative/risk quotes, sentiment: "negative")
-search                   (analyst Q&A, sections: ["EarningsCalls_Question"])
+search (Q1 forecast)     documentIDs: [doc_q1], topicSearchQuery: "forecast guidance outlook", sentiment: positive
+search (Q2 forecast)     documentIDs: [doc_q2], topicSearchQuery: "forecast guidance outlook", sentiment: positive
+search (Q3 forecast)     documentIDs: [doc_q3], topicSearchQuery: "forecast guidance outlook", sentiment: positive
+search (Q4 forecast)     documentIDs: [doc_q4], topicSearchQuery: "forecast guidance outlook", sentiment: positive
+search (bullish exec)    speakerTypes: ["Executives"], sentiment: "positive", size: 3
+search (risk/bearish)    topicSearchQuery: "risk challenge headwind", sentiment: "negative", size: 3
+search (analyst Q&A)     sections: ["EarningsCalls_Question"], size: 3
 ```
 
 → Save the top 1–2 quotes per task with speaker name, role, and date.
@@ -177,12 +184,6 @@ getStockPrices (1 week window around call):
   toDate: 7 days after call date
   interval: "day"
   → compute: % change before vs after = stock reaction
-
-search (forecast sentences):
-  documentIDs: ["<transcriptId>"]
-  topicSearchQuery: "forecast guidance outlook expectations"
-  speakerTypes: ["Executives"], size: 5
-  → summarize management's forward-looking tone that quarter
 ```
 
 **Build the comparison table:**

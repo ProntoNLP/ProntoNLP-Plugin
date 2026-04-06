@@ -14,6 +14,8 @@ metadata:
 
 The report always states the exact time period it covers so the user knows the context.
 
+> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, `deepResearch`, or any interactive visualization tool from this skill. These are user-triggered only. Only call the tools explicitly listed in the batches below.
+
 ---
 
 ## Step 0: Parse the Request — Determine Sections and Filters
