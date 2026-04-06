@@ -232,10 +232,10 @@ Thesis: BULLISH. Supported by (1) rising sentiment and investment scores across 
 
 | Quarter | Date     | Sentiment | Dir     | Investment | Dir     | Stock After | Dir     |
 |---------|----------|-----------|---------|------------|---------|-------------|---------|
-| Q1 2025 | Apr 28   | 0.32      | —       | 6.1        | —       | +2.0%       | —       |
-| Q2 2025 | Jul 31   | 0.38      | RISING  | 6.5        | RISING  | +4.3%       | RISING  |
-| Q3 2025 | Oct 30   | 0.35      | FALLING | 6.8        | RISING  | -1.3%       | FALLING |
-| Q4 2025 | Jan 30   | 0.41      | RISING  | 7.1        | RISING  | +3.5%       | RISING  |
+| Q1 2025 | Apr 28   | 0.32      | —       | 0.61       | —       | +2.0%       | —       |
+| Q2 2025 | Jul 31   | 0.38      | RISING  | 0.65       | RISING  | +4.3%       | RISING  |
+| Q3 2025 | Oct 30   | 0.35      | FALLING | 0.68       | RISING  | -1.3%       | FALLING |
+| Q4 2025 | Jan 30   | 0.41      | RISING  | 0.71       | RISING  | +3.5%       | RISING  |
 
 Note: Q3 shows a divergence — investment score continued rising despite sentiment dip,
 and the stock fell. This was driven by macro FX concerns, not fundamental deterioration.

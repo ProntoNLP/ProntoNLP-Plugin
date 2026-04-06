@@ -38,7 +38,7 @@
     // DATA — fill these arrays from Pronto tool results
     const quarters = ['Q1 2025', 'Q2 2025', 'Q3 2025', 'Q4 2025'];  // replace with actual quarter labels
     const sentimentScores = [/* e.g. 0.32, 0.38, 0.35, 0.41 */];
-    const investmentScores = [/* e.g. 6.1, 6.5, 6.8, 7.1 */];
+    const investmentScores = [/* e.g. 0.61, 0.65, 0.68, 0.71 — raw values from API, range 0.0 to 1.0 */];
     const stockReactions = [/* e.g. 2.0, 4.3, -1.3, 3.5 — % change 1 week after vs before call */];
     const weeklyDates = [/* date strings from getStockPrices weekly */];
     const weeklyPrices = [/* price values from getStockPrices weekly */];
@@ -74,7 +74,7 @@
         borderColor: '#6AA64A', backgroundColor: '#6AA64A20',
         fill: true, tension: 0.3, pointRadius: 6
       }]},
-      options: { scales: { y: { min: 0, max: 10, title: { display: true, text: 'Score' }}}}
+      options: { scales: { y: { min: 0, max: 1, title: { display: true, text: 'Score' }}}}
     });
 
     // Chart 3: Stock Reaction After Earnings (green = positive, red = negative)

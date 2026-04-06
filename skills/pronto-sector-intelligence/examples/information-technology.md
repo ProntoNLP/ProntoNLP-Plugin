@@ -182,7 +182,7 @@ Calls for NVDA and MSFT:
 | Dominant negative event | RiskFactor (98 hits) |
 | Fastest-rising theme | AI Agents (+84%) |
 | Fastest-declining theme | PC Market (−18%) |
-| Undervalued signal | INTC — score 5.8, stock down 28.4% |
+| Undervalued signal | INTC — score 0.58, stock down 28.4% |
 | Most bullish exec | Jensen Huang, NVDA (0.81) |
 | Most bullish analyst firm | Goldman Sachs (0.59 avg) |
 | Most bearish analyst firm | Bernstein (0.28 avg) |
@@ -196,7 +196,7 @@ The report renders as inline HTML with:
 - **Header:** Information Technology — Sector Intelligence Report | Generated: Apr 5, 2026 | Period: Apr 2025 – Apr 2026
 - **Section 1:** Executive Summary — sector RISING (0.48), NVDA/MSFT/AVGO lead; INTC undervalued signal; AI infrastructure thesis
 - **Section 2:** 7 leaderboard cards in responsive grid — investment, investment gain, sentiment, sentiment shift (bullish/bearish split card), stock, buy signals; Chart 1 (investment bar) + Chart 2 (stock bar)
-- **Section 3:** Metrics table (0.48 RISING, 7.2 RISING); Chart 3 (grouped bar); top aspects: AI Infrastructure, Cloud Services
+- **Section 3:** Metrics table (0.48 RISING, 0.72 RISING); Chart 3 (grouped bar); top aspects: AI Infrastructure, Cloud Services
 - **Section 4:** Trending topics table (top 20); Chart 4 (score bar) + Chart 5 (change bar); callouts: AI Agents fastest rising (+84%), PC Market fastest declining (−18%)
 - **Section 5:** Event analysis; Chart 6 (positive events) + Chart 7 (negative events); per-event company rankings (GrowthDriver → NVDA, MSFT, AVGO)
 - **Section 6:** Company rankings by AI Agents theme; Chart 8 (company bar for AI Agents); cross-sector: IT leads AI discussion by 3.2× vs Industrials

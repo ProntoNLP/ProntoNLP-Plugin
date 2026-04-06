@@ -163,10 +163,10 @@ search (forecast sentences):
 
 | Quarter | Date | Sentiment | Direction | Investment | Direction | Stock After | Direction |
 |---------|------|-----------|-----------|------------|-----------|-------------|-----------|
-| Q1 2025 | Apr 28 | 0.32 | — | 6.1 | — | +2.3% | — |
-| Q2 2025 | Jul 31 | 0.38 | RISING | 6.5 | RISING | +4.1% | RISING |
-| Q3 2025 | Oct 30 | 0.35 | FALLING | 6.8 | RISING | -1.2% | FALLING |
-| Q4 2025 | Jan 30 | 0.41 | RISING | 7.1 | RISING | +3.5% | RISING |
+| Q1 2025 | Apr 28 | 0.32 | — | 0.61 | — | +2.3% | — |
+| Q2 2025 | Jul 31 | 0.38 | RISING | 0.65 | RISING | +4.1% | RISING |
+| Q3 2025 | Oct 30 | 0.35 | FALLING | 0.68 | RISING | -1.2% | FALLING |
+| Q4 2025 | Jan 30 | 0.41 | RISING | 0.71 | RISING | +3.5% | RISING |
 
 **You must explicitly state all three verdicts:**
 1. "Sentiment score is [RISING/FALLING] — from X.XX (Q1) to X.XX (Q4)"
@@ -311,7 +311,7 @@ Render **one card per available earnings call** — typically 4, but some compan
     </div>
     <div class="qtr-metric">
       <span class="label">Investment</span>
-      <span class="value">6.1 <span class="arrow-down">▼</span></span>
+      <span class="value">0.61 <span class="arrow-down">▼</span></span>
     </div>
     <div class="qtr-metric">
       <span class="label">Pattern +/−</span>

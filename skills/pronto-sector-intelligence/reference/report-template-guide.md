@@ -55,7 +55,7 @@ Each leaderboard in Section 2 is a card with a title, rank number, and a mini-ta
         <td class="rank-num">1</td>
         <td><a href="..." class="co-link">Company Name</a></td>
         <td class="ticker">TICK</td>
-        <td class="score-cell">8.7</td>
+        <td class="score-cell">0.87</td>
         <td class="delta positive">+0.3</td>
       </tr>
     </tbody>
