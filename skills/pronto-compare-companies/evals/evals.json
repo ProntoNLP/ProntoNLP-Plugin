@@ -5,20 +5,14 @@
     "input": "Compare NVDA vs AMD",
     "expected_behavior": {
       "skill_triggered": "pronto-compare-companies",
-      "sub_skill_calls": [
-        {
-          "skill": "pronto-company-intelligence",
-          "company": "NVDA",
-          "mode": "comparison",
-          "fired_in_parallel": true
-        },
-        {
-          "skill": "pronto-company-intelligence",
-          "company": "AMD",
-          "mode": "comparison",
-          "fired_in_parallel": true
-        }
-      ],
+      "mcp_batches": {
+        "batch_1": ["getCompanyDescription(NVDA)", "getCompanyDescription(AMD)"],
+        "batch_2": ["getCompanyDocuments(NVIDIA)", "getCompanyDocuments(AMD)", "getStockChange ×6", "getPredictions ×8", "getTrends ×2"],
+        "batch_3": ["getAnalytics ×8", "getStockPrices ×8", "getSpeakers ×10", "getSpeakerCompanies ×2"],
+        "batch_4": ["search ×6"],
+        "all_batches_parallel": true,
+        "no_external_skills": true
+      },
       "report_mode": "Full Comparison",
       "output_format": "inline_html"
     },
@@ -70,8 +64,18 @@
       },
       {
         "id": "a10",
-        "description": "No tool names mentioned in report",
-        "check": "response does not contain: getAnalytics, getSpeakers, getTopMovers, getStockChange, getPredictions, pronto-company-intelligence — in the visible report text"
+        "description": "No tool names or API call names visible in the rendered report",
+        "check": "response does not contain visible text: getAnalytics, getSpeakers, getTopMovers, getStockChange, getPredictions — in the human-readable report sections"
+      },
+      {
+        "id": "a11",
+        "description": "getCompanyDescription called for both companies in Batch 1",
+        "check": "getCompanyDescription was invoked with NVDA (or NVIDIA) AND AMD before any other tool calls"
+      },
+      {
+        "id": "a12",
+        "description": "getAnalytics called per quarter (not one aggregate call)",
+        "check": "getAnalytics invoked 4 times for NVDA (once per documentID) and 4 times for AMD — 8 calls total with individual documentIDs"
       }
     ]
   },
@@ -81,26 +85,14 @@
     "input": "Apple vs Microsoft vs Google — which is the best investment right now?",
     "expected_behavior": {
       "skill_triggered": "pronto-compare-companies",
-      "sub_skill_calls": [
-        {
-          "skill": "pronto-company-intelligence",
-          "company": "Apple",
-          "mode": "comparison",
-          "fired_in_parallel": true
-        },
-        {
-          "skill": "pronto-company-intelligence",
-          "company": "Microsoft",
-          "mode": "comparison",
-          "fired_in_parallel": true
-        },
-        {
-          "skill": "pronto-company-intelligence",
-          "company": "Google",
-          "mode": "comparison",
-          "fired_in_parallel": true
-        }
-      ],
+      "mcp_batches": {
+        "batch_1": ["getCompanyDescription(Apple)", "getCompanyDescription(Microsoft)", "getCompanyDescription(Google)"],
+        "batch_2": ["getCompanyDocuments ×3", "getStockChange ×9", "getPredictions ×12", "getTrends ×3"],
+        "batch_3": ["getAnalytics ×12", "getStockPrices ×12", "getSpeakers ×15", "getSpeakerCompanies ×3"],
+        "batch_4": ["search ×9"],
+        "all_batches_parallel": true,
+        "no_external_skills": true
+      },
       "report_mode": "Full Comparison",
       "output_format": "inline_html"
     },
@@ -144,6 +136,11 @@
         "id": "b8",
         "description": "Charts 3 and 4 show three lines (one per company)",
         "check": "Multi-line charts in Section 2 have three datasets, one colored per company"
+      },
+      {
+        "id": "b9",
+        "description": "Batch 1 fires all three getCompanyDescription calls simultaneously",
+        "check": "getCompanyDescription invoked for Apple, Microsoft, and Google before any other tool calls — all three in the same parallel batch"
       }
     ]
   },
@@ -175,20 +172,14 @@
     "input": "Who wins between Tesla and Rivian?",
     "expected_behavior": {
       "skill_triggered": "pronto-compare-companies",
-      "sub_skill_calls": [
-        {
-          "skill": "pronto-company-intelligence",
-          "company": "Tesla",
-          "mode": "comparison",
-          "fired_in_parallel": true
-        },
-        {
-          "skill": "pronto-company-intelligence",
-          "company": "Rivian",
-          "mode": "comparison",
-          "fired_in_parallel": true
-        }
-      ],
+      "mcp_batches": {
+        "batch_1": ["getCompanyDescription(Tesla)", "getCompanyDescription(Rivian)"],
+        "batch_2": ["getCompanyDocuments ×2", "getStockChange ×6", "getPredictions ×8", "getTrends ×2"],
+        "batch_3": ["getAnalytics ×8", "getStockPrices ×8", "getSpeakers ×10", "getSpeakerCompanies ×2"],
+        "batch_4": ["search ×6"],
+        "all_batches_parallel": true,
+        "no_external_skills": true
+      },
       "report_mode": "Full Comparison",
       "output_format": "inline_html"
     },
@@ -217,6 +208,51 @@
         "id": "d5",
         "description": "N/A handling if Rivian has limited analyst coverage",
         "check": "if analyst data is sparse for Rivian, rows show 'N/A' rather than fabricated values"
+      }
+    ]
+  },
+  {
+    "id": "eval_005",
+    "name": "Five-company comparison — cloud platform leaders",
+    "input": "Compare AWS, Azure, Google Cloud, Salesforce, and Oracle on cloud momentum",
+    "expected_behavior": {
+      "skill_triggered": "pronto-compare-companies",
+      "mcp_batches": {
+        "batch_1": ["getCompanyDescription ×5 simultaneously"],
+        "batch_2": ["getCompanyDocuments ×5", "getStockChange ×15", "getPredictions ×20", "getTrends ×5 — all simultaneously"],
+        "batch_3": ["getAnalytics ×20", "getStockPrices ×20", "getSpeakers ×25", "getSpeakerCompanies ×5 — all simultaneously"],
+        "batch_4": ["search ×15 simultaneously"],
+        "all_batches_parallel": true,
+        "no_external_skills": true
+      },
+      "report_mode": "Full Comparison",
+      "output_format": "inline_html"
+    },
+    "assertions": [
+      {
+        "id": "e1",
+        "description": "Five company columns in scorecard",
+        "check": "scorecard contains five company columns — one per company"
+      },
+      {
+        "id": "e2",
+        "description": "Five-company color rule: only winner column green, others neutral",
+        "check": "with 5 companies, only winner cells use #dcfce7; no red loser cells (#fee2e2)"
+      },
+      {
+        "id": "e3",
+        "description": "Five company colors assigned correctly",
+        "check": "colors assigned: A=#3B82F6, B=#8B5CF6, C=#F59E0B, D=#14B8A6, E=#EC4899"
+      },
+      {
+        "id": "e4",
+        "description": "Cloud theme appears as shared macro topic",
+        "check": "Section 6 topic overlap identifies cloud-related themes as shared across multiple companies"
+      },
+      {
+        "id": "e5",
+        "description": "Charts 3 and 4 show five lines",
+        "check": "Multi-line charts in Section 2 have five datasets, one per company"
       }
     ]
   }

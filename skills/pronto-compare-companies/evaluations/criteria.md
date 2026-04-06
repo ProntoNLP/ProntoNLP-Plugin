@@ -21,15 +21,19 @@ This file defines what a correct, high-quality response from `pronto-compare-com
 
 ---
 
-## 2. Data Collection (Step 2)
+## 2. Data Collection (Batches 1–4)
 
 | Criterion | Pass condition |
 |-----------|---------------|
-| Parallel invocations | All company-intelligence calls fire simultaneously, not sequentially |
-| Correct skill called | Uses `pronto-company-intelligence` skill via Skill tool for each company |
-| Comparison mode args | Args include "comparison mode" and list all required metrics |
-| All required metrics captured | Sentiment Q1–Q4, investment Q1–Q4, stock YTD/6M/1Y, revenue/EPS/EBITDA/FCF, exec avg, analyst avg, CEO, CFO, gap, topics, risks |
+| Batch 1 fires all companies simultaneously | `getCompanyDescription` called for all companies at once |
+| Batch 2 fires all companies simultaneously | `getCompanyDocuments`, `getStockChange` ×3, `getPredictions` ×4, `getTrends` for all companies at once |
+| Batch 3 fires all companies simultaneously | `getAnalytics` ×4 per company, `getStockPrices` ×4 per company, `getSpeakers` ×4, `getSpeakerCompanies` for all companies at once |
+| Batch 4 fires all companies simultaneously | `search` ×3 per company for all companies at once |
+| companyId saved immediately | `companyId` from Batch 1 passed correctly to all stock calls in Batches 2–3 |
+| Per-quarter analytics | `getAnalytics` called separately per quarter using `documentIDs`, not one aggregate call |
+| All required metrics captured | Sentiment Q1–Q4, investment Q1–Q4, stock reaction Q1–Q4, stock YTD/6M/1Y, revenue/EPS/EBITDA/FCF, exec avg, analyst avg, CEO, CFO, gap, topics, risks |
 | Missing company handled | If company not found, tries ticker; notes issue; continues with remaining |
+| No external skills called | Uses MCP tools directly — does not call pronto-company-intelligence |
 
 ---
 
