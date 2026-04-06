@@ -82,7 +82,7 @@
       type: 'bar',
       data: { labels: quarters, datasets: [{
         label: 'Stock % Change After Call', data: stockReactions,
-        backgroundColor: stockReactions.map(v => v >= 0 ? '#22c55e' : '#ef4444')
+        backgroundColor: stockReactions.map(v => v >= 0 ? '#1D9E75' : '#D85A30')
       }]},
       options: { scales: { y: { title: { display: true, text: '% Change' }}}}
     });
@@ -126,7 +126,7 @@
       type: 'bar',
       data: { labels: trendNames, datasets: [{
         label: 'Trend Score', data: trendScores,
-        backgroundColor: trendChanges.map(v => v >= 0 ? '#22c55e' : '#ef4444')
+        backgroundColor: trendChanges.map(v => v >= 0 ? '#1D9E75' : '#D85A30')
       }]},
       options: { indexAxis: 'y', scales: { x: { title: { display: true, text: 'Score' }}}}
     });
@@ -135,8 +135,8 @@
     new Chart(document.getElementById('c8'), {
       type: 'bar',
       data: { labels: quarters, datasets: [
-        { label: 'Positive Events', data: positiveEvents, backgroundColor: '#22c55e' },
-        { label: 'Negative Events', data: negativeEvents, backgroundColor: '#ef4444' }
+        { label: 'Positive Events', data: positiveEvents, backgroundColor: '#1D9E75' },
+        { label: 'Negative Events', data: negativeEvents, backgroundColor: '#D85A30' }
       ]},
       options: { scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: 'Count' }}}}
     });
@@ -146,7 +146,7 @@
       type: 'bar',
       data: { labels: analystNames, datasets: [{
         label: 'Sentiment', data: analystSentiments,
-        backgroundColor: analystSentiments.map(v => v >= 0 ? '#22c55e' : '#ef4444')
+        backgroundColor: analystSentiments.map(v => v >= 0 ? '#1D9E75' : '#D85A30')
       }]},
       options: { scales: { y: { title: { display: true, text: 'Sentiment Score' }}}}
     });

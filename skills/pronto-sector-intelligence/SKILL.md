@@ -27,6 +27,10 @@ Produces sector intelligence reports using ProntoNLP tools. The centerpiece is a
 - No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags — output only a `<style>` block followed by HTML content and `<script>` blocks
 - Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-text-tertiary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--border-radius-lg)`, `var(--border-radius-md)`
 - For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
+- **Value coloring rule — applies to every numeric value, score, and % change rendered in the report:**
+  - Value **> 0** (positive sentiment, positive stock change, positive delta): text color `#1D9E75` (green)
+  - Value **< 0** (negative sentiment, negative stock change, negative delta): text color `#D85A30` (red)
+  - Value **= 0**: no color — use default inherited text color
 - Load Chart.js once: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
 - All chart data as inline JS constants — never reference external files
 - Clean layout: cards, tables, badges, section headers

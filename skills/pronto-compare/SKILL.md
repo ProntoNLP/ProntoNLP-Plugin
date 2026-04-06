@@ -27,6 +27,10 @@ Produces a self-contained side-by-side intelligence comparison of two or more en
 - No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags — output only a `<style>` block followed by HTML content and `<script>` blocks
 - Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-text-tertiary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--border-radius-lg)`, `var(--border-radius-md)`
 - For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
+- **Value coloring rule — applies to every numeric value, score, and % change rendered in the report:**
+  - Value **> 0** (positive sentiment, positive stock change, positive delta): text color `#1D9E75` (green)
+  - Value **< 0** (negative sentiment, negative stock change, negative delta): text color `#D85A30` (red)
+  - Value **= 0**: no color — use default inherited text color
 - Load Chart.js once: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
 - All chart data as inline JS constants — never reference external files
 
@@ -330,23 +334,34 @@ Generated: [Date] | [N] Entities ([type breakdown, e.g. "2 Companies", "1 Compan
 
 One column per entity + Winner column. Every scoreable row must have an explicit winner.
 
-**Row coloring:**
-- 2 entities: winner cell = green (`#dcfce7` / `#15803d`), loser cell = red (`#fee2e2` / `#b91c1c`)
-- 3+ entities: winner cell = green only, no red for losers
-- N/A cells (sector entity in company-only row): neutral, labeled "N/A — [entity type]"
+**Row coloring (cell background):**
+- 2 entities: winner cell = green background (`#dcfce7`) + green text (`#15803d`), loser cell = red background (`#fee2e2`) + red text (`#b91c1c`)
+- 3+ entities: winner cell = green background + green text only; all other cells neutral
+- N/A cells (sector entity in company-only row): neutral background, muted text (`var(--color-text-tertiary)`), labeled "N/A — Sector"
+
+**Value text coloring (applied INSIDE each cell, independent of winner/loser background):**
+- Positive numbers (`+X%`, positive sentiment, positive stock, value **> 0**): text color `#1D9E75` (green)
+- Negative numbers (`−X%`, negative sentiment, negative stock, value **< 0**): text color `#D85A30` (red)
+- Zero (value **= 0**): no color — use default inherited text color
+- N/A: `var(--color-text-tertiary)`
+
+**Winner column — every row must show the actual entity name:**
+- Every dimension row: `🏆 [EntityName]` (e.g. `🏆 NVDA`, `🏆 IT Sector`) — never just a letter like `🏆 A`
+- Direction-only rows (Sentiment Direction, Investment Direction): use `—` if both entities share the same direction; otherwise name the RISING entity
+- Overall Wins row: `🏆 [EntityName] (N wins)`
 
 | Metric | [A] | [B] | [C] | Winner |
 |--------|-----|-----|-----|--------|
-| Sentiment Score | X.XX ↑ | X.XX ↓ | X.XX | 🏆 A |
-| Investment Score | X.X | X.X | X.X | 🏆 C |
-| Sentiment Direction | RISING | FALLING | RISING | — |
+| Sentiment Score | 0.67 ↑ | 0.39 ↓ | 0.48 | 🏆 NVDA |
+| Investment Score | 0.71 | 0.52 | 0.63 | 🏆 NVDA |
+| Sentiment Direction | RISING | FALLING | RISING | 🏆 NVDA / IT Sector |
 | Investment Direction | RISING | RISING | FALLING | — |
-| Stock Performance | +X% | +X% | −X% | 🏆 A |
-| Theme Momentum | +X% | +X% | +X% | 🏆 B |
-| Risk Profile | Low | Medium | High | 🏆 A |
-| Earnings Reaction *(co. only)* | N/M | N/A | N/M | 🏆 A |
-| Financial Outlook *(co. only)* | $XB rev | N/A | $XB rev | 🏆 C |
-| **Overall Wins** | **N** | **N** | **N** | 🏆 [Leader] |
+| Stock Performance | +38.4% | −12.3% | +22.1% | 🏆 NVDA |
+| Theme Momentum | +91% | +84% | +68% | 🏆 NVDA |
+| Risk Profile | Low | Medium | High | 🏆 NVDA |
+| Earnings Reaction *(co. only)* | 4/4 | 2/4 | N/A — Sector | 🏆 NVDA |
+| Financial Outlook *(co. only)* | $48B rev | $9B rev | N/A — Sector | 🏆 NVDA |
+| **Overall Wins** | **7** | **1** | **1** | 🏆 **NVDA (7 wins)** |
 
 ---
 

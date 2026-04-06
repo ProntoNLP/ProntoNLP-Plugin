@@ -30,11 +30,27 @@ Entity E → pink:   #EC4899
 
 ## Scorecard Row Coloring
 
-- **Winner cell**: green background `#dcfce7`, text `#15803d`, bold + `🏆`
+### Cell background (winner/loser)
+- **Winner cell**: green background `#dcfce7`, text `#15803d`, bold
 - **Loser cell** (2 entities only): red background `#fee2e2`, text `#b91c1c`
 - **Middle** (3+ entities): neutral — only winner gets green highlight
 - **N/A cell** (sector in company-only row): neutral, text `var(--color-text-tertiary)`, labeled "N/A — Sector"
 - **Tie row**: — (em dash) in Winner column, no color applied
+
+### Value text coloring (inside each cell — independent of winner/loser background)
+Apply color to the numeric value itself, regardless of which cell it's in:
+- **Positive value** (value **> 0** — `+X%`, positive sentiment, positive stock change): `color: #1D9E75` (green)
+- **Negative value** (value **< 0** — `−X%`, negative sentiment, negative stock change): `color: #D85A30` (red)
+- **Zero** (value **= 0**): no color — use default inherited text color
+- **N/A**: `color: var(--color-text-tertiary)`
+
+Example: a loser cell showing `−12.3%` gets red background (loser) AND red text on the number. A winner cell showing `+38.4%` gets green background AND green text. A non-winner cell in a 3+ comparison showing `+22.1%` gets neutral background but still green text on the positive number.
+
+### Winner column — name the actual entity on every row
+- **Every dimension row**: `🏆 [EntityName]` — use the actual ticker or sector name, never a placeholder letter
+  - e.g. `🏆 NVDA`, `🏆 IT Sector`, `🏆 Health Care`
+- **Direction-only rows**: name the RISING entity if they differ; use `—` if both have the same direction
+- **Overall Wins row**: `🏆 [EntityName] (N wins)` — bold
 
 ---
 
@@ -65,7 +81,9 @@ Financial Outlook [company-only: N/A for sectors] |
 Overall Wins
 ```
 
-**Always show direction arrows inline**: `0.48 ↑` for RISING (green), `0.31 ↓` for FALLING (red), `0.38 →` for FLAT (neutral)
+**Always show direction arrows inline**: `0.48 ↑` for RISING (green `#1D9E75`), `0.31 ↓` for FALLING (red `#D85A30`), `0.38 →` for FLAT (neutral)
+
+**Stock / % change values**: color the number itself — `+38.4%` green, `−12.3%` red — in every cell regardless of whether it's the winner cell or not
 
 ---
 

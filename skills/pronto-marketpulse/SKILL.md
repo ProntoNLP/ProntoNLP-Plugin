@@ -193,6 +193,10 @@ See `reference/api-fields.md` for the complete field reference.
 - **No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags** — output only a `<style>` block followed by the HTML content
 - Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-text-tertiary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--font-mono)`, `var(--border-radius-lg)`, `var(--border-radius-md)`
 - For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
+- **Value coloring rule — applies to every numeric value, score, and % change rendered in the report:**
+  - Value **> 0** (positive sentiment, positive stock change, positive delta): text color `#1D9E75` (green)
+  - Value **< 0** (negative sentiment, negative stock change, negative delta): text color `#D85A30` (red)
+  - Value **= 0**: no color — use default inherited text color
 - All data embedded as inline JS constants at the top of the `<script>` block
 - Company names must link to ProntoNLP (see Company Link Format below)
 - **Only include sections the user asked for.** Use flex or grid so removing a section never breaks the layout.
