@@ -157,15 +157,22 @@ Calls for NVDA and MSFT:
 
 ---
 
-## Step 5: Batch 4 — Supporting Quotes via pronto-search-agent (fired simultaneously)
+## Step 5: Batch 4 — Supporting Quotes (fired simultaneously — environment-aware)
 
-Delegate all to `pronto-search-agent` (subagent_type: `prontonlp-plugin:pronto-search-agent`) via Agent tool — all 4 agents fire in parallel:
-
+**Claude Cowork** (`Bash` available) — `pronto-search-agent` via Agent tool, all 4 in parallel:
 ```
 pronto-search-agent: "Find bullish quotes about AI Agents for NVIDIA. Sentiment: positive. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
 pronto-search-agent: "Find risk quotes about Export Controls for NVIDIA. Sentiment: negative. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
 pronto-search-agent: "Find bullish quotes about AI Agents for Microsoft. Sentiment: positive. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
 pronto-search-agent: "Find notable analyst questions for Microsoft. Sections: EarningsCalls_Question. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+```
+
+**claude.ai** (`Bash` NOT available) — `search` MCP tool directly, all 4 in parallel:
+```
+search("NVIDIA", topicSearchQuery: "AI Agents", sentiment: "positive", size: 3, sinceDay: "2025-04-06", untilDay: "2026-04-06")
+search("NVIDIA", topicSearchQuery: "Export Controls", sentiment: "negative", size: 3, sinceDay: "2025-04-06", untilDay: "2026-04-06")
+search("Microsoft", topicSearchQuery: "AI Agents", sentiment: "positive", size: 3, sinceDay: "2025-04-06", untilDay: "2026-04-06")
+search("Microsoft", sections: ["EarningsCalls_Question"], size: 3, sinceDay: "2025-04-06", untilDay: "2026-04-06")
 ```
 
 **Saved quotes:**

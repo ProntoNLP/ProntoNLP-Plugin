@@ -128,8 +128,7 @@ getSpeakerCompanies("Eli Lilly", speakerTypes: ["Analysts"],
 
 Using top company per sector as the representative voice:
 
-All 4 agents fire simultaneously via Agent tool (subagent_type: `prontonlp-plugin:pronto-search-agent`):
-
+**Claude Cowork** (`Bash` available) — `pronto-search-agent` via Agent tool, all 4 in parallel:
 ```
 pronto-search-agent: "Find bullish executive quotes from NVIDIA about AI infrastructure growth and momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
 → "The infrastructure buildout for AI is just beginning..." — Jensen Huang, CEO, NVDA
@@ -142,6 +141,14 @@ pronto-search-agent: "Find bullish executive quotes from Eli Lilly about GLP-1 g
 
 pronto-search-agent: "Find bearish and risk quotes from Eli Lilly about pricing regulation and challenges. Sentiment: negative. Size: 3"
 → "Medicare pricing negotiations create long-term uncertainty for our portfolio..." — Anat Ashkenazi, CFO, LLY
+```
+
+**claude.ai** (`Bash` NOT available) — `search` MCP tool directly, all 4 in parallel:
+```
+search("NVIDIA", sentiment: "positive", speakerTypes: ["Executives"], topicSearchQuery: "sector growth momentum AI infrastructure", size: 3)
+search("NVIDIA", sentiment: "negative", topicSearchQuery: "sector risk challenge headwind", size: 3)
+search("Eli Lilly", sentiment: "positive", speakerTypes: ["Executives"], topicSearchQuery: "sector growth momentum GLP-1 obesity pipeline", size: 3)
+search("Eli Lilly", sentiment: "negative", topicSearchQuery: "pricing regulatory challenge headwind", size: 3)
 ```
 
 ---

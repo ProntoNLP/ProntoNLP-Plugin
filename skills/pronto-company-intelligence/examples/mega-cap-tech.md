@@ -160,11 +160,10 @@ Params: { companyId: "5678", fromDate: "2025-03-03", toDate: "2026-03-03" }  // 
 Params: { companyId: "2345", fromDate: "2025-03-03", toDate: "2026-03-03" }  // Dell
 ```
 
-## Batch 4: Forecast Sentences + Key Quotes via pronto-search-agent (all parallel)
+## Batch 4: Forecast Sentences + Key Quotes (all parallel — environment-aware)
 
-Delegate all search tasks to `pronto-search-agent` (subagent_type: `prontonlp-plugin:pronto-search-agent`). Fire all 7 agents simultaneously via the Agent tool.
+**Claude Cowork** (`Bash` available) — delegate to `pronto-search-agent` (subagent_type: `prontonlp-plugin:pronto-search-agent`), fire all 7 simultaneously:
 
-### Forecast search per quarter (4 agents)
 ```
 pronto-search-agent: "Find forecast and guidance quotes for Apple from Q1 earnings call. DocumentIDs: doc_q1. Topic: forecast guidance outlook expectations. SpeakerTypes: Executives. Sentiment: positive. Size: 5"
 → "We expect continued strength in Services, with revenue growth in the mid-teens..."
@@ -177,15 +176,39 @@ pronto-search-agent: "Find forecast and guidance quotes for Apple from Q3 earnin
 
 pronto-search-agent: "Find forecast and guidance quotes for Apple from Q4 earnings call. DocumentIDs: doc_q4. Topic: forecast guidance outlook expectations. SpeakerTypes: Executives. Sentiment: positive. Size: 5"
 → "We're very pleased with holiday performance and raising fiscal year guidance..."
-```
 
-### Positive/negative quotes + analyst Q&A (3 agents)
-```
 pronto-search-agent: "Find most bullish executive quotes for Apple. SpeakerTypes: Executives. Sentiment: positive. Size: 10"
-
 pronto-search-agent: "Find top risk and bearish quotes for Apple. Sentiment: negative. Size: 10"
-
 pronto-search-agent: "Find notable analyst questions for Apple. SpeakerTypes: Analysts. Sections: EarningsCalls_Question. Size: 10"
+```
+
+**claude.ai** (`Bash` NOT available) — call `search` MCP tool directly, fire all 7 simultaneously:
+
+```
+Tool: Pronto:search (Q1 forecasts)
+Params: { companyName: "Apple", documentIDs: ["doc_q1"], topicSearchQuery: "forecast guidance outlook expectations", speakerTypes: ["Executives"], size: 5 }
+→ "We expect continued strength in Services, with revenue growth in the mid-teens..."
+
+Tool: Pronto:search (Q2 forecasts)
+Params: { ... documentIDs: ["doc_q2"], topicSearchQuery: "forecast guidance outlook expectations" ... }
+→ "We're raising our full-year EPS guidance reflecting strong iPhone demand..."
+
+Tool: Pronto:search (Q3 forecasts)
+Params: { ... documentIDs: ["doc_q3"] ... }
+→ "We anticipate some headwinds from FX and macro uncertainty in the December quarter..."
+
+Tool: Pronto:search (Q4 forecasts)
+Params: { ... documentIDs: ["doc_q4"] ... }
+→ "We're very pleased with holiday performance and raising fiscal year guidance..."
+
+Tool: Pronto:search (positive executive quotes)
+Params: { companyName: "Apple", speakerTypes: ["Executives"], sentiment: "positive", size: 10 }
+
+Tool: Pronto:search (negative/risk quotes)
+Params: { companyName: "Apple", sentiment: "negative", size: 10 }
+
+Tool: Pronto:search (analyst Q&A)
+Params: { companyName: "Apple", speakerTypes: ["Analysts"], sections: ["EarningsCalls_Question"], size: 10 }
 ```
 
 ## Compile: Full Report
