@@ -125,7 +125,7 @@ getSpeakerCompanies      (Analysts)
 getStockChange per competitor
 ```
 
-**Batch 4** — quotes and forecasts:
+**Batch 4** — quotes and forecasts (**REQUIRED — do not skip, do not render the report until this completes**):
 
 **Environment-aware — pick ONE path, do NOT run both:**
 
@@ -158,7 +158,7 @@ search (risk/bearish)    topicSearchQuery: "risk challenge headwind", sentiment:
 search (analyst Q&A)     sections: ["EarningsCalls_Question"], size: 3
 ```
 
-→ Save the top 1–2 quotes per task with speaker name, role, and date.
+→ Save the top 1–2 quotes per task with speaker name, role, and date. Do not proceed to Batch 5 until Batch 4 results are in hand.
 
 **Batch 5** — render the full HTML report: inline in chat on claude.ai, written to `[ticker]-report.html` file in Claude Cowork.
 

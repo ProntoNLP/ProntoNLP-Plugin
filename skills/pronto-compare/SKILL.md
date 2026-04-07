@@ -233,7 +233,7 @@ After Batch 3, compute per company:
 
 ---
 
-## Step 5: Batch 4 — Quotes
+## Step 5: Batch 4 — Quotes (**REQUIRED — do not skip, do not proceed to Step 6 until this completes**)
 
 **Environment-aware — pick ONE path, do NOT run both:**
 
@@ -284,6 +284,8 @@ search(companyName: "<top company in sector>", sentiment: "positive",
 search(companyName: "<top company in sector>", sentiment: "negative",
   topicSearchQuery: "sector risk headwind challenge", size: 3)
 ```
+
+→ Save the top 1–2 quotes per task with speaker name, role, and date. Do not proceed to Step 6 until all quotes are in hand.
 
 ---
 
