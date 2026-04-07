@@ -163,7 +163,7 @@ pronto-search-summarizer: "Find bullish executive quotes from Microsoft about se
 pronto-search-summarizer: "Find bearish and risk quotes from Microsoft about sector risks and headwinds. Sentiment: negative. Size: 3"
 ```
 
-**Fallback (only if agent fails) — `search` MCP tool directly:
+**Fallback (only if agent fails in Claude Cowork, or direct path in claude.ai) — `search` MCP tool directly:**
 ```
 search("NVIDIA", sentiment: "positive", speakerTypes: ["Executives"], topicSearchQuery: "growth outlook guidance", size: 3, documentTypes: ["Earnings Calls"])
 search("NVIDIA", sentiment: "negative", topicSearchQuery: "risk challenge headwind", size: 3, documentTypes: ["Earnings Calls"])

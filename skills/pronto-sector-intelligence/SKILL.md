@@ -47,7 +47,22 @@ Produces sector intelligence reports using ProntoNLP tools. The centerpiece is a
 
 ---
 
-## Step 0: Identify the Sector & Choose Report Mode
+## Step 0: Detect Environment & Identify Sector
+
+### Environment Detection (do this FIRST)
+
+**Detect the environment before any tool calls. The result determines how Batch 4 will be executed.**
+
+| Environment | Detection | Batch 4 Path |
+|-------------|-----------|-------------|
+| **Claude Cowork** | `Bash` tool IS available | `pronto-search-summarizer` agent (preferred) → fallback to `search` if agent fails |
+| **claude.ai** | `Bash` tool NOT available | `search` MCP tool directly |
+
+Save the result as `batch4Strategy` for use in Batch 4 below.
+
+---
+
+### Identify the Sector & Choose Report Mode
 
 ### Sector Identification
 
@@ -151,7 +166,9 @@ Run for the top 2–3 companies by investment score from Batch 1. Aggregate acro
 
 **Batch 4** — supporting quotes (**REQUIRED — do not skip, do not render the report until this completes**):
 
-**Step 1 — Try the search agent first (preferred):**
+Execute Batch 4 according to your `batch4Strategy` from Step 0:
+
+**If `batch4Strategy = "agent"` (Claude Cowork):**
 
 Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 ```
@@ -165,11 +182,11 @@ Fetch all quotes needed for the [sector] sector intelligence report. Run these s
 Return all results with speaker name, role, and date."
 ```
 
-**If the agent returns results → use those results and skip Step 2.**
+**If agent returns results → use those results. If agent fails, fallback to `search` below.**
 
-**Step 2 — Fallback only if agent fails:**
+**If `batch4Strategy = "search"` (claude.ai):**
 
-If the agent did not return usable results, call `search` directly, fire all in parallel:
+Call `search` directly, fire all in parallel:
 ```
 search(companyName: "<top company 1>", topicSearchQuery: "<top trend>", sentiment: "positive", size: 3, sinceDay, untilDay)
 search(companyName: "<top company 1>", topicSearchQuery: "<top risk>", sentiment: "negative", size: 3, sinceDay, untilDay)

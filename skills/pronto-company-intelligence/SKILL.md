@@ -66,6 +66,19 @@ See `reference/report-template-guide.md` for the batch plan of each template. De
 
 ---
 
+## Step 0: Detect Environment
+
+**Do this FIRST — before any tool calls. The result determines how Batch 4 will be executed.**
+
+| Environment | Detection | Batch 4 Path |
+|-------------|-----------|-------------|
+| **Claude Cowork** | `Bash` tool IS available | `pronto-search-summarizer` agent (preferred) → fallback to `search` if agent fails |
+| **claude.ai** | `Bash` tool NOT available | `search` MCP tool directly |
+
+Save the result as `batch4Strategy` for use in Batch 4 below.
+
+---
+
 ## Tools Reference
 
 | # | Tool | Purpose | Company param |
@@ -127,7 +140,9 @@ getStockChange per competitor
 
 **Batch 4** — quotes and forecasts (**REQUIRED — do not skip, do not render the report until this completes**):
 
-**Step 1 — Try the search agent first (preferred):**
+Execute Batch 4 according to your `batch4Strategy` from Step 0:
+
+**If `batch4Strategy = "agent"` (Claude Cowork):**
 
 Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 ```
@@ -144,11 +159,11 @@ Fetch all quotes needed for the [company] intelligence report. Run these searche
 Return all results with speaker name, role, and date."
 ```
 
-**If the agent returns results → use those results and skip Step 2.**
+**If agent returns results → use those results. If agent fails, fallback to `search` below.**
 
-**Step 2 — Fallback only if agent fails:**
+**If `batch4Strategy = "search"` (claude.ai):**
 
-If the agent did not return usable results, call `search` directly, fire all in parallel:
+Call `search` directly, fire all in parallel:
 ```
 search (Q1 forecast)     documentIDs: [doc_q1], topicSearchQuery: "forecast guidance outlook", sentiment: positive
 search (Q2 forecast)     documentIDs: [doc_q2], topicSearchQuery: "forecast guidance outlook", sentiment: positive

@@ -267,13 +267,15 @@ Use `sortOrder: "asc"` for most bearish. Use `speakerTypes: ["Analysts"]` for an
 
 ---
 
-### 8. Quote Retrieval (agent-first, fallback if needed)
+### 8. Quote Retrieval
 
 **Purpose:** Key quotes from earnings calls — supporting evidence for themes and risks.
 
-**Step 1 — Try the search agent first (preferred):**
+**Note:** Execute according to `batch4Strategy` from Step 0:
+- If `batch4Strategy = "agent"` (Claude Cowork): use agent below, fallback to search if fails
+- If `batch4Strategy = "search"` (claude.ai): use search directly
 
-**`pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
+**Agent path — `pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
 Task format:
 ```
@@ -291,11 +293,7 @@ pronto-search-summarizer: "Find notable analyst questions for Microsoft. Section
 
 → Agent returns a clean summary with top quotes, speaker names, roles, and dates.
 
----
-
-**Step 2 — Fallback only if agent fails:**
-
-**`search` MCP tool directly:**
+**Fallback (only if agent fails) — `search` MCP tool directly:**
 ```json
 {
   "companyName": "<company name>",

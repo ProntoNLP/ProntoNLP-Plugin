@@ -182,7 +182,7 @@ pronto-search-summarizer: "Find top risk and bearish quotes for Apple. Sentiment
 pronto-search-summarizer: "Find notable analyst questions for Apple. SpeakerTypes: Analysts. Sections: EarningsCalls_Question. Size: 10"
 ```
 
-**Fallback (only if agent fails) — `search` MCP tool directly, fire all 7 simultaneously:
+**Fallback (only if agent fails in Claude Cowork, or direct path in claude.ai) — `search` MCP tool directly, fire all 7 simultaneously:**
 
 ```
 Tool: Pronto:search (Q1 forecasts)

@@ -289,11 +289,13 @@ Save: `sectorBullishAnalystFirm`
 
 ---
 
-## Batch 4 — Quotes (agent-first, fallback if needed)
+## Batch 4 — Quotes
 
-**Step 1 — Try the search agent first (preferred):**
+**Note:** Execute according to `batch4Strategy` from Step 0:
+- If `batch4Strategy = "agent"` (Claude Cowork): use agent below, fallback to search if fails
+- If `batch4Strategy = "search"` (claude.ai): use search directly
 
-**`pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
+**Agent path — `pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
 **Companies — 3 agents per company:**
 ```

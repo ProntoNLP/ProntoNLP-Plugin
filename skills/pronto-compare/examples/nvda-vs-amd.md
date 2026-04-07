@@ -138,7 +138,7 @@ pronto-search-summarizer: "Find bearish and risk quotes for AMD about risks, cha
 pronto-search-summarizer: "Find notable analyst questions for AMD. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
 ```
 
-**Fallback (only if agent fails) — `search` MCP tool directly, all 6 in parallel:
+**Fallback (only if agent fails in Claude Cowork, or direct path in claude.ai) — `search` MCP tool directly, all 6 in parallel:**
 ```
 search("NVIDIA", sentiment: "positive", speakerTypes: ["Executives"], topicSearchQuery: "growth outlook guidance", size: 3, documentTypes: ["Earnings Calls"])
 search("NVIDIA", sentiment: "negative", topicSearchQuery: "risk challenge headwind", size: 3, documentTypes: ["Earnings Calls"])
