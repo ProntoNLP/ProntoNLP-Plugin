@@ -1,4 +1,4 @@
-# ProntoNLP Plugin for Claude Code
+# ProntoNLP Plugin
 
 Tools and skills to perform advanced financial analysis, including sentiment analysis, company and sector intelligence, market pulse reporting, and comparative analysis — powered by ProntoNLP data.
 
@@ -8,7 +8,9 @@ The plugin and skills require access to [Pronto NLP](https://prontonlp.ai/) (now
 
 ## Installation
 
-All commands below are run inside Claude Code. Open it in your terminal first:
+The plugin can be installed in any compatible AI client. The example below uses Claude Code.
+
+Open Claude Code in your terminal:
 
 ```
 claude
@@ -16,7 +18,7 @@ claude
 
 ### Step 1 — Add from marketplace
 
-Add the ProntoNLP marketplace with Claude Code.
+Add the ProntoNLP marketplace to your client.
 
 ```
 /plugin marketplace add ProntoNLP/ProntoNLP-Plugin
