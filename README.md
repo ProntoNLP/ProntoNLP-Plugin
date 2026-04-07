@@ -8,7 +8,7 @@ The plugin and skills require access to [Pronto NLP](https://prontonlp.ai/) (now
 
 ## Installation
 
-### In Cowork — For Personal Users
+### In Claude Cowork/Code For Personal Users
 
 1. Go to the **Cowork** tab
 2. Click on **Customize**
@@ -17,7 +17,7 @@ The plugin and skills require access to [Pronto NLP](https://prontonlp.ai/) (now
 5. Click on **Add Marketplace**
 6. Paste the [ProntoNLP Plugin](https://github.com/ProntoNLP/ProntoNLP-Plugin) repository URL
 
-### In Cowork — For Organizations
+### In Claude Cowork/Code For Organizations Plan
 
 1. Go to the [ProntoNLP Plugin repository](https://github.com/ProntoNLP/ProntoNLP-Plugin)
 2. Click the green **\<\> Code** button
