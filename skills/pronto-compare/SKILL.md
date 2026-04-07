@@ -238,9 +238,7 @@ After Batch 3, compute per company:
 Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
 ```
-"orgName: [your orgName from the MCP server instructions]
-
-Fetch all quotes needed for the comparison report. Run these searches:
+"Fetch all quotes needed for the comparison report. Run these searches:
 
 For each company entity — [company 1], [company 2], ...:
   - Bullish executive quotes: speakerTypes: Executives, sentiment: positive, topic: 'growth outlook guidance', documentTypes: Earnings Calls, size: 3

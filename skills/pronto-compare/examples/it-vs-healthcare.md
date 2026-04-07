@@ -128,18 +128,18 @@ getSpeakerCompanies("Eli Lilly", speakerTypes: ["Analysts"],
 
 Using top company per sector as the representative voice:
 
-**`pronto-search-summarizer` via Agent tool, all 4 in parallel:**
+**`pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`), all 4 in parallel:
 ```
-pronto-search-summarizer: "Find bullish executive quotes from NVIDIA about AI infrastructure growth and momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
+"Find bullish executive quotes from NVIDIA about AI infrastructure growth and momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
 → "The infrastructure buildout for AI is just beginning..." — Jensen Huang, CEO, NVDA
 
-pronto-search-summarizer: "Find bearish and risk quotes from NVIDIA about sector risks and headwinds. Sentiment: negative. Size: 3"
+"Find bearish and risk quotes from NVIDIA about sector risks and headwinds. Sentiment: negative. Size: 3"
 → "Export restrictions create meaningful headwinds..." — Colette Kress, CFO, NVDA
 
-pronto-search-summarizer: "Find bullish executive quotes from Eli Lilly about GLP-1 growth, obesity drugs, and pipeline momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
+"Find bullish executive quotes from Eli Lilly about GLP-1 growth, obesity drugs, and pipeline momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
 → "GLP-1 demand continues to outpace our manufacturing capacity..." — David Ricks, CEO, LLY
 
-pronto-search-summarizer: "Find bearish and risk quotes from Eli Lilly about pricing regulation and challenges. Sentiment: negative. Size: 3"
+"Find bearish and risk quotes from Eli Lilly about pricing regulation and challenges. Sentiment: negative. Size: 3"
 → "Medicare pricing negotiations create long-term uncertainty for our portfolio..." — Anat Ashkenazi, CFO, LLY
 ```
 

@@ -275,16 +275,16 @@ Use `sortOrder: "asc"` for most bearish. Use `speakerTypes: ["Analysts"]` for an
 
 Task format:
 ```
-pronto-search-summarizer: "Find [positive/negative/analyst] quotes for [company] about [topic].
+"Find [positive/negative/analyst] quotes for [company] about [topic].
   Sentiment: [positive/negative], SpeakerTypes: [optional], Sections: [optional],
   Size: 3, SinceDay: [YYYY-MM-DD], UntilDay: [YYYY-MM-DD]"
 ```
 
 Examples:
 ```
-pronto-search-summarizer: "Find bullish quotes about AI Agents for NVIDIA. Sentiment: positive. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
-pronto-search-summarizer: "Find risk quotes about Export Controls for NVIDIA. Sentiment: negative. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
-pronto-search-summarizer: "Find notable analyst questions for Microsoft. Sections: EarningsCalls_Question. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+"Find bullish quotes about AI Agents for NVIDIA. Sentiment: positive. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+"Find risk quotes about Export Controls for NVIDIA. Sentiment: negative. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+"Find notable analyst questions for Microsoft. Sections: EarningsCalls_Question. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
 ```
 
 → Agent returns a clean summary with top quotes, speaker names, roles, and dates.
