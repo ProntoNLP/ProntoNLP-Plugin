@@ -293,24 +293,24 @@ Save: `sectorBullishAnalystFirm`
 
 | Environment | Detection | Approach |
 |-------------|-----------|---------|
-| **Claude Cowork** | `Bash` IS available | `pronto-search-agent` via Agent tool |
+| **Claude Cowork** | `Bash` IS available | `pronto-search-summarizer` via Agent tool |
 | **claude.ai** | `Bash` NOT available | `search` MCP tool directly |
 
 All Batch 4 calls fire simultaneously regardless of environment.
 
-### Claude Cowork — `pronto-search-agent` (subagent_type: `prontonlp-plugin:pronto-search-agent`):
+### Claude Cowork — `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
 **Companies — 3 agents per company:**
 ```
-pronto-search-agent: "Find bullish executive quotes for [company] about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
-pronto-search-agent: "Find bearish and risk quotes for [company] about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
-pronto-search-agent: "Find notable analyst questions for [company]. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-summarizer: "Find bullish executive quotes for [company] about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-summarizer: "Find bearish and risk quotes for [company] about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-summarizer: "Find notable analyst questions for [company]. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
 ```
 
 **Sectors — 2 agents per sector (via top company):**
 ```
-pronto-search-agent: "Find bullish executive quotes from [topCompanyName] about sector growth and momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
-pronto-search-agent: "Find bearish and risk quotes from [topCompanyName] about sector risks and headwinds. Sentiment: negative. Size: 3"
+pronto-search-summarizer: "Find bullish executive quotes from [topCompanyName] about sector growth and momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
+pronto-search-summarizer: "Find bearish and risk quotes from [topCompanyName] about sector risks and headwinds. Sentiment: negative. Size: 3"
 ```
 
 ### claude.ai — `search` MCP tool directly:

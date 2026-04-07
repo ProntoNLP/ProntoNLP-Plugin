@@ -128,14 +128,14 @@ getSpeakerCompanies("AMD", speakerTypes: ["Analysts"], sortBy: "sentiment", sort
 
 ## Step 5: Batch 4 — Quotes (all 6 simultaneously — environment-aware)
 
-**Claude Cowork** (`Bash` available) — `pronto-search-agent` via Agent tool, all 6 in parallel:
+**Claude Cowork** (`Bash` available) — `pronto-search-summarizer` via Agent tool, all 6 in parallel:
 ```
-pronto-search-agent: "Find bullish executive quotes for NVIDIA about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
-pronto-search-agent: "Find bearish and risk quotes for NVIDIA about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
-pronto-search-agent: "Find notable analyst questions for NVIDIA. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
-pronto-search-agent: "Find bullish executive quotes for AMD about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
-pronto-search-agent: "Find bearish and risk quotes for AMD about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
-pronto-search-agent: "Find notable analyst questions for AMD. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-summarizer: "Find bullish executive quotes for NVIDIA about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-summarizer: "Find bearish and risk quotes for NVIDIA about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-summarizer: "Find notable analyst questions for NVIDIA. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-summarizer: "Find bullish executive quotes for AMD about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-summarizer: "Find bearish and risk quotes for AMD about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-summarizer: "Find notable analyst questions for AMD. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
 ```
 
 **claude.ai** (`Bash` NOT available) — `search` MCP tool directly, all 6 in parallel:

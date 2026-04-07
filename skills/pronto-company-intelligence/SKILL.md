@@ -131,10 +131,10 @@ getStockChange per competitor
 
 | Environment | Detection | Action |
 |-------------|-----------|--------|
-| **Claude Cowork** | `Bash` tool IS available | → delegate to ONE `pronto-search-agent` (stop here, do NOT also call `search`) |
+| **Claude Cowork** | `Bash` tool IS available | → delegate to ONE `pronto-search-summarizer` (stop here, do NOT also call `search`) |
 | **claude.ai** | `Bash` tool NOT available | → call `search` MCP tool directly |
 
-**Claude Cowork — delegate to ONE `pronto-search-agent`** (subagent_type: `prontonlp-plugin:pronto-search-agent`):
+**Claude Cowork — delegate to ONE `pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 ```
 "Fetch all quotes needed for the [company] intelligence report. Run these searches:
 1. Forecast/guidance quotes — Q1 (documentIDs: [doc_q1]), topic: 'forecast guidance outlook', sentiment: positive, size: 3

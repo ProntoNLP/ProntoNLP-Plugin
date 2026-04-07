@@ -155,10 +155,10 @@ Run for the top 2–3 companies by investment score from Batch 1. Aggregate acro
 
 | Environment | Detection | Action |
 |-------------|-----------|--------|
-| **Claude Cowork** | `Bash` tool IS available | → delegate to ONE `pronto-search-agent` (stop here, do NOT also call `search`) |
+| **Claude Cowork** | `Bash` tool IS available | → delegate to ONE `pronto-search-summarizer` (stop here, do NOT also call `search`) |
 | **claude.ai** | `Bash` tool NOT available | → call `search` MCP tool directly |
 
-**Claude Cowork — delegate to ONE `pronto-search-agent`** (subagent_type: `prontonlp-plugin:pronto-search-agent`):
+**Claude Cowork — delegate to ONE `pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 ```
 "Fetch all quotes needed for the [sector] sector intelligence report. Run these searches:
 1. Bullish quotes about [top trend topic] for [top company 1] — sentiment: positive, size: 3, sinceDay: [date], untilDay: [date]

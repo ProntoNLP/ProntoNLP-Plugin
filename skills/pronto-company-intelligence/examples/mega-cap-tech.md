@@ -162,24 +162,24 @@ Params: { companyId: "2345", fromDate: "2025-03-03", toDate: "2026-03-03" }  // 
 
 ## Batch 4: Forecast Sentences + Key Quotes (all parallel — environment-aware)
 
-**Claude Cowork** (`Bash` available) — delegate to `pronto-search-agent` (subagent_type: `prontonlp-plugin:pronto-search-agent`), fire all 7 simultaneously:
+**Claude Cowork** (`Bash` available) — delegate to `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`), fire all 7 simultaneously:
 
 ```
-pronto-search-agent: "Find forecast and guidance quotes for Apple from Q1 earnings call. DocumentIDs: doc_q1. Topic: forecast guidance outlook expectations. SpeakerTypes: Executives. Sentiment: positive. Size: 5"
+pronto-search-summarizer: "Find forecast and guidance quotes for Apple from Q1 earnings call. DocumentIDs: doc_q1. Topic: forecast guidance outlook expectations. SpeakerTypes: Executives. Sentiment: positive. Size: 5"
 → "We expect continued strength in Services, with revenue growth in the mid-teens..."
 
-pronto-search-agent: "Find forecast and guidance quotes for Apple from Q2 earnings call. DocumentIDs: doc_q2. Topic: forecast guidance outlook expectations. SpeakerTypes: Executives. Sentiment: positive. Size: 5"
+pronto-search-summarizer: "Find forecast and guidance quotes for Apple from Q2 earnings call. DocumentIDs: doc_q2. Topic: forecast guidance outlook expectations. SpeakerTypes: Executives. Sentiment: positive. Size: 5"
 → "We're raising our full-year EPS guidance reflecting strong iPhone demand..."
 
-pronto-search-agent: "Find forecast and guidance quotes for Apple from Q3 earnings call. DocumentIDs: doc_q3. Topic: forecast guidance outlook expectations. SpeakerTypes: Executives. Sentiment: positive. Size: 5"
+pronto-search-summarizer: "Find forecast and guidance quotes for Apple from Q3 earnings call. DocumentIDs: doc_q3. Topic: forecast guidance outlook expectations. SpeakerTypes: Executives. Sentiment: positive. Size: 5"
 → "We anticipate some headwinds from FX and macro uncertainty in the December quarter..."
 
-pronto-search-agent: "Find forecast and guidance quotes for Apple from Q4 earnings call. DocumentIDs: doc_q4. Topic: forecast guidance outlook expectations. SpeakerTypes: Executives. Sentiment: positive. Size: 5"
+pronto-search-summarizer: "Find forecast and guidance quotes for Apple from Q4 earnings call. DocumentIDs: doc_q4. Topic: forecast guidance outlook expectations. SpeakerTypes: Executives. Sentiment: positive. Size: 5"
 → "We're very pleased with holiday performance and raising fiscal year guidance..."
 
-pronto-search-agent: "Find most bullish executive quotes for Apple. SpeakerTypes: Executives. Sentiment: positive. Size: 10"
-pronto-search-agent: "Find top risk and bearish quotes for Apple. Sentiment: negative. Size: 10"
-pronto-search-agent: "Find notable analyst questions for Apple. SpeakerTypes: Analysts. Sections: EarningsCalls_Question. Size: 10"
+pronto-search-summarizer: "Find most bullish executive quotes for Apple. SpeakerTypes: Executives. Sentiment: positive. Size: 10"
+pronto-search-summarizer: "Find top risk and bearish quotes for Apple. Sentiment: negative. Size: 10"
+pronto-search-summarizer: "Find notable analyst questions for Apple. SpeakerTypes: Analysts. Sections: EarningsCalls_Question. Size: 10"
 ```
 
 **claude.ai** (`Bash` NOT available) — call `search` MCP tool directly, fire all 7 simultaneously:

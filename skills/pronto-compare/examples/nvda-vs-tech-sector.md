@@ -154,13 +154,13 @@ getSpeakerCompanies("NVIDIA", speakerTypes: ["Analysts"],
 
 ### All 5 fire simultaneously (3 for NVDA, 2 for IT Sector via MSFT — environment-aware):
 
-**Claude Cowork** (`Bash` available) — `pronto-search-agent` via Agent tool:
+**Claude Cowork** (`Bash` available) — `pronto-search-summarizer` via Agent tool:
 ```
-pronto-search-agent: "Find bullish executive quotes for NVIDIA about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
-pronto-search-agent: "Find bearish and risk quotes for NVIDIA about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
-pronto-search-agent: "Find notable analyst questions for NVIDIA. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
-pronto-search-agent: "Find bullish executive quotes from Microsoft about sector growth, cloud, and AI momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
-pronto-search-agent: "Find bearish and risk quotes from Microsoft about sector risks and headwinds. Sentiment: negative. Size: 3"
+pronto-search-summarizer: "Find bullish executive quotes for NVIDIA about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-summarizer: "Find bearish and risk quotes for NVIDIA about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-summarizer: "Find notable analyst questions for NVIDIA. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
+pronto-search-summarizer: "Find bullish executive quotes from Microsoft about sector growth, cloud, and AI momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
+pronto-search-summarizer: "Find bearish and risk quotes from Microsoft about sector risks and headwinds. Sentiment: negative. Size: 3"
 ```
 
 **claude.ai** (`Bash` NOT available) — `search` MCP tool directly:

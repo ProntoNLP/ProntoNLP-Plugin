@@ -239,12 +239,12 @@ After Batch 3, compute per company:
 
 | Environment | Detection | Action |
 |-------------|-----------|--------|
-| **Claude Cowork** | `Bash` tool IS available | → delegate to ONE `pronto-search-agent` (stop here, do NOT also call `search`) |
+| **Claude Cowork** | `Bash` tool IS available | → delegate to ONE `pronto-search-summarizer` (stop here, do NOT also call `search`) |
 | **claude.ai** | `Bash` tool NOT available | → call `search` MCP tool directly |
 
 ---
 
-### Claude Cowork — delegate to ONE `pronto-search-agent` (subagent_type: `prontonlp-plugin:pronto-search-agent`):
+### Claude Cowork — delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
 ```
 "Fetch all quotes needed for the comparison report. Run these searches:

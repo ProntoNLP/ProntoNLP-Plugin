@@ -272,25 +272,25 @@ Use `sortOrder: "asc"` for most bearish. Use `speakerTypes: ["Analysts"]` for an
 **Purpose:** Key quotes from earnings calls — supporting evidence for themes and risks.
 
 **Environment detection:**
-- **Claude Cowork** (`Bash` IS available) → use `pronto-search-agent` via Agent tool
+- **Claude Cowork** (`Bash` IS available) → use `pronto-search-summarizer` via Agent tool
 - **claude.ai** (`Bash` NOT available) → call `search` MCP tool directly
 
 ---
 
-**Claude Cowork — `pronto-search-agent`** (subagent_type: `prontonlp-plugin:pronto-search-agent`):
+**Claude Cowork — `pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
 Task format:
 ```
-pronto-search-agent: "Find [positive/negative/analyst] quotes for [company] about [topic].
+pronto-search-summarizer: "Find [positive/negative/analyst] quotes for [company] about [topic].
   Sentiment: [positive/negative], SpeakerTypes: [optional], Sections: [optional],
   Size: 3, SinceDay: [YYYY-MM-DD], UntilDay: [YYYY-MM-DD]"
 ```
 
 Examples:
 ```
-pronto-search-agent: "Find bullish quotes about AI Agents for NVIDIA. Sentiment: positive. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
-pronto-search-agent: "Find risk quotes about Export Controls for NVIDIA. Sentiment: negative. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
-pronto-search-agent: "Find notable analyst questions for Microsoft. Sections: EarningsCalls_Question. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+pronto-search-summarizer: "Find bullish quotes about AI Agents for NVIDIA. Sentiment: positive. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+pronto-search-summarizer: "Find risk quotes about Export Controls for NVIDIA. Sentiment: negative. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+pronto-search-summarizer: "Find notable analyst questions for Microsoft. Sections: EarningsCalls_Question. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
 ```
 
 → Agent returns a clean summary with top quotes, speaker names, roles, and dates.
