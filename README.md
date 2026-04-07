@@ -8,6 +8,27 @@ The plugin and skills require access to [Pronto NLP](https://prontonlp.ai/) (now
 
 ## Installation
 
+### In Cowork — For Personal Users
+
+1. Go to the **Cowork** tab
+2. Click on **Customize**
+3. Click on the **+** button in **Personal Plugins**
+4. Click on **Create Plugin**
+5. Click on **Add Marketplace**
+6. Paste the [ProntoNLP Plugin](https://github.com/ProntoNLP/ProntoNLP-Plugin) repository URL
+
+### In Cowork — For Organizations
+
+1. Go to the [ProntoNLP Plugin repository](https://github.com/ProntoNLP/ProntoNLP-Plugin)
+2. Click the green **\<\> Code** button
+3. Click **Download ZIP**
+4. Open **Claude Desktop**
+5. Click on your profile image or name
+6. Click on **Organization Settings**
+7. Click on **Plugins**
+8. Click on **Add Plugin**
+9. Upload the ZIP file you downloaded
+
 ### In Claude Code
 
 Open Claude Code in your terminal:
@@ -39,27 +60,6 @@ Choose how to install the plugin:
 - **Install for you (user scope)** — installs across all your projects (recommended)
 - **Install for all collaborators on this repository (project scope)** — shared via the repo
 - **Install for you, in this repo only (local scope)** — only you, only this project
-
-### In Cowork — For personal users
-
-1. Go to the **Cowork** tab
-2. Click on **Customize**
-3. Click on the **+** button in **Personal Plugins**
-4. Click on **Create Plugin**
-5. Click on **Add Marketplace**
-6. Paste the [ProntoNLP Plugin](https://github.com/ProntoNLP/ProntoNLP-Plugin) repository URL
-
-### In Cowork — For organizations
-
-1. Go to the [ProntoNLP Plugin repository](https://github.com/ProntoNLP/ProntoNLP-Plugin)
-2. Click the green **\<\> Code** button
-3. Click **Download ZIP**
-4. Open **Claude Desktop**
-5. Click on your profile image or name
-6. Click on **Organization Settings**
-7. Click on **Plugins**
-8. Click on **Add Plugin**
-9. Upload the ZIP file you downloaded
 
 ## Skills
 
