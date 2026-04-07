@@ -20,7 +20,7 @@ getCompanyCompetitors({ companyNameOrTicker: "AAPL" })
 getCompanyDocuments({ companyName: "Apple" })
   └→ transcriptIds (e.g. ["doc_q1", "doc_q2", "doc_q3", "doc_q4"])
        ├→ getAnalytics({ documentIDs: ["doc_q1"], ... })  // per quarter
-       └→ search({ documentIDs: ["doc_q1"], ... })        // per quarter
+       └→ pronto-search-summarizer (pass transcriptIds in prompt)  // Batch 4
 ```
 
 ## Which tools accept companyId vs companyName

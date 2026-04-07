@@ -66,19 +66,6 @@ See `reference/report-template-guide.md` for the batch plan of each template. De
 
 ---
 
-## Step 0: Detect Environment
-
-**Do this FIRST — before any tool calls. The result determines how Batch 4 will be executed.**
-
-| Environment | Detection | Batch 4 Path |
-|-------------|-----------|-------------|
-| **Claude Cowork** | `Bash` tool IS available | `pronto-search-summarizer` agent ONLY |
-| **claude.ai** | `Bash` tool NOT available | `search` MCP tool directly |
-
-Save the result as `batch4Strategy` for use in Batch 4 below.
-
----
-
 ## Tools Reference
 
 | # | Tool | Purpose | Company param |
@@ -140,10 +127,6 @@ getStockChange per competitor
 
 **Batch 4** — quotes and forecasts (**REQUIRED — do not skip, do not render the report until this completes**):
 
-Execute Batch 4 according to your `batch4Strategy` from Step 0 — use ONLY ONE path:
-
-**If `batch4Strategy = "agent"` (Claude Cowork) — use agent ONLY:**
-
 Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 ```
 "orgName: [your orgName from the MCP server instructions]
@@ -157,18 +140,6 @@ Fetch all quotes needed for the [company] intelligence report. Run these searche
 6. Top risk/bearish quotes — topic: 'risk challenge headwind', sentiment: negative, size: 3
 7. Notable analyst questions — sections: EarningsCalls_Question, size: 3
 Return all results with speaker name, role, and date."
-```
-
-**If `batch4Strategy = "search"` (claude.ai) — use search directly:**
-
-```
-search (Q1 forecast)     documentIDs: [doc_q1], topicSearchQuery: "forecast guidance outlook", sentiment: positive
-search (Q2 forecast)     documentIDs: [doc_q2], topicSearchQuery: "forecast guidance outlook", sentiment: positive
-search (Q3 forecast)     documentIDs: [doc_q3], topicSearchQuery: "forecast guidance outlook", sentiment: positive
-search (Q4 forecast)     documentIDs: [doc_q4], topicSearchQuery: "forecast guidance outlook", sentiment: positive
-search (bullish exec)    speakerTypes: ["Executives"], sentiment: "positive", size: 3
-search (risk/bearish)    topicSearchQuery: "risk challenge headwind", sentiment: "negative", size: 3
-search (analyst Q&A)     sections: ["EarningsCalls_Question"], size: 3
 ```
 
 → Save the top 1–2 quotes per task with speaker name, role, and date. Do not proceed to Batch 5 until Batch 4 results are in hand.

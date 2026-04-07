@@ -291,11 +291,7 @@ Save: `sectorBullishAnalystFirm`
 
 ## Batch 4 — Quotes
 
-**Note:** Execute according to `batch4Strategy` from Step 0 — use ONLY ONE path:
-- If `batch4Strategy = "agent"` (Claude Cowork): use agent below
-- If `batch4Strategy = "search"` (claude.ai): use search below
-
-**Agent path — `pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
+**`pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
 **Companies — 3 agents per company:**
 ```
@@ -308,21 +304,6 @@ pronto-search-summarizer: "Find notable analyst questions for [company]. Section
 ```
 pronto-search-summarizer: "Find bullish executive quotes from [topCompanyName] about sector growth and momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
 pronto-search-summarizer: "Find bearish and risk quotes from [topCompanyName] about sector risks and headwinds. Sentiment: negative. Size: 3"
-```
-
-**Search path — `search` MCP tool directly:**
-
-**Companies — 3 calls per company:**
-```
-search(companyName, sentiment: "positive", speakerTypes: ["Executives"], topicSearchQuery: "growth outlook guidance", size: 3, documentTypes: ["Earnings Calls"])
-search(companyName, sentiment: "negative", topicSearchQuery: "risk challenge headwind", size: 3, documentTypes: ["Earnings Calls"])
-search(companyName, sections: ["EarningsCalls_Question"], size: 3, documentTypes: ["Earnings Calls"])
-```
-
-**Sectors — 2 calls per sector (via top company):**
-```
-search(companyName: "[topCompanyName]", sentiment: "positive", speakerTypes: ["Executives"], topicSearchQuery: "sector growth momentum", size: 3)
-search(companyName: "[topCompanyName]", sentiment: "negative", topicSearchQuery: "sector risk headwind challenge", size: 3)
 ```
 
 Save: 1 bullish exec quote, 1 risk quote, 1 notable analyst question per company; 1 bullish + 1 risk quote per sector

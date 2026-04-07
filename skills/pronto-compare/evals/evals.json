@@ -79,7 +79,7 @@
         "batch_1": "no API calls — sectors normalized only",
         "batch_2": ["getAnalytics(IT sector)", "getAnalytics(HC sector)", "getTrends(IT sector)", "getTrends(HC sector)", "getTopMovers(IT sector)", "getTopMovers(HC sector)"],
         "batch_3": ["searchTopCompanies(IT, GrowthDriver)", "searchTopCompanies(IT, RiskFactor)", "searchTopCompanies(HC, DrugApproval)", "searchTopCompanies(HC, RegulatoryRisk)", "getSpeakers(IT top company)", "getSpeakerCompanies(IT top company)", "getSpeakers(HC top company)", "getSpeakerCompanies(HC top company)"],
-        "batch_4": ["search(IT top company) ×2", "search(HC top company) ×2"],
+        "batch_4": ["pronto-search-summarizer(IT top company) ×2", "pronto-search-summarizer(HC top company) ×2"],
         "all_batches_parallel": true
       },
       "output_format": "inline_html"
@@ -152,7 +152,7 @@
         "batch_1": ["getCompanyDescription(NVDA)"],
         "batch_2": ["getCompanyDocuments(NVDA)", "getStockChange(NVDA) ×3", "getPredictions(NVDA) ×4", "getTrends(NVDA)", "getAnalytics(IT sector)", "getTrends(IT sector)", "getTopMovers(IT sector)"],
         "batch_3": ["getAnalytics(NVDA) ×4", "getStockPrices(NVDA) ×4", "getSpeakers(NVDA) ×4", "getSpeakerCompanies(NVDA)", "searchTopCompanies(IT, GrowthDriver)", "searchTopCompanies(IT, RiskFactor)", "getSpeakers(IT top company)", "getSpeakerCompanies(IT top company)"],
-        "batch_4": ["search(NVDA) ×3", "search(IT top company) ×2"],
+        "batch_4": ["pronto-search-summarizer(NVDA) ×3", "pronto-search-summarizer(IT top company) ×2"],
         "all_batches_parallel": true
       },
       "output_format": "inline_html"

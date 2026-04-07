@@ -48,19 +48,6 @@ Produces a self-contained side-by-side intelligence comparison of two or more en
 
 ---
 
-## Step 0: Detect Environment (do this FIRST)
-
-**Detect the environment before any tool calls. The result determines how Batch 4 will be executed.**
-
-| Environment | Detection | Batch 4 Path |
-|-------------|-----------|-------------|
-| **Claude Cowork** | `Bash` tool IS available | `pronto-search-summarizer` agent ONLY |
-| **claude.ai** | `Bash` tool NOT available | `search` MCP tool directly |
-
-Save the result as `batch4Strategy` for use in Step 5 below.
-
----
-
 ## Step 1: Parse Entities & Assign Types
 
 Extract all entities from the user's request. Identify each as either a **company** or a **sector**.
@@ -248,10 +235,6 @@ After Batch 3, compute per company:
 
 ## Step 5: Batch 4 — Quotes (**REQUIRED — do not skip, do not proceed to Step 6 until this completes**)
 
-Execute Batch 4 according to your `batch4Strategy` from Step 0 — use ONLY ONE path:
-
-**If `batch4Strategy = "agent"` (Claude Cowork) — use agent ONLY:**
-
 Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
 ```
@@ -269,30 +252,6 @@ For each sector entity — use [top company in sector] as the representative:
   - Bearish/risk quotes from [top company]: sentiment: negative, topic: 'sector risk headwind', size: 3
 
 Return all results with speaker name, role, and date."
-```
-
-**If `batch4Strategy = "search"` (claude.ai) — use search directly:**
-
-Call `search` MCP tool directly, fire all in parallel:
-
-**Companies (3 calls per company):**
-```
-search(companyName: "<name>", sentiment: "positive", speakerTypes: ["Executives"],
-  topicSearchQuery: "growth outlook guidance", size: 3, documentTypes: ["Earnings Calls"])
-
-search(companyName: "<name>", sentiment: "negative",
-  topicSearchQuery: "risk challenge headwind", size: 3, documentTypes: ["Earnings Calls"])
-
-search(companyName: "<name>", sections: ["EarningsCalls_Question"], size: 3, documentTypes: ["Earnings Calls"])
-```
-
-**Sectors (2 calls per sector, using top company as representative):**
-```
-search(companyName: "<top company in sector>", sentiment: "positive",
-  speakerTypes: ["Executives"], topicSearchQuery: "sector growth momentum", size: 3)
-
-search(companyName: "<top company in sector>", sentiment: "negative",
-  topicSearchQuery: "sector risk headwind challenge", size: 3)
 ```
 
 → Save the top 1–2 quotes per task with speaker name, role, and date. Do not proceed to Step 6 until all quotes are in hand.
