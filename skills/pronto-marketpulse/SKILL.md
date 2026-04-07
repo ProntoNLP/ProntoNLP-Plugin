@@ -199,6 +199,7 @@ See `reference/api-fields.md` for the complete field reference.
   - Value **> 0** (positive sentiment, positive stock change, positive delta): text color `#1D9E75` (green)
   - Value **< 0** (negative sentiment, negative stock change, negative delta): text color `#D85A30` (red)
   - Value **= 0**: no color — use default inherited text color
+- **Score display rule:** Investment scores and sentiment scores are raw API values in the **0.0–1.0 range**. Display them exactly as returned — never multiply, never append "/10", never reformat as a fraction. Example: show `0.71`, not `7.1` or `7.1/10`. `sentimentScoreChange` and `investmentScoreChange` are percentage changes — always display with a `%` suffix (e.g. `+4.2%`, `-1.8%`). Any negative number or negative percentage (value < 0) **must** render in red `#D85A30` — this includes stock changes, score changes, deltas, and any other numeric field with a minus sign.
 - All data embedded as inline JS constants at the top of the `<script>` block
 - Company names must link to ProntoNLP (see Company Link Format below)
 - **Only include sections the user asked for.** Use flex or grid so removing a section never breaks the layout.

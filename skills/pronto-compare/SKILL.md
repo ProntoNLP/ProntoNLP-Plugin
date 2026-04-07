@@ -33,6 +33,7 @@ Produces a self-contained side-by-side intelligence comparison of two or more en
   - Value **> 0** (positive sentiment, positive stock change, positive delta): text color `#1D9E75` (green)
   - Value **< 0** (negative sentiment, negative stock change, negative delta): text color `#D85A30` (red)
   - Value **= 0**: no color — use default inherited text color
+- **Score display rule:** Investment scores and sentiment scores are raw API values in the **0.0–1.0 range**. Display them exactly as returned — never multiply, never append "/10", never reformat as a fraction. Example: show `0.71`, not `7.1` or `7.1/10`. `sentimentScoreChange` and `investmentScoreChange` are percentage changes — always display with a `%` suffix (e.g. `+4.2%`, `-1.8%`). Any negative number or negative percentage (value < 0) **must** render in red `#D85A30` — this includes stock changes, score changes, deltas, and any other numeric field with a minus sign.
 - Load Chart.js once: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
 - All chart data as inline JS constants — never reference external files
 
