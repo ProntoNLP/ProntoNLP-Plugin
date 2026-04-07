@@ -235,16 +235,9 @@ After Batch 3, compute per company:
 
 ## Step 5: Batch 4 — Quotes (**REQUIRED — do not skip, do not proceed to Step 6 until this completes**)
 
-**Environment-aware — pick ONE path, do NOT run both:**
+**Step 1 — Try the search agent first (preferred):**
 
-| Environment | Detection | Action |
-|-------------|-----------|--------|
-| **Claude Cowork** | `Bash` tool IS available | → delegate to ONE `pronto-search-summarizer` (stop here, do NOT also call `search`) |
-| **claude.ai** | `Bash` tool NOT available | → call `search` MCP tool directly |
-
----
-
-### Claude Cowork — delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
+Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
 ```
 "orgName: [your orgName from the MCP server instructions]
@@ -263,9 +256,13 @@ For each sector entity — use [top company in sector] as the representative:
 Return all results with speaker name, role, and date."
 ```
 
+**If the agent returns results → use those results and skip Step 2.**
+
 ---
 
-### claude.ai — call `search` MCP tool directly, fire all in parallel:
+**Step 2 — Fallback only if agent fails:**
+
+If the agent did not return usable results, call `search` MCP tool directly, fire all in parallel:
 
 **Companies (3 calls per company):**
 ```

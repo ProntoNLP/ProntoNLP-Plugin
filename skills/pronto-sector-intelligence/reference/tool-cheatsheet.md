@@ -267,17 +267,13 @@ Use `sortOrder: "asc"` for most bearish. Use `speakerTypes: ["Analysts"]` for an
 
 ---
 
-### 8. Quote Retrieval (environment-aware)
+### 8. Quote Retrieval (agent-first, fallback if needed)
 
 **Purpose:** Key quotes from earnings calls — supporting evidence for themes and risks.
 
-**Environment detection:**
-- **Claude Cowork** (`Bash` IS available) → use `pronto-search-summarizer` via Agent tool
-- **claude.ai** (`Bash` NOT available) → call `search` MCP tool directly
+**Step 1 — Try the search agent first (preferred):**
 
----
-
-**Claude Cowork — `pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
+**`pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
 Task format:
 ```
@@ -297,7 +293,9 @@ pronto-search-summarizer: "Find notable analyst questions for Microsoft. Section
 
 ---
 
-**claude.ai — `search` MCP tool directly:**
+**Step 2 — Fallback only if agent fails:**
+
+**`search` MCP tool directly:**
 ```json
 {
   "companyName": "<company name>",

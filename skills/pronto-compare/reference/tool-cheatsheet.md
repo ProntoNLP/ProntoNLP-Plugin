@@ -289,16 +289,11 @@ Save: `sectorBullishAnalystFirm`
 
 ---
 
-## Batch 4 — Quotes (environment-aware)
+## Batch 4 — Quotes (agent-first, fallback if needed)
 
-| Environment | Detection | Approach |
-|-------------|-----------|---------|
-| **Claude Cowork** | `Bash` IS available | `pronto-search-summarizer` via Agent tool |
-| **claude.ai** | `Bash` NOT available | `search` MCP tool directly |
+**Step 1 — Try the search agent first (preferred):**
 
-All Batch 4 calls fire simultaneously regardless of environment.
-
-### Claude Cowork — `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
+**`pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
 **Companies — 3 agents per company:**
 ```
@@ -313,7 +308,11 @@ pronto-search-summarizer: "Find bullish executive quotes from [topCompanyName] a
 pronto-search-summarizer: "Find bearish and risk quotes from [topCompanyName] about sector risks and headwinds. Sentiment: negative. Size: 3"
 ```
 
-### claude.ai — `search` MCP tool directly:
+**If the agent returns results → use those results and skip Step 2.**
+
+**Step 2 — Fallback only if agent fails:**
+
+### Step 2 — `search` MCP tool directly (fallback only):
 
 **Companies — 3 calls per company:**
 ```

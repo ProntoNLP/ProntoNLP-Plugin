@@ -50,7 +50,7 @@ Then use these IDs:
 1. `getCompanyDescription` + `getCompanyCompetitors` (parallel)
 2. `getCompanyDocuments` + `getStockPrices` + `getStockChange` x3 + `getPredictions` x6 + `getTrends` (parallel)
 3. `getAnalytics` x4 (per quarter) + `getStockPrices` x4 (around calls) + `getSpeakers` x2 + `getSpeakerCompanies` + `getStockChange` per competitor (parallel)
-4. Quotes — **Claude Cowork:** `pronto-search-summarizer` ×4 (forecast) + positive + negative + analyst Q&A via Agent tool in parallel | **claude.ai:** `search` ×4 + positive + negative + analyst Q&A directly in parallel
+4. Quotes — **Agent-first:** `pronto-search-summarizer` ×4 (forecast) + positive + negative + analyst Q&A via Agent tool in parallel | **Fallback:** `search` ×4 + positive + negative + analyst Q&A directly in parallel
 5. Write HTML charts file
 
 ---
@@ -99,7 +99,7 @@ Then use these IDs:
 1. `getCompanyDescription` + `getCompanyCompetitors` (parallel — extract risk factors + competitor IDs)
 2. `getCompanyDocuments`
 3. `getAnalytics` x4 (per quarter) + `getAnalytics` (10-K risk factors) + `getSpeakers` (analysts, sortOrder: "asc" for bears) + `getStockChange` per competitor (parallel)
-4. Quotes — **Claude Cowork:** `pronto-search-summarizer` (negative) + `pronto-search-summarizer` (analyst negative questions) via Agent tool | **claude.ai:** `search` (negative) + `search` (analyst negative questions) directly
+4. Quotes — **Agent-first:** `pronto-search-summarizer` (negative) + `pronto-search-summarizer` (analyst negative questions) via Agent tool | **Fallback:** `search` (negative) + `search` (analyst negative questions) directly
 
 Key: Sort analysts by `sortOrder: "asc"` to find most bearish first.
 

@@ -151,14 +151,9 @@ Run for the top 2–3 companies by investment score from Batch 1. Aggregate acro
 
 **Batch 4** — supporting quotes (**REQUIRED — do not skip, do not render the report until this completes**):
 
-**Environment-aware — pick ONE path, do NOT run both:**
+**Step 1 — Try the search agent first (preferred):**
 
-| Environment | Detection | Action |
-|-------------|-----------|--------|
-| **Claude Cowork** | `Bash` tool IS available | → delegate to ONE `pronto-search-summarizer` (stop here, do NOT also call `search`) |
-| **claude.ai** | `Bash` tool NOT available | → call `search` MCP tool directly |
-
-**Claude Cowork — delegate to ONE `pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
+Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 ```
 "orgName: [your orgName from the MCP server instructions]
 
@@ -170,7 +165,11 @@ Fetch all quotes needed for the [sector] sector intelligence report. Run these s
 Return all results with speaker name, role, and date."
 ```
 
-**claude.ai — call `search` directly**, fire all in parallel:
+**If the agent returns results → use those results and skip Step 2.**
+
+**Step 2 — Fallback only if agent fails:**
+
+If the agent did not return usable results, call `search` directly, fire all in parallel:
 ```
 search(companyName: "<top company 1>", topicSearchQuery: "<top trend>", sentiment: "positive", size: 3, sinceDay, untilDay)
 search(companyName: "<top company 1>", topicSearchQuery: "<top risk>", sentiment: "negative", size: 3, sinceDay, untilDay)
