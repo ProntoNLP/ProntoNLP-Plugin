@@ -143,7 +143,7 @@ pronto-search-summarizer: "Find bearish and risk quotes from Eli Lilly about pri
 → "Medicare pricing negotiations create long-term uncertainty for our portfolio..." — Anat Ashkenazi, CFO, LLY
 ```
 
-**Fallback (only if agent fails in Claude Cowork, or direct path in claude.ai) — `search` MCP tool directly, all 4 in parallel:**
+**Search path (claude.ai only) — `search` MCP tool directly, all 4 in parallel:**
 ```
 search("NVIDIA", sentiment: "positive", speakerTypes: ["Executives"], topicSearchQuery: "sector growth momentum AI infrastructure", size: 3)
 search("NVIDIA", sentiment: "negative", topicSearchQuery: "sector risk challenge headwind", size: 3)

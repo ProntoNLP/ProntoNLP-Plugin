@@ -72,7 +72,7 @@ See `reference/report-template-guide.md` for the batch plan of each template. De
 
 | Environment | Detection | Batch 4 Path |
 |-------------|-----------|-------------|
-| **Claude Cowork** | `Bash` tool IS available | `pronto-search-summarizer` agent (preferred) → fallback to `search` if agent fails |
+| **Claude Cowork** | `Bash` tool IS available | `pronto-search-summarizer` agent ONLY |
 | **claude.ai** | `Bash` tool NOT available | `search` MCP tool directly |
 
 Save the result as `batch4Strategy` for use in Batch 4 below.
@@ -140,9 +140,9 @@ getStockChange per competitor
 
 **Batch 4** — quotes and forecasts (**REQUIRED — do not skip, do not render the report until this completes**):
 
-Execute Batch 4 according to your `batch4Strategy` from Step 0:
+Execute Batch 4 according to your `batch4Strategy` from Step 0 — use ONLY ONE path:
 
-**If `batch4Strategy = "agent"` (Claude Cowork):**
+**If `batch4Strategy = "agent"` (Claude Cowork) — use agent ONLY:**
 
 Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 ```
@@ -159,11 +159,8 @@ Fetch all quotes needed for the [company] intelligence report. Run these searche
 Return all results with speaker name, role, and date."
 ```
 
-**If agent returns results → use those results. If agent fails, fallback to `search` below.**
+**If `batch4Strategy = "search"` (claude.ai) — use search directly:**
 
-**If `batch4Strategy = "search"` (claude.ai):**
-
-Call `search` directly, fire all in parallel:
 ```
 search (Q1 forecast)     documentIDs: [doc_q1], topicSearchQuery: "forecast guidance outlook", sentiment: positive
 search (Q2 forecast)     documentIDs: [doc_q2], topicSearchQuery: "forecast guidance outlook", sentiment: positive

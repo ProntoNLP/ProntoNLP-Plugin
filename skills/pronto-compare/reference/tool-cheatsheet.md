@@ -291,9 +291,9 @@ Save: `sectorBullishAnalystFirm`
 
 ## Batch 4 — Quotes
 
-**Note:** Execute according to `batch4Strategy` from Step 0:
-- If `batch4Strategy = "agent"` (Claude Cowork): use agent below, fallback to search if fails
-- If `batch4Strategy = "search"` (claude.ai): use search directly
+**Note:** Execute according to `batch4Strategy` from Step 0 — use ONLY ONE path:
+- If `batch4Strategy = "agent"` (Claude Cowork): use agent below
+- If `batch4Strategy = "search"` (claude.ai): use search below
 
 **Agent path — `pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
@@ -310,11 +310,7 @@ pronto-search-summarizer: "Find bullish executive quotes from [topCompanyName] a
 pronto-search-summarizer: "Find bearish and risk quotes from [topCompanyName] about sector risks and headwinds. Sentiment: negative. Size: 3"
 ```
 
-**If the agent returns results → use those results and skip Step 2.**
-
-**Step 2 — Fallback only if agent fails:**
-
-### Step 2 — `search` MCP tool directly (fallback only):
+**Search path — `search` MCP tool directly:**
 
 **Companies — 3 calls per company:**
 ```

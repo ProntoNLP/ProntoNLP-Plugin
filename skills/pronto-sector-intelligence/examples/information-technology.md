@@ -167,7 +167,7 @@ pronto-search-summarizer: "Find bullish quotes about AI Agents for Microsoft. Se
 pronto-search-summarizer: "Find notable analyst questions for Microsoft. Sections: EarningsCalls_Question. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
 ```
 
-**Fallback (only if agent fails in Claude Cowork, or direct path in claude.ai) — `search` MCP tool directly, all 4 in parallel:**
+**Search path (claude.ai only) — `search` MCP tool directly, all 4 in parallel:**
 ```
 search("NVIDIA", topicSearchQuery: "AI Agents", sentiment: "positive", size: 3, sinceDay: "2025-04-06", untilDay: "2026-04-06")
 search("NVIDIA", topicSearchQuery: "Export Controls", sentiment: "negative", size: 3, sinceDay: "2025-04-06", untilDay: "2026-04-06")

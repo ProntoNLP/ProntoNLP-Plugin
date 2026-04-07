@@ -55,7 +55,7 @@ Produces sector intelligence reports using ProntoNLP tools. The centerpiece is a
 
 | Environment | Detection | Batch 4 Path |
 |-------------|-----------|-------------|
-| **Claude Cowork** | `Bash` tool IS available | `pronto-search-summarizer` agent (preferred) → fallback to `search` if agent fails |
+| **Claude Cowork** | `Bash` tool IS available | `pronto-search-summarizer` agent ONLY |
 | **claude.ai** | `Bash` tool NOT available | `search` MCP tool directly |
 
 Save the result as `batch4Strategy` for use in Batch 4 below.
@@ -166,9 +166,9 @@ Run for the top 2–3 companies by investment score from Batch 1. Aggregate acro
 
 **Batch 4** — supporting quotes (**REQUIRED — do not skip, do not render the report until this completes**):
 
-Execute Batch 4 according to your `batch4Strategy` from Step 0:
+Execute Batch 4 according to your `batch4Strategy` from Step 0 — use ONLY ONE path:
 
-**If `batch4Strategy = "agent"` (Claude Cowork):**
+**If `batch4Strategy = "agent"` (Claude Cowork) — use agent ONLY:**
 
 Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 ```
@@ -182,11 +182,8 @@ Fetch all quotes needed for the [sector] sector intelligence report. Run these s
 Return all results with speaker name, role, and date."
 ```
 
-**If agent returns results → use those results. If agent fails, fallback to `search` below.**
+**If `batch4Strategy = "search"` (claude.ai) — use search directly:**
 
-**If `batch4Strategy = "search"` (claude.ai):**
-
-Call `search` directly, fire all in parallel:
 ```
 search(companyName: "<top company 1>", topicSearchQuery: "<top trend>", sentiment: "positive", size: 3, sinceDay, untilDay)
 search(companyName: "<top company 1>", topicSearchQuery: "<top risk>", sentiment: "negative", size: 3, sinceDay, untilDay)

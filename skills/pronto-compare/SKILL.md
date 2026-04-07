@@ -54,7 +54,7 @@ Produces a self-contained side-by-side intelligence comparison of two or more en
 
 | Environment | Detection | Batch 4 Path |
 |-------------|-----------|-------------|
-| **Claude Cowork** | `Bash` tool IS available | `pronto-search-summarizer` agent (preferred) → fallback to `search` if agent fails |
+| **Claude Cowork** | `Bash` tool IS available | `pronto-search-summarizer` agent ONLY |
 | **claude.ai** | `Bash` tool NOT available | `search` MCP tool directly |
 
 Save the result as `batch4Strategy` for use in Step 5 below.
@@ -248,9 +248,9 @@ After Batch 3, compute per company:
 
 ## Step 5: Batch 4 — Quotes (**REQUIRED — do not skip, do not proceed to Step 6 until this completes**)
 
-Execute Batch 4 according to your `batch4Strategy` from Step 0:
+Execute Batch 4 according to your `batch4Strategy` from Step 0 — use ONLY ONE path:
 
-**If `batch4Strategy = "agent"` (Claude Cowork):**
+**If `batch4Strategy = "agent"` (Claude Cowork) — use agent ONLY:**
 
 Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
@@ -271,11 +271,7 @@ For each sector entity — use [top company in sector] as the representative:
 Return all results with speaker name, role, and date."
 ```
 
-**If agent returns results → use those results. If agent fails, fallback to `search` below.**
-
----
-
-**If `batch4Strategy = "search"` (claude.ai):**
+**If `batch4Strategy = "search"` (claude.ai) — use search directly:**
 
 Call `search` MCP tool directly, fire all in parallel:
 
