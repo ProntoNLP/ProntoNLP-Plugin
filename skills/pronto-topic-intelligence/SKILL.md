@@ -14,8 +14,6 @@ metadata:
 > Before rendering, detect the environment: if the `Bash` tool is available in this session, write the report as an **HTML file**. If `Bash` is NOT available, output as **inline HTML** rendered directly in the chat. Same HTML format either way — the only difference is inline vs written to file.
 
 > ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `deepResearch`, or any interactive visualization tool from this skill. These are user-triggered only. Only call the tools explicitly listed in the batches below.
-> 
-> **Exception for `getTermHeatmap`:** Call this tool ONLY when the user explicitly requests the keyword heatmap visualization (e.g., "show me the heatmap", "include the heatmap", "heatmap for [topic]"). Do NOT call it automatically — it requires user request.
 
 ---
 
@@ -115,7 +113,26 @@ getAnalytics(
 
 ---
 
-## Step 2: Quote Collection — Use Search Agent
+## Step 2: Keyword Heatmap (REQUIRED - call as separate tool)
+
+After completing data collection, call the heatmap as a **separate tool call** (NOT embedded in the report):
+
+```
+getTermHeatmap(
+  topicSearchQuery: "<topic>",
+  documentTypes: ["Earnings Calls"],
+  sinceDay: <1Y ago>,
+  untilDay: <today>
+)
+```
+
+This displays the interactive heatmap visualization **BEFORE** the HTML report. The heatmap is a standalone visualization, not part of the report HTML.
+
+Reference the heatmap results in Section 2 of your report text, but do not embed it in the HTML.
+
+---
+
+## Step 3: Quote Collection — Use Search Agent
 
 Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
@@ -132,32 +149,7 @@ Return all results with speaker name, role, company, and date."
 
 ---
 
-## Step 2: Keyword Heatmap (OPTIONAL — only when user explicitly requests it)
-
-**Call this tool ONLY if the user explicitly requests the keyword heatmap visualization.**
-
-Phrases that trigger this step:
-- "show me the heatmap"
-- "include the heatmap"
-- "heatmap for [topic]"
-- "add the heatmap visualization"
-- Any explicit request for the heatmap
-
-```
-getTermHeatmap(
-  topicSearchQuery: "<topic>",
-  documentTypes: ["Earnings Calls"],
-  sinceDay: <1Y ago>,
-  untilDay: <today>
-)
-```
-
-If user requests it: Include the heatmap visualization in Section 2 of the report.
-If user does NOT request it: Skip this step entirely — do not include the heatmap section.
-
----
-
-## Step 3: Quote Collection — Use Search Agent
+## Step 4: Compile the Report
 
 ### Output Format — Environment-Aware
 
