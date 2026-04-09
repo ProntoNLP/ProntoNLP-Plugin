@@ -4,7 +4,7 @@ Tools and skills to perform advanced financial analysis, including sentiment ana
 
 ## Prerequisites
 
-The plugin and skills require access to [Pronto NLP](https://prontonlp.ai/) (now part of S&P Global) data subscription to work with.
+The plugin and skills require access to [ProntoNLP](https://prontonlp.ai/) (now part of S&P Global) data subscription to work with.
 
 ## Installation
 
@@ -92,3 +92,9 @@ Use for phrases like: *"NVDA vs AMD"*, *"tech vs healthcare"*, *"NVDA vs the tec
 Generates a broad market intelligence dashboard ranking companies across the entire market by investment score, sentiment shifts, and stock performance — based on recent earnings calls. Defaults to the past 7 days when no time frame is specified.
 
 Use for phrases like: *"what's moving in the market"*, *"top movers"*, *"market recap"*, *"most bullish companies"*, *"biggest sentiment shifts"*, *"earnings season highlights"*.
+
+# License
+
+Licensed under the Apache 2.0 License. Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+Copyright 2026-present Kensho Technologies, LLC. The present date is determined by the timestamp of the most recent commit in the repository.
