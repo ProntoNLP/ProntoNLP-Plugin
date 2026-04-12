@@ -53,20 +53,7 @@ getAnalytics(
 ```
 → Save: overall sentiment score, investment score, top event types, top aspects
 
-### 1c. getTrends — Topic Trend Over Time
-
-```
-getTrends(
-  topicSearchQuery: "<topic>",
-  documentTypes: ["Earnings Calls"],
-  sinceDay: <1Y ago>,
-  untilDay: <today>,
-  limit: 20
-)
-```
-→ Save: top related topics, trend direction, change %
-
-### 1d. searchSectors — Topic Distribution by Sector
+### 1c. searchSectors — Topic Distribution by Sector
 
 ```
 searchSectors(
@@ -91,22 +78,7 @@ searchTopCompanies(
 ```
 → Save: top companies by topic mention count, sentiment per company
 
-### 1f. getTopMovers — Sentiment/Investment on Topic
-
-```
-getTopMovers(
-  topicSearchQuery: "<topic>",
-  documentTypes: ["Earnings Calls"],
-  marketCaps: <default filter>,
-  limit: 20,
-  sortBy: ["sentimentScore", "investmentScore", "sentimentScoreChange", "aspectScore"],
-  sinceDay: <1Y ago>,
-  untilDay: <today>
-)
-```
-→ Save: top companies by sentiment/investment on this topic
-
-### 1g. getAnalytics (quarterly) — Sentiment Over Time
+### 1f. getAnalytics (quarterly) — Sentiment Over Time
 
 ```
 getAnalytics(
@@ -281,7 +253,7 @@ Chart.js configuration:
 
 ### Section 5: Top Companies
 
-**Data table** with company details (from `searchTopCompanies` + `getTopMovers`):
+**Data table** with company details (from `searchTopCompanies`):
 
 | Company | Ticker | Country | Sector | Hits | Sentiment |
 |---------|--------|---------|--------|------|-----------|
@@ -310,19 +282,7 @@ Highlight the top 3 companies by mention count and the top 3 by positive sentime
 
 ---
 
-### Section 7: Related Themes
-
-From `getTrends` — top related topics with sentiment:
-
-| Related Theme | Score | Change | Sentiment |
-|---------------|-------|--------|-----------|
-| [theme] | X | +X% / -X% | positive/negative |
-
-State: "Top related theme: [theme] — [interpretation]"
-
----
-
-### Section 8: Key Quotes
+### Section 7: Key Quotes
 
 From the search agent — attributed quotes with source links:
 
@@ -340,7 +300,7 @@ From the search agent — attributed quotes with source links:
 
 ---
 
-### Section 9: Top Aspects
+### Section 8: Top Aspects
 
 From `getAnalytics` — what specific aspects of the topic are discussed:
 
@@ -381,7 +341,6 @@ Default to **past year** for topic intelligence. Topic analysis benefits from lo
 |---------|-----------|
 | Topic not found in documents | Try synonyms or broader terms; note in report |
 | No sentiment trend data | Show snapshot only; note insufficient data for trend |
-| `getTrends` returns empty | Widen date range; try without documentTypes filter |
 | `searchSectors` returns empty | Try `searchTopCompanies` instead |
 | No quotes from search agent | Note "No matching quotes found" — never fabricate |
 | Very few companies (<5) | Note limited dataset; proceed with available data |
