@@ -1,165 +1,127 @@
 # Topic Intelligence Example: Inflation
 
 ## Request
-"how is inflation mentioned across sectors"
+
+"how is inflation discussed across sectors"
 
 ---
 
-## Step 1: Topic Parsing
+## Step 0: Topic Parsing
 
-**Topic:** `inflation`
+**topicExact:** `inflation` — taken as the subject the user is asking about (exact token; for a phrase like `war with Iran`, pass that full string unchanged).
+
+Use the same string for tools and for Step 3.
 
 ---
 
-## Step 2: Data Collection (all parallel)
+## Step 1: First Parallel Batch
 
-### 2a. getAnalytics — Inflation Sentiment Across Market
+### getOrganization
 
-```
-getAnalytics(
-  topicSearchQuery: "inflation",
-  documentTypes: ["Earnings Calls"],
-  analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment"],
-  sinceDay: "2025-04-07",
-  untilDay: "2026-04-07"
-)
-```
-→ Sentiment: 0.34 (leaning negative) | Investment: 0.42 | Top event: RiskFactor (2,847 hits) | Top aspects: "cost pressures", "pricing power", "input costs"
+→ `org` saved for links.
 
-### 2b. getTrends — Related Topic Trends
-
-```
-getTrends(
-  topicSearchQuery: "inflation",
-  documentTypes: ["Earnings Calls"],
-  sinceDay: "2025-04-07",
-  untilDay: "2026-04-07",
-  limit: 10
-)
-```
-→ Related: "interest rates" (+18%), "cost pressures" (+12%), "pricing actions" (+8%), "supply chain" (-5%), "wages" (+6%)
-
-### 2c. searchSectors — Inflation Distribution by Sector
+### searchSectors — full period (example dates)
 
 ```
 searchSectors(
-  searchQueries: ["inflation"],
+  topicSearchQuery: "inflation",
   documentTypes: ["Earnings Calls"],
-  sinceDay: "2025-04-07",
-  untilDay: "2026-04-07"
+  sinceDay: "2025-04-12",
+  untilDay: "2026-04-12"
 )
 ```
-→ 1. Consumer Discretionary (4,218 mentions) | 2. Consumer Staples (3,892) | 3. Industrials (3,104) | 4. Information Technology (2,891) | 5. Materials (2,456)
 
-### 2d. searchTopCompanies — Companies Discussing Inflation
+→ Sectors with `total`, `score`, sentiment counts. **Meta hits** = sum of `total` across sectors (example: ~45,000 — illustrative only). **Sectors chart** — horizontal bar by sector `total` (no overtime line chart).
+
+### searchTopCompanies
 
 ```
 searchTopCompanies(
   topicSearchQuery: "inflation",
   documentTypes: ["Earnings Calls"],
-  limit: 20,
-  sinceDay: "2025-04-07",
-  untilDay: "2026-04-07"
-)
-```
-→ 1. Walmart (847 hits, sentiment: 0.28) | 2. Amazon (723 hits, sentiment: 0.31) | 3. Home Depot (612 hits, sentiment: 0.25) | 4. PepsiCo (598 hits, sentiment: 0.29) | 5. Costco (534 hits, sentiment: 0.33)
-
-### 2e. getTopMovers — Sentiment Leaders on Inflation
-
-```
-getTopMovers(
-  topicSearchQuery: "inflation",
-  documentTypes: ["Earnings Calls"],
-  sortBy: ["sentimentScore", "investmentScore"],
-  limit: 10,
-  sinceDay: "2025-04-07",
-  untilDay: "2026-04-07"
-)
-```
-→ Top by sentiment: Microsoft (0.71), Apple (0.68), Alphabet (0.65) — companies with strong pricing power
-
----
-
-## Step 3: Keyword Heatmap (OPTIONAL — only if user explicitly requested)
-
-*In this example, the user did NOT request the heatmap, so this step is skipped.*
-
-If user had requested: "show me the heatmap for inflation"
-```
-getTermHeatmap(
-  topicSearchQuery: "inflation",
-  documentTypes: ["Earnings Calls"],
-  sinceDay: "2025-04-07",
-  untilDay: "2026-04-07"
+  sinceDay: "2025-04-12",
+  untilDay: "2026-04-12"
 )
 ```
 
+→ Up to **20** rows. Table: **Company Name** | **Symbol** (`ticker`) | **sentimentScore** (`sentiment`) | **Hits** (`hitsCount` or `score`).
+
 ---
 
-## Step 4: Quote Collection
+## Step 2: Top Documents — getCompanyDocuments
 
-**`pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
+For **10–15** companies from `searchTopCompanies` (names must match tool output):
 
 ```
-"Find quotes about inflation across the market. Run these searches:
-1. Most bullish/positive quotes about inflation — sentiment: positive, size: 5
-2. Most bearish/negative quotes about inflation — sentiment: negative, size: 5
-3. Notable analyst questions about inflation — sections: EarningsCalls_Question, size: 5
-4. Quotes from different sectors about inflation — documentTypes: Earnings Calls, size: 5
-Return all results with speaker name, role, company, and date."
+getCompanyDocuments(companyName: "Walmart", documentTypes: ["Earnings Calls"], excludeFutureDocuments: true)
+// ... parallel for each selected company; keep newest 1–2 rows per company from each response
 ```
-→ See saved quotes below
 
-**Saved quotes:**
-- "We've seen inflation normalize in most categories, allowing us to hold margins while remaining competitive" — CFO, Consumer Staples
-- "Input cost inflation remains our biggest headwind — we're taking pricing actions to offset" — CEO, Industrials
-- "The market is underestimating our pricing power in an inflationary environment" — CFO, Technology
+→ Flatten, dedupe by `documentID`, sort by `date` desc, keep top **20** rows for the table.
 
 ---
 
-## Step 5: Compile Report
+## Step 3: pronto-search-summarizer
 
-### Render as HTML (inline or file)
+Use the **exact task template in SKILL.md Step 3** with **topicExact:** `inflation` (verbatim) and `org` filled in.
 
----
-
-## Key Signals (before rendering)
-
-| Signal | Value |
-|--------|-------|
-| Topic sentiment | 0.34 — leaning negative |
-| Dominant event | RiskFactor (2,847 hits) |
-| Top sector | Consumer Discretionary (4,218 mentions) |
-| Top company | Walmart (847 hits) |
-| Trend | Declining — mentions down 12% YoY |
-| Related rising theme | Interest rates (+18%) |
+→ No sentiment: positive/negative filters on the topic; organize as representative commentary / analyst questions / by sector.
 
 ---
 
-## Report Preview (text summary)
+## Step 4: Compile Report
 
-### Executive Summary
+Render per SKILL.md: Executive Summary → sectors chart → tables → Key Quotes → Themes → Conclusion.
 
-Inflation remains a significant concern across the market, with an overall sentiment score of 0.34 — indicating negative perception. Consumer Discretionary and Consumer Staples lead discussions, with 4,218 and 3,892 mentions respectively. The dominant narrative centers on **cost pressures** and **pricing power**, with companies split between those absorbing costs (pressuring margins) and those passing costs through (risking volume).
+---
 
-**Key insight:** Companies with strong pricing power (tech giants) show positive sentiment (0.65+), while consumer-facing retailers show negative sentiment (0.25-0.33). The trend is toward moderation — inflation mentions declined 12% YoY, suggesting the market views inflation as a receding risk.
+## Key Signals (illustrative — real report uses tool values only)
 
-### Top Companies
+| Signal | Source |
+|--------|--------|
+| Total hits (meta) | Sum of `total` from full-period `searchSectors` |
+| Top sectors | Full-period `searchSectors` by `total` |
+| Top companies | `searchTopCompanies` (≤20) |
+| Documents | Batched `getCompanyDocuments` |
 
-| Company | Ticker | Sector | Hits | Sentiment |
-|---------|--------|--------|------|-----------|
-| Walmart | WMT | Consumer Discretionary | 847 | 0.28 |
-| Amazon | AMZN | Consumer Discretionary | 723 | 0.31 |
-| Home Depot | HD | Consumer Discretionary | 612 | 0.25 |
-| PepsiCo | PEP | Consumer Staples | 598 | 0.29 |
-| Costco | COST | Consumer Staples | 534 | 0.33 |
+---
 
-### Related Themes
+## Report Preview (abbreviated)
 
-| Theme | Change | Sentiment |
-|-------|--------|-----------|
-| Interest rates | +18% | negative |
-| Cost pressures | +12% | negative |
-| Pricing actions | +8% | positive |
-| Wages | +6% | negative |
-| Supply chain | -5% | positive |
+### Executive Summary (style reference)
+
+Inflation remains a central cross-sector narrative in corporate commentary, with uneven emphasis across industries. Consumer-facing and input-cost-heavy sectors show sustained engagement, while the tone mixes operational mitigation (pricing, productivity) with caution on demand elasticity. Near-term discussion clusters on pass-through mechanics and margin defense; medium-term threads reference macro rates and cost normalization. Uncertainty around the persistence of cost pressure and the timing of central-bank response frames much of the dispersion in sentiment across companies.
+
+### Chart / table order
+
+1. Related sectors (horizontal bar)  
+2. Related companies table  
+3. Top documents table  
+
+### Themes (structure example — quotes must be real in production)
+
+**Theme 1: Pricing pass-through and margin defense**  
+**Insight:** …  
+**Relevant Evidence:**  
+- "…" (Company A)  
+- "…" (Company B)  
+**Market Implications:** …  
+
+**Theme 2: Cost inputs and supply chain**  
+**Insight:** …  
+**Relevant Evidence:** …  
+**Market Implications:** …  
+
+### Conclusion (structure reference)
+
+Synthesis paragraph; **Near-term / Medium-term / Long-term** bullets; **Critical monitoring indicators**; **Overweight / Underweight / Neutral** framed as hypotheses from evidence — no fabricated tickers or KPIs.
+
+---
+
+## Removed from legacy skill (do not use here)
+
+- `getTermHeatmap`  
+- `getTrends`  
+- Event sentiment doughnut (`patternSentiment` pie)  
+- Top Aspects section  
+- `getAnalytics(... topicSearchQuery ...)`  

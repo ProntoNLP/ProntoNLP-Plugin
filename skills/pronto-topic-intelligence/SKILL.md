@@ -1,9 +1,9 @@
 ---
 name: pronto-topic-intelligence
-description: "Performs topic-based research across the entire market — analyzing how a specific keyword, theme, or concept is discussed across sectors, companies, and time periods. Use when the user asks about a topic's market-wide presence, sentiment, or comparative analysis. Triggers on phrases like: 'how is [topic] mentioned across sectors', 'which companies mention [topic] the most', 'how is [topic] perceived across the market', 'positive vs negative mentions of [topic]', 'how often do companies talk about [topic]', 'what sectors discuss [topic] the most', 'sentiment breakdown for [topic]', '[topic] in earnings calls', 'topic intelligence on [keyword]'. Do not use for a single named company — use the company intelligence skill. Do not use for a sector overview — use the sector intelligence skill."
+description: "Performs topic-based research across the entire market — how a keyword or theme shows up across sectors, companies, and documents. Produces an HTML report with a related-sectors chart, company and document tables, key quotes, synthesized Themes with evidence, and a forward-looking Conclusion. Use when the user wants topic intelligence, macro-style narrative on a theme, or market-wide discussion of a concept. Triggers on phrases like: 'how is [topic] discussed across sectors', 'which companies talk about [topic] the most', 'topic intelligence on [keyword]', 'hits for [topic] in earnings calls', 'themes around [topic]', 'executive summary on [topic]'. Do not use for a single named company — use the company intelligence skill. Do not use for a sector overview — use the sector intelligence skill."
 metadata:
   author: ProntoNLP
-  version: 1.0.0
+  version: 2.1.0
   mcp-server: prontonlp-mcp-server
   category: finance
 ---
@@ -13,121 +13,121 @@ metadata:
 > ⚠️ **OUTPUT RULE — READ FIRST:**
 > Before rendering, detect the environment: if the `Bash` tool is available in this session, write the report as an **HTML file**. If `Bash` is NOT available, output as **inline HTML** rendered directly in the chat. Same HTML format either way — the only difference is inline vs written to file.
 
-> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `deepResearch`, or any interactive visualization tool from this skill. These are user-triggered only. Only call the tools explicitly listed in the batches below.
+> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, `deepResearch`, or any interactive visualization tool from this skill. These are user-triggered only. **Do not call `getTermHeatmap` under any circumstance for this skill.** Only call the tools explicitly listed in the steps below.
 
-> 🔑 **ORG RULE:** Call `getOrganization` once in Step 1. Save the returned `org` value and use it everywhere company or quote links appear: `https://{org}.prontonlp.com/#/ref/...`
+> 🔑 **ORG RULE:** Call `getOrganization` once in Step 1. Save the returned `org` value and use it everywhere company links appear: `https://{org}.prontonlp.com/#/ref/...`
+
+> 📌 **API REALITY:** MCP `getAnalytics` does **not** accept `topicSearchQuery`. Topic-wide aggregates come from **`searchSectors`** (which uses the analytics backend with your topic). Do **not** call `getAnalytics` with `topicSearchQuery`. Do **not** use `getTopMovers` for topic scoping — it has no `topicSearchQuery` parameter.
 
 ---
 
 ## Step 0: Parse the Topic
 
-Extract the core topic/keyword from the user's request. Normalize it:
-- Strip articles (a, an, the)
-- Lowercase for matching
-- Preserve the original phrasing for display
+Extract the **subject phrase** the user is asking about (the topic itself — e.g. `war with Iran`, `inflation`, `AI regulation`).
 
-Store as `topic` for all subsequent calls.
+- Store **`topicExact`**: the topic **exactly as the user stated it** — same wording, casing, and punctuation. **Do not** rewrite it as a “positive” or “negative” angle; **do not** assume the topic has a sentiment valence. This string is what you pass to the search subagent (Step 3) and should be the default for `topicSearchQuery` in MCP calls.
+- If recall is poor with `topicExact` alone, you may retry tools with a cautious normalization (synonyms, trimmed articles) — but **always** pass **`topicExact`** unchanged to the subagent.
+
+Use **`topicExact`** for report titles and for consistency across `searchSectors`, `searchTopCompanies`, and Step 3.
 
 ---
 
-## Step 1: Data Collection — All Batches in Parallel
+## Step 1: Data Collection — First Parallel Batch
 
-Fire all applicable calls simultaneously. Use the topic/keyword in all calls.
+Fire **simultaneously** (same `documentTypes` and date range unless the user specified otherwise):
 
-### 1a. getOrganization — Always call first (in parallel with the rest)
-
-```
-getOrganization    → save org (used for all citation and company links)
-```
-
-### 1b. getAnalytics — Topic Sentiment Across Market
+### 1a. getOrganization
 
 ```
-getAnalytics(
-  topicSearchQuery: "<topic>",
-  documentTypes: ["Earnings Calls"],
-  analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment"],
-  sinceDay: <1Y ago>,
-  untilDay: <today>
-)
+getOrganization → save org
 ```
-→ Save: overall sentiment score, investment score, top event types, top aspects
 
-### 1c. searchSectors — Topic Distribution by Sector
+### 1b. searchSectors — Full period (Related Sectors + totals)
+
+Use **`topicSearchQuery`** (semantic) with **`topicExact`** first, **or** `searchQueries: ["<topicExact>"]` (keyword), not both unless you have a reason.
 
 ```
 searchSectors(
-  searchQueries: ["<topic>"],
+  topicSearchQuery: "<topicExact>",
   documentTypes: ["Earnings Calls"],
-  sinceDay: <1Y ago>,
-  untilDay: <today>
+  sinceDay: <range start>,
+  untilDay: <range end>
 )
 ```
-→ Save: sectors ranked by topic frequency, sentiment per sector
 
-### 1e. searchTopCompanies — Companies Discussing the Topic
+→ Returns `sectors[]` with `name`, `total` (hits), `totalPositives`, `totalNegatives`, `totalNeutrals`, `score`, etc.
+
+**Compute:**
+- **Total hits (meta line):** Sum of `total` across all returned sectors (or state the methodology if partial data).
+- **Optional blended sentiment:** Weighted average of sector `score` by sector `total`:  
+  `sum(score * total) / sum(total)` over sectors that have both fields — use only when valid; otherwise describe sentiment qualitatively.
+
+### 1c. searchTopCompanies
 
 ```
 searchTopCompanies(
-  topicSearchQuery: "<topic>",
+  topicSearchQuery: "<topicExact>",
   documentTypes: ["Earnings Calls"],
-  limit: 30,
-  sinceDay: <1Y ago>,
-  untilDay: <today>
+  sinceDay: <same as above>,
+  untilDay: <same as above>
 )
 ```
-→ Save: top companies by topic mention count, sentiment per company
 
-### 1f. getAnalytics (quarterly) — Sentiment Over Time
-
-```
-getAnalytics(
-  topicSearchQuery: "<topic>",
-  documentTypes: ["Earnings Calls"],
-  analyticsType: ["scores", "patternSentiment"],
-  sinceDay: <1Y ago>,
-  untilDay: <today>
-)
-```
-→ Save: quarterly sentiment trend for Chart 1 (line chart over time)
+→ **Effective cap: at most 20 companies** are returned by the API regardless of any `limit` parameter. Save `companyId`, `companyName`, **`ticker`** (symbol), **`sentiment`** (display column **sentimentScore**), and semantic **`score`** or keyword **`hitsCount`** for the **Hits** column (whichever the response provides).
 
 ---
 
-## Step 2: Keyword Heatmap (REQUIRED - call as separate tool)
+## Step 2: Top Documents — getCompanyDocuments (parallel)
 
-After completing data collection, call the heatmap as a **separate tool call** (NOT embedded in the report):
+After `searchTopCompanies` returns, take the **top 10–15 companies** by hits/relevance (fewer if fewer returned).
+
+For **each** company **in parallel**:
 
 ```
-getTermHeatmap(
-  topicSearchQuery: "<topic>",
+getCompanyDocuments(
+  companyName: "<exact companyName from searchTopCompanies>",
   documentTypes: ["Earnings Calls"],
-  sinceDay: <1Y ago>,
-  untilDay: <today>
+  excludeFutureDocuments: true
 )
 ```
 
-This displays the interactive heatmap visualization **BEFORE** the HTML report. The heatmap is a standalone visualization, not part of the report HTML.
+The API returns documents **newest first**. From each response, keep only the **first 1–2** rows per company before merging (reduces table bloat).
 
-Reference the heatmap results in Section 2 of your report text, but do not embed it in the HTML.
+→ Flatten all kept rows. **Dedupe** by `documentID`. Sort by `date` descending. Keep the **top 15–25** rows for the HTML table.
+
+**Table columns:** Company | Title | Date | Document ID (use `documentID` from the tool; users can chain to `search` / other tools — do not invent document URLs).
 
 ---
 
-## Step 3: Quote Collection — Use Search Agent
+## Step 3: Quote Collection — Search Agent
 
-Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
+Delegate to **ONE** `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
 ```
 "org: [org from getOrganization]
 
-Find quotes about <topic> across the market. Run these searches:
-1. Most bullish/positive quotes about <topic> — sentiment: positive, size: 5
-2. Most bearish/negative quotes about <topic> — sentiment: negative, size: 5
-3. Notable analyst questions about <topic> — sections: EarningsCalls_Question, size: 5
-4. Quotes from different sectors about <topic> — documentTypes: Earnings Calls, size: 5
-Return all results with speaker name, role, company, and date."
+**Topic (exact string — use verbatim in every search; do not rephrase, do not treat as inherently positive or negative):**
+<topicExact>
+
+Collect evidence for a market-wide topic report including Themes with verbatim quotes.
+
+The topic is neutral — it is not 'bullish' or 'bearish' as a label. Do **not** use sentiment: positive / sentiment: negative filters scoped to the topic. Use `topicSearchQuery` set to the exact topic string above (preferred) or equivalent per your search tool.
+
+Run these searches (match the report date range if the caller specified one):
+1. Broad statements discussing the topic — topicSearchQuery: <topicExact>, documentTypes: ['Earnings Calls'], size: 16
+2. Additional coverage with sector diversity — same topicSearchQuery; vary `sectors` across calls or paginate; total size across calls ~16
+3. Analyst questions on the topic — topicSearchQuery: <topicExact>, sections: ['EarningsCalls_Question'], size: 12
+4. If results are thin, one cautious broader pass (e.g. searchQuery) — only when needed; keep topic anchored to the exact string when possible
+
+Requirements:
+- Return **verbatim** quote text (short clauses or 1–2 sentences each).
+- Every quote: speaker name, role (if available), company, date, and source link / sentence id if available.
+- Cover **at least 5 distinct sectors** across the combined results when the data allows.
+
+Organize output for the report under headings such as **Representative commentary**, **Analyst questions**, and **By sector cluster** — not as 'bullish vs bearish on the topic' unless you are describing the *content* of specific quotes."
 ```
 
-→ Save top quotes with attribution.
+→ Save quotes with full attribution. **No fabrication** — Themes evidence must come only from these results or from explicit `search` follow-ups you run yourself.
 
 ---
 
@@ -135,107 +135,87 @@ Return all results with speaker name, role, company, and date."
 
 ### Output Format — Environment-Aware
 
-**Detect the environment before rendering:**
-
 | Environment | Detection | Output format |
 |-------------|-----------|---------------|
 | **claude.ai** | `Bash` tool is NOT available | Inline HTML fragment rendered in chat |
 | **Claude Cowork** | `Bash` tool IS available | HTML written to file |
 
-### HTML rules (apply to BOTH environments — only delivery differs):
+### HTML rules (apply to BOTH environments)
+
 - No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags — output only a `<style>` block followed by HTML content and `<script>` blocks
 - Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-text-tertiary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--border-radius-lg)`, `var(--border-radius-md)`
 - For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
 - **Value coloring rule — applies to every numeric value, score, and % change:**
   - Value **> 0** (positive sentiment, positive change): text color `#1D9E75` (green)
   - Value **< 0** (negative sentiment, negative change): text color `#D85A30` (red)
-  - Value **= 0**: no color — use default inherited text color
-- **Score display rule:** Investment scores and sentiment scores are raw API values in the **0.0–1.0 range**. Display them exactly as returned — never multiply, never append "/10". `sentimentScoreChange` and `investmentScoreChange` are percentage changes — always display with a `%` suffix (e.g. `+4.2%`, `-1.8%`). Any negative number **must** render in red `#D85A30`.
-- **Company link format:** Use `org` from `getOrganization` to build all company links:
+  - Value **= 0**: default inherited text color
+- **Score display rule:** Show numeric scores **as returned** — never multiply, never append "/10". **`searchTopCompanies` `sentiment` (column sentimentScore)** may be a signed scale (e.g. -1 to 1) or another range per environment — do not rescale. Other sentiment fields may be **0.0–1.0** where documented. Percentage changes from tools use a **`%`** suffix. Any negative number **must** render in red `#D85A30`.
+- **Company link format:**
   ```html
   <a href="https://{org}.prontonlp.com/#/ref/$COMPANY{id}" class="co-link">{name}</a>
   ```
-  where `{id}` is the numeric company `id` field from the tool response.
+  Use numeric `companyId` from `searchTopCompanies` (strip `$COMPANY` prefix if already present in ids — match your environment’s ID format).
 - Load Chart.js once: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
 - All chart data as inline JS constants — never reference external files
 
-### claude.ai delivery:
-- Output the HTML fragment directly inline in the chat response
+### claude.ai delivery
 
-### Claude Cowork delivery:
-- Write the full HTML to a file named `[topic]-topic-report.html` (e.g. `inflation-topic-report.html`) using the `Write` tool
-- After writing, tell the user the filename and open it
+Output the HTML fragment directly inline in the chat response.
+
+### Claude Cowork delivery
+
+Write the full HTML to `[topic]-topic-report.html` using the `Write` tool, then tell the user the filename.
 
 ---
 
-## Report Structure
+## Report Structure (Highlights-style where MCP-supported — no Hits Overtime chart)
 
-### Title
+### Title / meta
+
 ```
-# [Topic] — Topic Intelligence Report
-Generated: [Date] | Period: Past Year | Mentions: [N]
+# [topicExact] — Topic Intelligence Report
+Generated: [Date] | Period: [stated range] | Hits (market total, methodology): [N]
 ```
+
+Use **Hits**, never “Mentions.” The **N** must match the disclosed rule (e.g. sum of sector `total` over full-period `searchSectors`).
 
 ---
 
 ### Section 1: Executive Summary
 
-2–3 paragraphs explicitly stating:
-- Overall topic sentiment (positive/negative/neutral) with score
-- Which sectors are most engaged with the topic
-- Top companies driving the conversation
-- Trend direction (RISING/FALLING mentions)
-- Key insight: what the data reveals about market perception
+Write **2–4 paragraphs** in a **macro / market-narrative** style (see quality bar: cross-sector and geography, near-term vs medium-term dynamics, uncertainty and policy or operational drivers). **Do not invent statistics.** Only use numbers that come from tools (totals, sector rankings, company counts).
+
+You may describe sentiment **qualitatively** or use the weighted sector score **if** you computed it from real sector data.
 
 ---
 
-### Section 2: Keyword Heatmap (only if user explicitly requested)
+### Section 2: Charts and tables (Chart.js + HTML tables)
 
-**This section appears ONLY when the user explicitly requested the heatmap visualization.**
+Present in this **order**:
 
-Display the `getTermHeatmap` visualization here. Include a brief interpretation of the heatmap patterns.
+1. **Chart — Related sectors**  
+   - **Horizontal bar chart** — top sectors by `total` from full-period `searchSectors` (truncate to top 10–15 if crowded).  
+   - Dataset label: `Hits` or `Topic hits by sector`.
 
-If the user did NOT request the heatmap: Skip this section entirely — do not include placeholders.
+2. **Table — Related companies** (`searchTopCompanies`)  
+   - Columns **in this order:** **Company Name** (linked) | **Symbol** (`ticker`; show `—` if empty) | **sentimentScore** (from API field `sentiment`, formatted as returned — apply green/red coloring per value rules) | **Hits** (`hitsCount` for keyword flow, or `score` for semantic / `topicSearchQuery` flow — keep column title **Hits** in both cases).  
+   - Do **not** promise more than **20** rows.
 
----
+3. **Table — Top documents** (`getCompanyDocuments` pipeline)  
+   - Columns: **Company** | **Title** | **Date** | **Document ID**
 
-### Section 3: Sentiment Over Time (Chart 1)
+**Do not** add a hits-over-time or overtime line chart — MCP data for this skill does not support an accurate time series comparable to the in-app Highlights widget.
 
-**Line chart** showing topic sentiment trend over the past year (quarterly data points from `getAnalytics`).
+**Example Chart.js — horizontal sectors:**
 
-Chart.js configuration:
-```javascript
-{
-  type: 'line',
-  data: {
-    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-    datasets: [{
-      label: 'Topic Sentiment',
-      data: [score1, score2, score3, score4],
-      borderColor: '#3B82F6',
-      tension: 0.3
-    }]
-  }
-}
-```
-
-State: "Topic sentiment is [RISING/FALLING/STABLE] — from X.XX to X.XX over the past year"
-
----
-
-### Section 4: Sector Distribution
-
-**Horizontal bar chart** showing topic mention intensity by sector (from `searchSectors`).
-
-Chart.js configuration:
 ```javascript
 {
   type: 'bar',
   data: {
     labels: [sector names],
     datasets: [{
-      label: 'Topic Mentions',
-      data: [count per sector],
+      label: 'Hits',
+      data: [totals...],
       backgroundColor: '#3B82F6'
     }]
   },
@@ -243,82 +223,48 @@ Chart.js configuration:
 }
 ```
 
-**Top sectors table:**
-
-| Sector | Mentions | Sentiment | Dominant Aspect |
-|--------|----------|-----------|-----------------|
-| [Sector] | X | +X.XX / -X.XX | [aspect] |
+**Optional small table after the sectors chart** — sectors with Hits (`total`), Sentiment (`score`), and optional positive/negative/neutral counts from `totalPositives` / `totalNegatives` / `totalNeutrals` when present. **No “Dominant Aspect” column** (aspects removed).
 
 ---
 
-### Section 5: Top Companies
+### Section 3: Key Quotes
 
-**Data table** with company details (from `searchTopCompanies`):
-
-| Company | Ticker | Country | Sector | Hits | Sentiment |
-|---------|--------|---------|--------|------|-----------|
-| [Name] | [Ticker] | [Country] | [Sector] | X | +X.XX / -X.XX |
-
-Highlight the top 3 companies by mention count and the top 3 by positive sentiment.
+From the search agent — group as **Representative commentary**, **Analyst questions**, and **Other angles** (or by sector), matching how the subagent organized results. Full attribution and links/ids as provided. **Do not** force a “bullish vs bearish on the topic” layout unless the quotes clearly support that framing.
 
 ---
 
-### Section 6: Event Sentiment Breakdown (Chart 2)
+### Section 4: Themes
 
-**Pie/Doughnut chart** showing sentiment distribution (positive vs negative mentions).
+**3–6 themes.** Each theme **must** follow this structure:
 
-```javascript
-{
-  type: 'doughnut',
-  data: {
-    labels: ['Positive', 'Negative', 'Neutral'],
-    datasets: [{
-      data: [positiveCount, negativeCount, neutralCount],
-      backgroundColor: ['#1D9E75', '#D85A30', '#9CA3AF']
-    }]
-  }
-}
-```
+- **Theme N: [Short title]**
+- **Insight:** One short paragraph — synthesis only, no fake numbers.
+- **Relevant Evidence:**  
+  - Bullet list of **verbatim** quotes from Step 3 (or your own `search` results).  
+  - Each line ends with **(Company Name)**.  
+  - **Never** invent or paraphrase-as-if-verbatim.
+- **Market Implications:** One short paragraph — clearly framed as **interpretation** grounded in the evidence above.
+
+Themes should **cluster** the evidence (e.g. by mechanism, sector angle, or risk channel), not repeat the Executive Summary verbatim.
 
 ---
 
-### Section 7: Key Quotes
+### Section 5: Conclusion
 
-From the search agent — attributed quotes with source links:
-
-**Bullish quotes about [topic]:**
-- "[Quote]" — [Speaker], [Role], [Company] ([Date])
-  [Source link]
-
-**Bearish quotes about [topic]:**
-- "[Quote]" — [Speaker], [Role], [Company] ([Date])
-  [Source link]
-
-**Analyst questions about [topic]:**
-- "[Quote]" — [Speaker], [Role], [Company] ([Date])
-  [Source link]
-
----
-
-### Section 8: Top Aspects
-
-From `getAnalytics` — what specific aspects of the topic are discussed:
-
-| Aspect | Frequency | Sentiment | Companies |
-|--------|-----------|-----------|-----------|
-| [aspect] | X hits | +X.XX | [top company] |
+- Opening **synthesis** paragraph (evidence-grounded).
+- **Key takeaways for market direction** — separate **Near-term**, **Medium-term**, **Long-term** subsections (bullet lists are fine). Use **conditional** language; no fabricated KPIs or tickers.
+- **Critical monitoring indicators** — bullet list of **observable** items tied to the topic (macro series, policy cues, corporate guidance themes, etc.).
+- **Portfolio positioning** — **Overweight / Underweight / Neutral** bullets as **hypotheses** derived from the report’s evidence, not personalized investment advice.
 
 ---
 
 ## Charts Summary
 
-| Chart | Type | Data Source | Section | Notes |
-|-------|------|------------|---------|-------|
-| Heatmap | Heatmap | getTermHeatmap | Section 2 | **OPTIONAL** — only when user explicitly requests |
-| Chart 1 | Line | Quarterly sentiment over time | Section 3 | |
-| Chart 2 | Doughnut | Positive/Negative/Neutral breakdown | Section 6 | |
-
-Place charts within their corresponding section. All data as inline JS constants.
+| Chart / table | Type | Data source |
+|---------------|------|-------------|
+| Related sectors | Horizontal bar | Full-period `searchSectors` |
+| Related companies | Table | `searchTopCompanies` (≤20 rows) |
+| Top documents | Table | Batched `getCompanyDocuments` |
 
 ---
 
@@ -331,31 +277,30 @@ Past 6 months:       sinceDay = 6 months ago, untilDay = today
 YTD:                 sinceDay = Jan 1,         untilDay = today
 ```
 
-Default to **past year** for topic intelligence. Topic analysis benefits from longer time horizons to see trends.
+Default to **past year**.
 
 ---
 
 ## Error Handling
 
 | Problem | What to do |
-|---------|-----------|
-| Topic not found in documents | Try synonyms or broader terms; note in report |
-| No sentiment trend data | Show snapshot only; note insufficient data for trend |
-| `searchSectors` returns empty | Try `searchTopCompanies` instead |
-| No quotes from search agent | Note "No matching quotes found" — never fabricate |
-| Very few companies (<5) | Note limited dataset; proceed with available data |
+|---------|------------|
+| Topic sparse or empty | Try synonyms or broader terms; state limitations |
+| `searchSectors` empty | Rely on `searchTopCompanies` and quotes; note limited sector view |
+| No quotes from search agent | State explicitly; shrink Themes or skip Themes with a warning — **never fabricate** |
+| `getCompanyDocuments` fails for some names | Skip those companies; continue with available documents |
+| Fewer than 5 companies | Note small sample; still deliver what the data supports |
 
 ---
 
 ## Best Practices
 
-1. **Detect environment first** — inline HTML on claude.ai, write HTML file in Claude Cowork
-2. **Trigger keyword heatmap ONLY when user explicitly requests** — do NOT call getTermHeatmap automatically; it requires user request (e.g., "show me the heatmap", "include heatmap")
-3. **Use search agent** for quotes — include diverse perspectives (bullish/bearish/analyst)
-4. **Present both sides** — always show positive AND negative mentions of the topic
-5. **Cite all quotes** with speaker name, role, company, and source link
-6. **Never fabricate data** — if a tool returns nothing, say so honestly
-7. **Use the topic consistently** in all calls — variations may yield different results
+1. **Detect environment first** — inline HTML vs file.
+2. **Never call `getTermHeatmap`** from this skill.
+3. **Hits terminology** everywhere in UI copy (charts, tables, meta).
+4. **Themes and Conclusion** must remain **grounded** in tool outputs and attributed quotes.
+5. **Never fabricate data** — if a tool returns nothing, say so honestly.
+6. Use **`topicExact`** for the subagent and prefer it for `topicSearchQuery` across tools.
 
 ---
 
@@ -363,6 +308,6 @@ Default to **past year** for topic intelligence. Topic analysis benefits from lo
 
 | File | Purpose |
 |------|---------|
-| `reference/tool-cheatsheet.md` | Complete tool parameter reference for topic analysis |
-| `examples/inflation-topic.md` | Full worked example: inflation topic intelligence |
-| `evaluations/criteria.md` | Evaluation rubric — triggering, data collection, visualization, quotes |
+| `reference/tool-cheatsheet.md` | Tool parameter reference for topic analysis |
+| `examples/inflation-topic.md` | Worked example |
+| `evaluations/criteria.md` | Evaluation rubric |

@@ -2,179 +2,97 @@
 
 ## Tools Used
 
-This skill uses the following ProntoNLP tools for topic-based research:
+Topic intelligence uses these ProntoNLP tools. **Do not** call `getTermHeatmap`, `getMindMap`, `deepResearch`, or **`getTrends`** from this skill.
 
 ---
 
-## 1. getAnalytics — Topic Sentiment Analysis
+## 1. getOrganization
 
-**Purpose:** Overall sentiment and event data for a topic across all documents.
+**Purpose:** Resolve `org` for all `https://{org}.prontonlp.com/#/ref/...` company links.
 
-```json
-{
-  "topicSearchQuery": "<topic keyword>",
-  "documentTypes": ["Earnings Calls"],
-  "analyticsType": ["scores", "eventTypes", "aspects", "patternSentiment"],
-  "sinceDay": "YYYY-MM-DD",
-  "untilDay": "YYYY-MM-DD"
-}
+```
+getOrganization()
 ```
 
-**Response fields:**
-- `sentimentScore`: overall sentiment (0.0–1.0)
-- `investmentScore`: investment relevance (0.0–1.0)
-- `eventTypes[]`: dominant events (GrowthDriver, RiskFactor, etc.)
-- `aspects[]`: specific sub-topics discussed
-
-**Report usage:** Section 1 (Executive Summary), Section 9 (Top Aspects)
-
 ---
 
-## 2. getTrends — Related Topic Trends
+## 2. searchSectors — Sector hits + sentiment (topic-scoped)
 
-**Purpose:** What topics are trending alongside the main topic.
+**Purpose:** Sector breakdown for the topic; drives **Related Sectors** bar chart, sector table, and **total hits** (sum of `total`). One **full-period** call per report (do **not** synthesize an overtime line chart from repeated `searchSectors` by quarter — that is not reliable for this skill).
+
+**Full period (example):**
 
 ```json
 {
-  "topicSearchQuery": "<topic keyword>",
-  "documentTypes": ["Earnings Calls"],
-  "sinceDay": "YYYY-MM-DD",
-  "untilDay": "YYYY-MM-DD",
-  "limit": 20,
-  "sortBy": "score",
-  "sortOrder": "desc"
-}
-```
-
-**Response fields:**
-- `topics[]`: related topic names
-- `score`: topic relevance score
-- `change`: % change in mentions
-
-**Report usage:** Section 7 (Related Themes)
-
----
-
-## 3. searchSectors — Topic Distribution by Sector
-
-**Purpose:** Which sectors discuss the topic most frequently.
-
-```json
-{
-  "searchQueries": ["<topic keyword>"],
+  "topicSearchQuery": "<topicExact>",
   "documentTypes": ["Earnings Calls"],
   "sinceDay": "YYYY-MM-DD",
   "untilDay": "YYYY-MM-DD"
 }
 ```
 
-**Response fields:**
-- `sectors[]`: ranked list of sectors
-- `topicDistribution`: mentions per sector
-- `sentimentPerSector`: sentiment score per sector
+**Response:** `sectors[]` with `name`, `total` (hits), `totalPositives`, `totalNegatives`, `totalNeutrals`, `score`, etc.
 
-**Report usage:** Section 4 (Sector Distribution)
+**Report usage:** Horizontal bar chart, optional sector table, meta **Hits** = sum of `total` over sectors.
 
----
-
-## 4. searchTopCompanies — Companies Discussing the Topic
-
-**Purpose:** Which companies mention the topic most often.
-
-```json
-{
-  "topicSearchQuery": "<topic keyword>",
-  "documentTypes": ["Earnings Calls"],
-  "limit": 30,
-  "sinceDay": "YYYY-MM-DD",
-  "untilDay": "YYYY-MM-DD"
-}
-```
-
-**Response fields:**
-- `topCompanies[]`: ranked companies
-- `hitCount`: number of mentions
-- `sentiment`: sentiment per company
-- `companyName`, `ticker`, `country`, `sector`
-
-**Report usage:** Section 5 (Top Companies)
+**Note:** MCP `getAnalytics` does **not** accept `topicSearchQuery`. Use **`searchSectors`** for topic-wide sector analytics.
 
 ---
 
-## 5. getTopMovers — Sentiment/Investment Leaders on Topic
+## 3. searchTopCompanies — Related companies table
 
-**Purpose:** Top companies by sentiment or investment score on this topic.
-
-```json
-{
-  "topicSearchQuery": "<topic keyword>",
-  "documentTypes": ["Earnings Calls"],
-  "marketCaps": ["Small ($300mln - $2bln)", "Mid ($2bln - $10bln)", "Large ($10bln - $200bln)", "Mega ($200bln & more)"],
-  "limit": 20,
-  "sortBy": ["sentimentScore", "investmentScore", "sentimentScoreChange", "aspectScore"],
-  "sinceDay": "YYYY-MM-DD",
-  "untilDay": "YYYY-MM-DD"
-}
-```
-
-**Response fields:**
-- `topMovers[]`: companies ranked by criterion
-- `underperforming[]`: low score, high mentions
-- `overperforming[]`: high score, high mentions
-
-**Report usage:** Section 1, Section 5
-
----
-
-## 6. getTermHeatmap — Keyword Heatmap Visualization
-
-**Purpose:** Visual heatmap of topic distribution across sectors/companies.
+**Purpose:** Top companies discussing the topic (semantic or keyword flow inside API).
 
 ```json
 {
-  "topicSearchQuery": "<topic keyword>",
+  "topicSearchQuery": "<topicExact>",
   "documentTypes": ["Earnings Calls"],
   "sinceDay": "YYYY-MM-DD",
   "untilDay": "YYYY-MM-DD"
 }
 ```
 
-**Report usage:** Section 2 (Keyword Heatmap) — REQUIRED before rendering
+**Response:** Up to **20** companies (API cap). Fields: `companyId`, `companyName`, `ticker` (symbol; may be empty string), `sentiment` (show in HTML as column **sentimentScore**), plus either semantic `score` or keyword `hitsCount` for the **Hits** column.
+
+**Report usage:** Related companies table (≤20 rows) — columns **Company Name** | **Symbol** | **sentimentScore** | **Hits**.
 
 ---
 
-## 7. pronto-search-summarizer — Quote Collection
+## 4. getCompanyDocuments — Rows for Top documents table
 
-**Purpose:** Attributed quotes about the topic from executives and analysts.
+**Purpose:** Latest document(s) per top company; batch after `searchTopCompanies`.
+
+```json
+{
+  "companyName": "<name from searchTopCompanies>",
+  "documentTypes": ["Earnings Calls"],
+  "excludeFutureDocuments": true
+}
+```
+
+Call **in parallel** for **10–15** top companies. Responses are newest-first — take **1–2** documents per company, then flatten, dedupe by `documentID`, sort by `date` desc, keep **15–25** rows.
+
+**Report usage:** Top documents table (Company | Title | Date | Document ID).
+
+---
+
+## 5. pronto-search-summarizer — Quotes + theme evidence
 
 **subagent_type:** `prontonlp-plugin:pronto-search-summarizer`
 
-Task format:
-```
-"Find quotes about <topic> across the market. Run these searches:
-1. Most bullish/positive quotes about <topic> — sentiment: positive, size: 5
-2. Most bearish/negative quotes about <topic> — sentiment: negative, size: 5
-3. Notable analyst questions about <topic> — sections: EarningsCalls_Question, size: 5
-4. Quotes from different sectors about <topic> — documentTypes: Earnings Calls, size: 5
-Return all results with speaker name, role, company, and date."
-```
-
-→ Agent returns clean summary with quotes and source links.
-
-**Report usage:** Section 8 (Key Quotes)
+Use the task template in **SKILL.md Step 3**: pass **`topicExact`** verbatim; **no** sentiment: positive/negative filters on the topic; larger `size`; verbatim quotes for Themes.
 
 ---
 
-## ID Flow
+## ID / Data Flow
 
 ```
-topicSearchQuery → 
-  ├── getAnalytics → sentiment, events, aspects
-  ├── getTrends → related topics
-  ├── searchSectors → sector distribution
-  ├── searchTopCompanies → company rankings
-  ├── getTopMovers → sentiment leaders
-  └── getTermHeatmap → visualization
+topicExact
+  ├── getOrganization → org
+  ├── searchSectors (full period) → sectors, total hits meta, sectors chart
+  ├── searchTopCompanies → company table → company names for getCompanyDocuments
+  ├── getCompanyDocuments ×10–15 → top documents table
+  └── pronto-search-summarizer → Key Quotes + Themes evidence
 ```
 
 ---
@@ -192,10 +110,6 @@ topicSearchQuery →
 
 ## Quick Parameter Reference
 
-**Document types**: `Earnings Calls` | `10-K` | `10-Q` | `Company Conference Presentations` | `Analyst/Investor Day`
+**Document types:** `Earnings Calls` | `10-K` | `10-Q` | `Company Conference Presentations` | `Analyst/Investor Day` | …
 
-**Market caps**: `Nano (under $50mln)` | `Micro ($50mln - $300mln)` | `Small ($300mln - $2bln)` | `Mid ($2bln - $10bln)` | `Large ($10bln - $200bln)` | `Mega ($200bln & more)`
-
-**Sort options**: `sortBy: "score"` | `sortBy: "sentiment"` | `sortBy: "day"` | `sortBy: "count"`
-
-**Event types**: `GrowthDriver` | `RiskFactor` | `CapexExpansion` | `Restructuring` | `RegulatoryChange` | `MergerAcquisition`
+**Topic string:** Prefer **`topicExact`** (user’s exact wording) for `topicSearchQuery` in `searchSectors` and `searchTopCompanies`.
