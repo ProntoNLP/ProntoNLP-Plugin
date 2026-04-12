@@ -1,0 +1,42 @@
+[
+  {
+    "id": "eval-pronto-topic-research-1",
+    "prompt": "Write a topic research report on the phrase 'War with Iran'",
+    "expected_tool_calls": [
+      {
+        "tool": "getOrganization",
+        "params": {}
+      },
+      {
+        "tool": "getTrendOvertime",
+        "params": {
+          "topicSearchQuery": "War with Iran",
+          "documentTypes": ["Earnings Calls"]
+        }
+      },
+      {
+        "tool": "getTrendRelatedSectors",
+        "params": {}
+      },
+      {
+        "tool": "getTrendWordsByCompany",
+        "params": {}
+      },
+      {
+        "tool": "getTrendWordsByDocument",
+        "params": {}
+      },
+      {
+        "tool": "getTrendNetwork",
+        "params": {}
+      }
+    ],
+    "expected_output_fragments": [
+      "<h1 class=\"title\">Topic Research:",
+      "<script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>",
+      "Generated:",
+      "borderDash",
+      "target=\"_blank\""
+    ]
+  }
+]

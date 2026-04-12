@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Topic Research: Template</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: -apple-system, sans-serif; background: #ffffff; color: #1e293b; padding: 20px; }
+    .title { color: #0f172a; border-bottom: 2px solid #1D9E75; padding-bottom: 8px; margin-bottom: 4px; }
+    .subtitle { color: #64748b; font-size: 14px; margin-top: 0; margin-bottom: 24px; }
+    h2, h3 { color: #1D9E75; margin-top: 24px; font-weight: 600; }
+    .graphs-container, .tables-container { max-width: 1200px; margin-bottom: 32px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1200px; }
+    canvas { width: 100% !important; max-height: 350px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; margin-bottom: 24px; text-align: left; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th { background: #f8fafc; color: #475569; padding: 12px; border-bottom: 1px solid #e2e8f0; font-weight: 600; }
+    td { padding: 12px; border-bottom: 1px solid #e2e8f0; color: #1e293b; }
+    .co-link { color: #2563eb; text-decoration: none; font-weight: 500; }
+    .co-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1 class="title">Topic Research: [Topic]</h1>
+  <p class="subtitle">Generated: [Date] | Period: [sinceDay] to [untilDay] | Total Hits: [Total hits from getTrendOvertime]</p>
+
+  <div class="grid">
+    <div>
+      <h3>Hits Overtime</h3>
+      <canvas id="hitsOvertimeChart"></canvas>
+    </div>
+    <div>
+      <h3>Related Sectors</h3>
+      <canvas id="relatedSectorsChart"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // Light mode defaults for all charts
+    Chart.defaults.color = '#475569';
+    Chart.defaults.borderColor = '#e2e8f0';
+
+    // Mock arrays
+    const overtimeLabels = ['Q1', 'Q2', 'Q3', 'Q4'];
+    const currentHits = [150, 200, 300, 250];
+    const priorHits = [100, 150, 200, 180];
+    const positiveHits = [80, 120, 150, 100];
+    const negativeHits = [30, 40, 80, 70];
+
+    // Chart: Hits Overtime
+    new Chart(document.getElementById('hitsOvertimeChart'), {
+      type: 'line',
+      data: { 
+        labels: overtimeLabels, 
+        datasets: [
+          { label: 'Total Hits (Current)', data: currentHits, borderColor: '#2563eb', tension: 0.3, pointRadius: 5 },
+          { label: 'Total Hits (Prior)', data: priorHits, borderColor: '#2563eb', borderDash: [5, 5], tension: 0.3, pointRadius: 5 },
+          { label: 'Positive', data: positiveHits, borderColor: '#1D9E75', hidden: true },
+          { label: 'Negative', data: negativeHits, borderColor: '#D85A30', hidden: true }
+        ]
+      },
+      options: { 
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label + ': ' + context.raw;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const sectors = ['Technology', 'Healthcare'];
+    const sectorHits = [400, 350];
+    new Chart(document.getElementById('relatedSectorsChart'), {
+      type: 'bar',
+      data: { labels: sectors, datasets: [{ label: 'Sector Hits', data: sectorHits, backgroundColor: '#3b82f6' }] }
+    });
+  </script>
+</body>
+</html>
