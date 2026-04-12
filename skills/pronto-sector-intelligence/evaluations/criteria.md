@@ -91,7 +91,7 @@ This file defines what a correct, high-quality response from `pronto-sector-inte
 | CSS design tokens used | `var(--color-text-primary)`, `var(--color-background-primary)` etc. — not hardcoded colors for layout |
 | Signal colors correct | Green `#1D9E75`, red `#D85A30` for RISING/FALLING and positive/negative signals |
 | RISING badge green, FALLING badge red | Direction badges use correct background colors |
-| Company links formatted correctly | Links use `https://prontonlp.prontonlp.com/#/ref/$COMPANY{id}` format |
+| Company links formatted correctly | Links use `https://{org}.prontonlp.com/#/ref/$COMPANY{id}` format |
 | Leaderboard cards in responsive grid | `grid-template-columns: repeat(auto-fit, minmax(...))` or equivalent |
 | Potential Buy Signals card present | 🔍 icon; shows high-score companies with falling stock |
 

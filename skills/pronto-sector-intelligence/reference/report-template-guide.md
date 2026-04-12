@@ -82,8 +82,10 @@ Use inline badges for direction labels:
 
 ### Company link format
 
+`{org}` is retrieved by calling `getOrganization` in Batch 1. Never hardcode it.
+
 ```html
-<a href="https://prontonlp.prontonlp.com/#/ref/$COMPANY{id}" class="co-link">{name}</a>
+<a href="https://{org}.prontonlp.com/#/ref/$COMPANY{id}" class="co-link">{name}</a>
 ```
 
 where `{id}` is the numeric `id` field from the tool response.

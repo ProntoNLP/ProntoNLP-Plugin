@@ -15,6 +15,8 @@ metadata:
 
 > ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `deepResearch`, or any interactive visualization tool from this skill. These are user-triggered only. Only call the tools explicitly listed in the batches below.
 
+> 🔑 **ORG RULE:** Call `getOrganization` once in Step 1. Save the returned `org` value and use it everywhere company or quote links appear: `https://{org}.prontonlp.com/#/ref/...`
+
 ---
 
 ## Step 0: Parse the Topic
@@ -32,7 +34,13 @@ Store as `topic` for all subsequent calls.
 
 Fire all applicable calls simultaneously. Use the topic/keyword in all calls.
 
-### 1a. getAnalytics — Topic Sentiment Across Market
+### 1a. getOrganization — Always call first (in parallel with the rest)
+
+```
+getOrganization    → save org (used for all citation and company links)
+```
+
+### 1b. getAnalytics — Topic Sentiment Across Market
 
 ```
 getAnalytics(
@@ -45,7 +53,7 @@ getAnalytics(
 ```
 → Save: overall sentiment score, investment score, top event types, top aspects
 
-### 1b. getTrends — Topic Trend Over Time
+### 1c. getTrends — Topic Trend Over Time
 
 ```
 getTrends(
@@ -58,7 +66,7 @@ getTrends(
 ```
 → Save: top related topics, trend direction, change %
 
-### 1c. searchSectors — Topic Distribution by Sector
+### 1d. searchSectors — Topic Distribution by Sector
 
 ```
 searchSectors(
@@ -70,7 +78,7 @@ searchSectors(
 ```
 → Save: sectors ranked by topic frequency, sentiment per sector
 
-### 1d. searchTopCompanies — Companies Discussing the Topic
+### 1e. searchTopCompanies — Companies Discussing the Topic
 
 ```
 searchTopCompanies(
@@ -83,7 +91,7 @@ searchTopCompanies(
 ```
 → Save: top companies by topic mention count, sentiment per company
 
-### 1e. getTopMovers — Sentiment/Investment on Topic
+### 1f. getTopMovers — Sentiment/Investment on Topic
 
 ```
 getTopMovers(
@@ -98,7 +106,7 @@ getTopMovers(
 ```
 → Save: top companies by sentiment/investment on this topic
 
-### 1f. getAnalytics (quarterly) — Sentiment Over Time
+### 1g. getAnalytics (quarterly) — Sentiment Over Time
 
 ```
 getAnalytics(
@@ -137,7 +145,9 @@ Reference the heatmap results in Section 2 of your report text, but do not embed
 Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 
 ```
-"Find quotes about <topic> across the market. Run these searches:
+"org: [org from getOrganization]
+
+Find quotes about <topic> across the market. Run these searches:
 1. Most bullish/positive quotes about <topic> — sentiment: positive, size: 5
 2. Most bearish/negative quotes about <topic> — sentiment: negative, size: 5
 3. Notable analyst questions about <topic> — sections: EarningsCalls_Question, size: 5
@@ -168,6 +178,12 @@ Return all results with speaker name, role, company, and date."
   - Value **> 0** (positive sentiment, positive change): text color `#1D9E75` (green)
   - Value **< 0** (negative sentiment, negative change): text color `#D85A30` (red)
   - Value **= 0**: no color — use default inherited text color
+- **Score display rule:** Investment scores and sentiment scores are raw API values in the **0.0–1.0 range**. Display them exactly as returned — never multiply, never append "/10". `sentimentScoreChange` and `investmentScoreChange` are percentage changes — always display with a `%` suffix (e.g. `+4.2%`, `-1.8%`). Any negative number **must** render in red `#D85A30`.
+- **Company link format:** Use `org` from `getOrganization` to build all company links:
+  ```html
+  <a href="https://{org}.prontonlp.com/#/ref/$COMPANY{id}" class="co-link">{name}</a>
+  ```
+  where `{id}` is the numeric company `id` field from the tool response.
 - Load Chart.js once: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
 - All chart data as inline JS constants — never reference external files
 

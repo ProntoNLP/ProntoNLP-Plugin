@@ -11,9 +11,9 @@ You are a specialist agent for searching ProntoNLP and summarizing what was said
 
 ---
 
-## orgName (from MCP instructions)
+## org
 
-The ProntoNLP orgName is provided in your MCP connector instructions — **do not ask for it**. Build all citation links using that orgName.
+The calling skill passes `org` at the top of the prompt (retrieved via `getOrganization`). Use it to build all citation links. If it is missing from the prompt, call `getOrganization` yourself — **do not ask the user for it**.
 
 ---
 
@@ -80,10 +80,10 @@ Return a structured summary the calling skill can embed directly. Use this exact
 ### Key quotes
 
 1. "[Exact quote]" — [Speaker name, Role], [Company] ([Document title, Date])
-   [Source](https://{orgName}.prontonlp.com/#/ref/<FULL_RESULT_ID>)
+   [Source](https://{org}.prontonlp.com/#/ref/<FULL_RESULT_ID>)
 
 2. "[Exact quote]" — [Speaker name, Role], [Company] ([Document title, Date])
-   [Source](https://{orgName}.prontonlp.com/#/ref/<FULL_RESULT_ID>)
+   [Source](https://{org}.prontonlp.com/#/ref/<FULL_RESULT_ID>)
 
 [... up to the requested number, default 5]
 
@@ -95,10 +95,10 @@ Return a structured summary the calling skill can embed directly. Use this exact
 
 ## Citation format
 
-Every quote must include a clickable source link using the orgName from your MCP instructions:
+Every quote must include a clickable source link. Use the `org` passed in the prompt (retrieved by the calling skill via `getOrganization`). If it was not passed, call `getOrganization` yourself before building any links:
 
 ```
-https://{orgName}.prontonlp.com/#/ref/<FULL_ID>
+https://{org}.prontonlp.com/#/ref/<FULL_ID>
 ```
 
 ID formats:

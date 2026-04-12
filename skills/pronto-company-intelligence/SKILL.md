@@ -37,6 +37,11 @@ Produces company intelligence reports using ProntoNLP tools. The centerpiece is 
   - Value **< 0** (negative sentiment, negative stock change, negative delta): text color `#D85A30` (red)
   - Value **= 0**: no color — use default inherited text color
 - **Score display rule:** Investment scores and sentiment scores are raw API values in the **0.0–1.0 range**. Display them exactly as returned — never multiply, never append "/10", never reformat as a fraction. Example: show `0.71`, not `7.1` or `7.1/10`. `sentimentScoreChange` and `investmentScoreChange` are percentage changes — always display with a `%` suffix (e.g. `+4.2%`, `-1.8%`). Any negative number or negative percentage (value < 0) **must** render in red `#D85A30` — this includes stock changes, score changes, deltas, and any other numeric field with a minus sign.
+- **Company link format:** Use `org` from `getOrganization` (called in Batch 1) to build all company and competitor links:
+  ```html
+  <a href="https://{org}.prontonlp.com/#/ref/$COMPANY{id}" class="co-link">{name}</a>
+  ```
+  where `{id}` is the numeric company `id` field from the tool response.
 - Load Chart.js once: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
 - All chart data as inline JS constants — never reference external files
 - Clean layout: styled cards, HTML tables, badges, section headers
@@ -102,6 +107,7 @@ Run each batch in sequence; within a batch, fire all calls simultaneously.
 ```
 getCompanyDescription    → save companyId, sector, risks
 getCompanyCompetitors    → save competitor companyIds[]
+getOrganization          → save org (used for citation links and Batch 4 agent)
 ```
 
 **Batch 2** — data collection (needs companyId):
@@ -129,7 +135,9 @@ getStockChange per competitor
 
 Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 ```
-"Fetch all quotes needed for the [company] intelligence report. Run these searches:
+"org: [org from getOrganization]
+
+Fetch all quotes needed for the [company] intelligence report. Run these searches:
 1. Forecast/guidance quotes — Q1 (documentIDs: [doc_q1]), topic: 'forecast guidance outlook', sentiment: positive, size: 3
 2. Forecast/guidance quotes — Q2 (documentIDs: [doc_q2]), topic: 'forecast guidance outlook', sentiment: positive, size: 3
 3. Forecast/guidance quotes — Q3 (documentIDs: [doc_q3]), topic: 'forecast guidance outlook', sentiment: positive, size: 3

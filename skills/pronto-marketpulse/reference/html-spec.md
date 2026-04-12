@@ -104,8 +104,10 @@ Must include: data source (ProntoNLP) · filters applied · exact date range · 
 
 ## Company Link Format
 
+`{org}` is retrieved by calling `getOrganization` at the start of the skill. Never hardcode it.
+
 ```html
-<a href="https://prontonlp.prontonlp.com/#/ref/$COMPANY{id}">{name}</a>
+<a href="https://{org}.prontonlp.com/#/ref/$COMPANY{id}">{name}</a>
 ```
 
 where `{id}` is the numeric `id` field from the company object (prefix with `$COMPANY`).

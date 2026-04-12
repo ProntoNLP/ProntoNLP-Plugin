@@ -69,7 +69,7 @@
       {
         "id": "a12",
         "description": "Company links use correct ProntoNLP URL format",
-        "check": "anchor hrefs match pattern: prontonlp.prontonlp.com/#/ref/$COMPANY{id}"
+        "check": "anchor hrefs match pattern: {org}.prontonlp.com/#/ref/$COMPANY{id}"
       }
     ]
   },

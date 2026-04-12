@@ -102,6 +102,7 @@ Run each batch in sequence; within a batch, fire all calls simultaneously.
 
 **Batch 1** — foundation (no dependencies):
 ```
+getOrganization          → save org (used for citation links and Batch 4 agent)
 getTopMovers(
   sectors: ["<sector>"],
   documentTypes: ["Earnings Calls"],
@@ -153,7 +154,9 @@ Run for the top 2–3 companies by investment score from Batch 1. Aggregate acro
 
 Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
 ```
-"Fetch all quotes needed for the [sector] sector intelligence report. Run these searches:
+"org: [org from getOrganization]
+
+Fetch all quotes needed for the [sector] sector intelligence report. Run these searches:
 1. Bullish quotes about [top trend topic] for [top company 1] — sentiment: positive, size: 3, sinceDay: [date], untilDay: [date]
 2. Bearish/risk quotes about [top risk event] for [top company 1] — sentiment: negative, size: 3, sinceDay: [date], untilDay: [date]
 3. Bullish quotes about [top trend topic] for [top company 2] — sentiment: positive, size: 3, sinceDay: [date], untilDay: [date]

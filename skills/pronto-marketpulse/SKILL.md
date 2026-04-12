@@ -90,7 +90,13 @@ Apply any of these when the user specifies them:
 
 ## Step 2: Call Data Tools
 
-Fire all applicable calls **simultaneously**. Only make the calls needed for the sections determined in Step 0.
+Fire all applicable calls **simultaneously**. Always include `getOrganization` — the returned `org` value is required for all company link URLs (see Company Link Format below).
+
+```
+getOrganization    → save org (required for all company links: https://{org}.prontonlp.com/#/ref/$COMPANY{id})
+```
+
+Only make the remaining calls needed for the sections determined in Step 0.
 
 ### 2a. getTopMovers — Single Call with Multiple Sort Criteria *(when movers section is needed)*
 
@@ -225,8 +231,10 @@ Each section is independently removable. The grid/flex layout must reflow cleanl
 
 ## Company Link Format
 
+Call `getOrganization` at the start of the skill to get `org`. Use it in all company links:
+
 ```html
-<a href="https://prontonlp.prontonlp.com/#/ref/$COMPANY{id}" class="co-link">{name}</a>
+<a href="https://{org}.prontonlp.com/#/ref/$COMPANY{id}" class="co-link">{name}</a>
 ```
 
 where `{id}` is the numeric company `id` field from the tool response (prefix with `$COMPANY`).

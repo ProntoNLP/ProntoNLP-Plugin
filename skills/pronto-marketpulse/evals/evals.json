@@ -55,7 +55,7 @@
           "id": "company-links",
           "description": "Company names link to ProntoNLP using the correct URL format",
           "check": "response_contains",
-          "pattern": "prontonlp.prontonlp.com/#/ref/$COMPANY"
+          "pattern": "{org}.prontonlp.com/#/ref/$COMPANY"
         },
         {
           "id": "date-range-shown",
