@@ -157,10 +157,10 @@ Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pro
 "org: [org from getOrganization]
 
 Fetch all quotes needed for the [sector] sector intelligence report. Run these searches:
-1. Bullish quotes about [top trend topic] for [top company 1] — sentiment: positive, size: 3, sinceDay: [date], untilDay: [date]
-2. Bearish/risk quotes about [top risk event] for [top company 1] — sentiment: negative, size: 3, sinceDay: [date], untilDay: [date]
-3. Bullish quotes about [top trend topic] for [top company 2] — sentiment: positive, size: 3, sinceDay: [date], untilDay: [date]
-4. Notable analyst questions for [top company 2] — sections: EarningsCalls_Question, size: 3, sinceDay: [date], untilDay: [date]
+1. Bullish quotes about [top trend topic] for [top company 1] — companyName: [top company 1], sentiment: positive, documentTypes: ["Earnings Calls"], size: 3, sinceDay: [date], untilDay: [date]
+2. Bearish/risk quotes about [top risk event] for [top company 1] — companyName: [top company 1], sentiment: negative, documentTypes: ["Earnings Calls"], size: 3, sinceDay: [date], untilDay: [date]
+3. Bullish quotes about [top trend topic] for [top company 2] — companyName: [top company 2], sentiment: positive, documentTypes: ["Earnings Calls"], size: 3, sinceDay: [date], untilDay: [date]
+4. Notable analyst questions for [top company 2] — companyName: [top company 2], sections: EarningsCalls_Question, documentTypes: ["Earnings Calls"], size: 3, sinceDay: [date], untilDay: [date]
 Return all results with speaker name, role, and date."
 ```
 

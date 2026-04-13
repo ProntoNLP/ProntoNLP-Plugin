@@ -244,17 +244,19 @@ Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pro
 
 ```
 "org: [org from getOrganization]
+sinceDay: <1Y ago>
+untilDay: <today>
 
 Fetch all quotes needed for the comparison report. Run these searches:
 
 For each company entity — [company 1], [company 2], ...:
-  - Bullish executive quotes: speakerTypes: Executives, sentiment: positive, topic: 'growth outlook guidance', documentTypes: Earnings Calls, size: 3
-  - Bearish/risk quotes: sentiment: negative, topic: 'risk challenge headwind', documentTypes: Earnings Calls, size: 3
-  - Notable analyst questions: sections: EarningsCalls_Question, documentTypes: Earnings Calls, size: 3
+  - Bullish executive quotes: companyName: [company], speakerTypes: Executives, sentiment: positive, topicSearchQuery: 'growth outlook guidance', documentTypes: ["Earnings Calls"], sinceDay: <1Y ago>, untilDay: <today>, size: 3
+  - Bearish/risk quotes: companyName: [company], sentiment: negative, topicSearchQuery: 'risk challenge headwind', documentTypes: ["Earnings Calls"], sinceDay: <1Y ago>, untilDay: <today>, size: 3
+  - Notable analyst questions: companyName: [company], sections: EarningsCalls_Question, documentTypes: ["Earnings Calls"], sinceDay: <1Y ago>, untilDay: <today>, size: 3
 
 For each sector entity — use [top company in sector] as the representative:
-  - Bullish quotes from [top company]: speakerTypes: Executives, sentiment: positive, topic: 'sector growth momentum', size: 3
-  - Bearish/risk quotes from [top company]: sentiment: negative, topic: 'sector risk headwind', size: 3
+  - Bullish quotes from [top company]: companyName: [top company], speakerTypes: Executives, sentiment: positive, topicSearchQuery: 'sector growth momentum', documentTypes: ["Earnings Calls"], sinceDay: <1Y ago>, untilDay: <today>, size: 3
+  - Bearish/risk quotes from [top company]: companyName: [top company], sentiment: negative, topicSearchQuery: 'sector risk headwind', documentTypes: ["Earnings Calls"], sinceDay: <1Y ago>, untilDay: <today>, size: 3
 
 Return all results with speaker name, role, and date."
 ```

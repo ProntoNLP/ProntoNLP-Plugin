@@ -138,13 +138,13 @@ Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pro
 "org: [org from getOrganization]
 
 Fetch all quotes needed for the [company] intelligence report. Run these searches:
-1. Forecast/guidance quotes — Q1 (documentIDs: [doc_q1]), topic: 'forecast guidance outlook', sentiment: positive, size: 3
-2. Forecast/guidance quotes — Q2 (documentIDs: [doc_q2]), topic: 'forecast guidance outlook', sentiment: positive, size: 3
-3. Forecast/guidance quotes — Q3 (documentIDs: [doc_q3]), topic: 'forecast guidance outlook', sentiment: positive, size: 3
-4. Forecast/guidance quotes — Q4 (documentIDs: [doc_q4]), topic: 'forecast guidance outlook', sentiment: positive, size: 3
-5. Most bullish executive quotes — speakerTypes: Executives, sentiment: positive, size: 3
-6. Top risk/bearish quotes — topic: 'risk challenge headwind', sentiment: negative, size: 3
-7. Notable analyst questions — sections: EarningsCalls_Question, size: 3
+1. Forecast/guidance quotes — Q1 (documentIDs: [doc_q1]), topicSearchQuery: 'forecast guidance outlook', sentiment: positive, size: 3
+2. Forecast/guidance quotes — Q2 (documentIDs: [doc_q2]), topicSearchQuery: 'forecast guidance outlook', sentiment: positive, size: 3
+3. Forecast/guidance quotes — Q3 (documentIDs: [doc_q3]), topicSearchQuery: 'forecast guidance outlook', sentiment: positive, size: 3
+4. Forecast/guidance quotes — Q4 (documentIDs: [doc_q4]), topicSearchQuery: 'forecast guidance outlook', sentiment: positive, size: 3
+5. Most bullish executive quotes — companyName: [company], speakerTypes: Executives, sentiment: positive, documentTypes: ["Earnings Calls"], size: 3
+6. Top risk/bearish quotes — companyName: [company], topicSearchQuery: 'risk challenge headwind', sentiment: negative, documentTypes: ["Earnings Calls"], size: 3
+7. Notable analyst questions — companyName: [company], sections: EarningsCalls_Question, documentTypes: ["Earnings Calls"], size: 3
 Return all results with speaker name, role, and date."
 ```
 

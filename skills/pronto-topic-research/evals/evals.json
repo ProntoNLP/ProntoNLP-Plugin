@@ -11,24 +11,71 @@
         "tool": "getTrendOvertime",
         "params": {
           "topicSearchQuery": "War with Iran",
-          "documentTypes": ["Earnings Calls"]
+          "documentTypes": ["Earnings Calls"],
+          "corpus": ["S&P Transcripts"],
+          "interval": "quarter",
+          "sinceDay": "<15-month-default-or-user-start>",
+          "untilDay": "<today-or-user-end>"
         }
       },
       {
         "tool": "getTrendRelatedSectors",
-        "params": {}
+        "params": {
+          "topicSearchQuery": "War with Iran",
+          "documentTypes": ["Earnings Calls"],
+          "corpus": ["S&P Transcripts"],
+          "sinceDay": "<90-day-default-or-user-start>",
+          "untilDay": "<today-or-user-end>"
+        }
       },
       {
         "tool": "getTrendWordsByCompany",
-        "params": {}
+        "params": {
+          "topicSearchQuery": "War with Iran",
+          "documentTypes": ["Earnings Calls"],
+          "corpus": ["S&P Transcripts"],
+          "sinceDay": "<90-day-default-or-user-start>",
+          "untilDay": "<today-or-user-end>"
+        }
       },
       {
         "tool": "getTrendWordsByDocument",
-        "params": {}
+        "params": {
+          "topicSearchQuery": "War with Iran",
+          "documentTypes": ["Earnings Calls"],
+          "corpus": ["S&P Transcripts"],
+          "sinceDay": "<90-day-default-or-user-start>",
+          "untilDay": "<today-or-user-end>"
+        }
       },
       {
         "tool": "getTrendNetwork",
-        "params": {}
+        "params": {
+          "topicSearchQuery": "War with Iran",
+          "documentTypes": ["Earnings Calls"],
+          "corpus": ["S&P Transcripts"],
+          "sinceDay": "<90-day-default-or-user-start>",
+          "untilDay": "<today-or-user-end>"
+        }
+      },
+      {
+        "tool": "Agent(prontonlp-plugin:pronto-search-summarizer)",
+        "params": {
+          "description": "Search best sentences from parameters",
+          "topicSearchQuery": "War with Iran",
+          "documentTypes": ["Earnings Calls"],
+          "corpus": ["S&P Transcripts"],
+          "sinceDay": "<90-day-default-or-user-start>",
+          "untilDay": "<today-or-user-end>",
+          "instruction": "Return only best verbatim sentences and prioritize best/high-signal evidence; plain text, one sentence per line, one citation link per line."
+        }
+      },
+      {
+        "tool": "Agent(prontonlp-plugin:pronto-themes-broker)",
+        "params": {
+          "description": "Themes broker synthesis from search results",
+          "searchResults": "<best-sentences-from-step-2-search-agent>"
+        }
       }
     ],
     "expected_output_fragments": [
