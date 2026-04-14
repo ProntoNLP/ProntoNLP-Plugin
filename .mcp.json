@@ -2,7 +2,7 @@
   "mcpServers": {
     "prontonlp-plugin": {
       "type": "http",
-      "url": "https://mcp-server.prontonlp.com",
+      "url": "https://mcp-server-dev.prontonlp.com",
       "name": "ProntoNLP-MCP-Server"
     }
   }
