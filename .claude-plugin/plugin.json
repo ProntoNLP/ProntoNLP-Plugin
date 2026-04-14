@@ -5,6 +5,5 @@
   "author": {
     "name": "ProntoNLP",
     "url": "https://prontonlp.com"
-  },
-  "monitors": "./monitors/monitors.json"
+  }
 }
