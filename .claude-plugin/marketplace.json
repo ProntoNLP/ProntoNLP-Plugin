@@ -1,7 +1,7 @@
 {
-    "name": "prontonlp-tools",
+    "name": "prontonlp-plugin",
     "owner": {
-      "name": "Your Name"
+      "name": "ProntoNLP"
     },
      "plugins": [
       {
