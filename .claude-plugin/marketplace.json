@@ -1,14 +1,17 @@
 {
     "name": "prontonlp-plugin",
+    "metadata": {
+      "description": "ProntoNLP's marketplace for advanced financial analytics — company intelligence, sector analysis, market pulse, comparisons, and topic research."
+    },
     "owner": {
       "name": "ProntoNLP"
     },
-     "plugins": [
+    "plugins": [
       {
         "name": "prontonlp-plugin",
         "source": "./",
         "description": "ProntoNLP's plugin for various financial analytics tools.",
-        "version": "1.0.0"
+        "version": "1.0.8"
       }
-  ]
+    ]
 }
