@@ -1,12 +1,12 @@
 [
   {
     "name": "session-logger",
-    "command": "${CLAUDE_PLUGIN_ROOT}/monitors/scripts/session-logger.sh",
-    "trigger": "session-start"
+    "description": "Logs when a session starts",
+    "command": "${CLAUDE_PLUGIN_ROOT}/monitors/scripts/session-logger.sh"
   },
   {
     "name": "skill-logger",
-    "command": "${CLAUDE_PLUGIN_ROOT}/monitors/scripts/skill-logger.sh",
-    "trigger": "skill-invoke"
+    "description": "Logs when a skill is invoked",
+    "command": "${CLAUDE_PLUGIN_ROOT}/monitors/scripts/skill-logger.sh"
   }
 ]
