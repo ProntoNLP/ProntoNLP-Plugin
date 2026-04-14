@@ -194,7 +194,7 @@ Calls for NVDA and MSFT:
 
 ## Report Output Structure
 
-The report renders as inline HTML with:
+The report is written to `information-technology-report.html` with:
 
 - **Header:** Information Technology — Sector Intelligence Report | Generated: Apr 5, 2026 | Period: Apr 2025 – Apr 2026
 - **Section 1:** Executive Summary — sector RISING (0.48), NVDA/MSFT/AVGO lead; INTC undervalued signal; AI infrastructure thesis

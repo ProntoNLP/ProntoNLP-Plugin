@@ -285,7 +285,7 @@ Include 2–3 quotes from `search` with `sentiment: "negative"` and `sections: [
 
 ## Charts Reference
 
-All charts are inline HTML — load Chart.js once at the top: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
+Charts are included in the HTML file. Load Chart.js once at the top: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
 
 | Chart | Section | Type | Data source | Color scheme |
 |-------|---------|------|------------|-------------|

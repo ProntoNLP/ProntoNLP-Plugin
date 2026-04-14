@@ -13,7 +13,7 @@
 
 - Mode: Mixed (Company + Sector) → 7 universal dimensions + 2 company-only (N/A for sector)
 - Period: Past Year (default)
-- Output file (Cowork): `NVDA-vs-tech-report.html`
+- Output file: `NVDA-vs-tech-report.html`
 
 **Note to renderer:** The comparison is mixed — acknowledge in verdict that this is not apples-to-apples. Company carries single-stock risk; sector provides breadth.
 

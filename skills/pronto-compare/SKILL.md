@@ -16,16 +16,16 @@ Produces a self-contained side-by-side intelligence comparison of two or more en
 
 ---
 
-## Output Format — Environment-Aware
+## Output Format
 
-**Detect the environment before rendering:**
+Always write the report as an HTML file using the `Write` tool, then tell the user the filename.
 
-| Environment | Detection | Output format |
-|-------------|-----------|---------------|
-| **claude.ai** | `Bash` tool is NOT available | Inline HTML fragment rendered in chat |
-| **Claude Cowork** | `Bash` tool IS available | HTML written to file |
+File naming:
+- Company vs company: `[tickerA]-vs-[tickerB]-report.html` (e.g. `NVDA-vs-AMD-report.html`)
+- Company vs sector: `[ticker]-vs-[sector-slug]-report.html` (e.g. `NVDA-vs-tech-report.html`)
+- Sector vs sector: `[sectorA-slug]-vs-[sectorB-slug]-report.html` (e.g. `tech-vs-healthcare-report.html`)
 
-### HTML rules (apply to BOTH environments — only delivery differs):
+### HTML rules:
 - No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags — output only a `<style>` block followed by HTML content and `<script>` blocks
 - Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-text-tertiary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--border-radius-lg)`, `var(--border-radius-md)`
 - For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
@@ -36,15 +36,6 @@ Produces a self-contained side-by-side intelligence comparison of two or more en
 - **Score display rule:** Investment scores and sentiment scores are raw API values in the **0.0–1.0 range**. Display them exactly as returned — never multiply, never append "/10", never reformat as a fraction. Example: show `0.71`, not `7.1` or `7.1/10`. `sentimentScoreChange` and `investmentScoreChange` are percentage changes — always display with a `%` suffix (e.g. `+4.2%`, `-1.8%`). Any negative number or negative percentage (value < 0) **must** render in red `#D85A30` — this includes stock changes, score changes, deltas, and any other numeric field with a minus sign.
 - Load Chart.js once: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
 - All chart data as inline JS constants — never reference external files
-
-### claude.ai delivery:
-- Output the HTML fragment directly inline in the chat response
-
-### Claude Cowork delivery:
-- Write the full HTML to a file named as follows, then tell the user the filename and open it:
-  - Company vs company: `[tickerA]-vs-[tickerB]-report.html` (e.g. `NVDA-vs-AMD-report.html`)
-  - Company vs sector: `[ticker]-vs-[sector-slug]-report.html` (e.g. `NVDA-vs-tech-report.html`)
-  - Sector vs sector: `[sectorA-slug]-vs-[sectorB-slug]-report.html` (e.g. `tech-vs-healthcare-report.html`)
 
 ---
 
@@ -568,7 +559,7 @@ Load Chart.js once at the top of the HTML. All data as inline JS constants.
 
 ## Best Practices
 
-1. **Detect environment first** — inline HTML on claude.ai (`Bash` not available), write HTML file in Claude Cowork (`Bash` available)
+1. **Always write to file** — write the HTML report using the `Write` tool (see Output Format for filename rules)
 2. **Save `companyId` immediately** after Batch 1 for every company entity — required for all stock calls
 3. **Fire all entities simultaneously within each batch** — never process one entity at a time
 4. **Adapt the scorecard** — when sectors are present, show N/A clearly in company-only rows rather than leaving them blank

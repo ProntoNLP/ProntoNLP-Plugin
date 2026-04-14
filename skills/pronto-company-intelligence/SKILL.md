@@ -11,7 +11,7 @@ metadata:
 # Company Intelligence Report Generator
 
 > ⚠️ **OUTPUT RULE — READ FIRST:**
-> Before rendering, detect the environment: if the `Bash` tool is available in this session, write the report as an **HTML file** (Claude Cowork). If `Bash` is NOT available, output as **inline HTML** rendered directly in the chat (claude.ai). Same HTML format either way — the only difference is inline vs written to file.
+> Always write the report as an **HTML file**. Use the `Write` tool to save it to `[ticker]-report.html` (e.g. `NVDA-report.html`), then tell the user the filename.
 
 > ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, `deepResearch`, or any interactive visualization tool from this skill. These are user-triggered only. Only call the tools explicitly listed in the batches below.
 
@@ -19,16 +19,11 @@ Produces company intelligence reports using ProntoNLP tools. The centerpiece is 
 
 ---
 
-## Output Format — Environment-Aware
+## Output Format
 
-**Detect the environment before rendering:**
+Always write the report as an HTML file using the `Write` tool. Save to `[ticker]-report.html` (e.g. `NVDA-report.html`) and tell the user the filename.
 
-| Environment | Detection | Output format |
-|-------------|-----------|---------------|
-| **claude.ai** | `Bash` tool is NOT available | Inline HTML fragment rendered in chat |
-| **Claude Cowork** | `Bash` tool IS available | HTML written to file |
-
-### HTML rules (apply to BOTH environments — only delivery differs):
+### HTML rules:
 - No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags — output only a `<style>` block followed by HTML content and `<script>` blocks
 - Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-text-tertiary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--border-radius-lg)`, `var(--border-radius-md)`
 - For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
@@ -45,13 +40,6 @@ Produces company intelligence reports using ProntoNLP tools. The centerpiece is 
 - Load Chart.js once: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
 - All chart data as inline JS constants — never reference external files
 - Clean layout: styled cards, HTML tables, badges, section headers
-
-### claude.ai delivery:
-- Output the HTML fragment directly inline in the chat response
-
-### Claude Cowork delivery:
-- Write the full HTML to a file named `[ticker]-report.html` (e.g. `NVDA-report.html`) using the `Write` tool
-- After writing, tell the user the filename and open it
 
 ---
 
@@ -150,7 +138,7 @@ Return all results with speaker name, role, and date."
 
 → Save the top 1–2 quotes per task with speaker name, role, and date. Do not proceed to Batch 5 until Batch 4 results are in hand.
 
-**Batch 5** — render the full HTML report: inline in chat on claude.ai, written to `[ticker]-report.html` file in Claude Cowork.
+**Batch 5** — render the full HTML report: write to `[ticker]-report.html` using the `Write` tool.
 
 ---
 
@@ -378,8 +366,7 @@ Documents analyzed (title, date, transcriptId) | Pronto company ID | Date ranges
 
 ## Charts
 
-**On claude.ai:** Charts render as inline HTML — no separate file. Use `assets/charts-template.html` as a reference for the 10 Chart.js configurations (canvas IDs c1–c10, chart types, options). Populate the data arrays from tool results.
-**In Claude Cowork:** Charts are included in the HTML file exactly as on claude.ai — no changes needed.
+Charts are included in the HTML file. Use `assets/charts-template.html` as a reference for the 10 Chart.js configurations (canvas IDs c1–c10, chart types, options). Populate the data arrays from tool results.
 
 **Chart placement:**
 - Load Chart.js once near the top of the HTML output: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
@@ -423,7 +410,7 @@ Past 6 months: sinceDay = 6 months ago, untilDay = today
 
 ## Best Practices
 
-1. **Detect environment first** — inline HTML on claude.ai (`Bash` not available), HTML written to `[ticker]-report.html` file in Claude Cowork (`Bash` available)
+1. **Always write to file** — write the HTML report to `[ticker]-report.html` using the `Write` tool
 2. Save `companyId` the moment you get it from `getCompanyDescription`
 3. Maximize parallelism — batch all independent calls per the strategy above
 4. Never fabricate data — if a tool returns nothing, say so honestly

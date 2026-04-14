@@ -11,7 +11,7 @@ metadata:
 # Topic Research Report Generator
 
 > ⚠️ **OUTPUT RULE — READ FIRST:**
-> You must write the report as an **HTML file** using your file writing tool. Do not output the HTML inline in the chat. Write the full HTML to `[topic]-topic-report.html`, then tell the user the file is ready.
+> Always write the report as an **HTML file**. Use the `Write` tool to save it to `[topic]-topic-research.html`, then tell the user the filename.
 
 > 🔑 **ORG RULE:** Call `getOrganization` once in Step 1. Save the returned `org` value and use it everywhere links appear: `https://{org}.prontonlp.com/#/ref/...`
 
@@ -157,6 +157,6 @@ Always pass `dateRange` (both `gte` and `lte`) on every request, even when using
 
 ## Best Practices
 
-1. **Write to HTML file.** Do not print the entire HTML inline.
+1. **Always write to HTML file** using the `Write` tool — never output HTML inline.
 2. **Never fabricate data.** Rely solely on the output from `pronto-themes-broker`.
 3. **Use "Hits"** everywhere rather than "Mentions" for occurrences of the topic if you add any extra text manually.
