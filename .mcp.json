@@ -2,7 +2,7 @@
   "mcpServers": {
     "prontonlp-mcp-server": {
       "type": "http",
-      "url": "https://mcp-server.prontonlp.com",
+      "url": "https://mcp-server.prontonlp.com/spglobal",
       "name": "ProntoNLP MCP Server"
     }
   }
