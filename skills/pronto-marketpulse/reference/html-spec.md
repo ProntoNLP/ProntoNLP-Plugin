@@ -19,7 +19,7 @@ This file defines **what** must appear in the report, not how it should look. Th
 
 ## Output Format
 
-Output an **inline HTML fragment** in your response — no `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags. Start with a `<style>` block, then the HTML content. This renders inline in the chat.
+Write the full HTML to `market-pulse-report.html` using the `Write` tool — no `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags. Start with a `<style>` block, then the HTML content.
 
 Use Claude's native CSS tokens for theming. Hardcode signal colors only: green `#1D9E75`, red `#D85A30`.
 

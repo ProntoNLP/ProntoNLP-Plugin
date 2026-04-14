@@ -1,12 +1,12 @@
 # Sample Post-Generation Delivery
 
-This is an example of what Claude should say to the user after generating the inline HTML report.
+This is an example of what Claude should say to the user after generating and writing the HTML report file.
 
 ---
 
 ## Example 1: "What's moving in the market this week?" (Movers only — default)
 
-*(dashboard rendered inline above)*
+*(report written to `market-pulse-report.html`)*
 
 ---
 
@@ -27,7 +27,7 @@ Ask for a **full report** to also see Trending Topics and Voice of the Market (e
 
 ## Example 2: "What happened in the market this week?" (Full report)
 
-*(dashboard rendered inline above)*
+*(report written to `market-pulse-report.html`)*
 
 ---
 
@@ -49,7 +49,7 @@ Here's your full Market Pulse for **Mar 19 – Mar 26, 2026**, covering **63 uni
 
 ## Example 3: "Show me only the top stock movers" (Single leaderboard)
 
-*(dashboard rendered inline above)*
+*(report written to `market-pulse-report.html`)*
 
 ---
 
@@ -63,7 +63,7 @@ Here's your Top Stock Movers leaderboard for **Mar 19 – Mar 26, 2026** ($200M+
 
 ## Example 4: "Top movers, large companies only" (Movers with $5B+ filter)
 
-*(dashboard rendered inline above)*
+*(report written to `market-pulse-report.html`)*
 
 ---
 

@@ -13,7 +13,7 @@
 
 - Mode: Sector vs Sector → 7 scoring dimensions (no company-only dimensions)
 - Period: Past Year (default)
-- Output file (Cowork): `tech-vs-healthcare-report.html`
+- Output file: `tech-vs-healthcare-report.html`
 
 **No Batch 1 API calls needed** — both entities are sectors. Normalize names only:
 - "tech sector" → `Information Technology`

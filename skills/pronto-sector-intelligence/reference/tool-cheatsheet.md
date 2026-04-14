@@ -331,7 +331,7 @@ Run for top 2–3 companies by investment score.
 - `search` (EarningsCalls_Question section) per top company
 
 ### Batch 5:
-- Render full inline HTML report with all charts
+- Write full HTML report with all charts to `[sector]-report.html`
 
 ---
 
