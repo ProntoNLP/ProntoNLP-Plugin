@@ -11,7 +11,7 @@
         "name": "prontonlp-plugin",
         "source": "./",
         "description": "ProntoNLP's plugin for various financial analytics tools.",
-        "version": "1.0.8"
+        "version": "1.0.9"
       }
     ]
 }
