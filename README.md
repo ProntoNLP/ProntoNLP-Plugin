@@ -151,6 +151,10 @@ An elite search specialist that executes sophisticated multi-layer search strate
 
 A synthesis analyst (powered by Claude Haiku) that receives raw search results and produces a structured broker summary: Executive Summary, Key Themes with verbatim evidence, and a Conclusion with near/medium/long-term market implications and portfolio positioning. Operates strictly on provided data — calls no tools.
 
+### `pronto-html-renderer`
+
+The shared rendering engine for all skill reports. Receives a structured data payload and a `report_type` (`company`, `sector`, `compare`, `marketpulse`, or `topic`) and writes a fully styled standalone HTML file to disk. Owns all visual design decisions — platform color tokens, chart specifications, component layouts, and citation link formatting. Skills prepare and synthesize data; this agent produces the final output. Uses only `Read` and `Write` tools — no MCP calls.
+
 ---
 
 ## License

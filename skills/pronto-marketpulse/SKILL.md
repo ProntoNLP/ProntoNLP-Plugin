@@ -3,51 +3,46 @@ name: pronto-marketpulse
 description: "Generates a broad market intelligence dashboard ranking companies across the entire market by investment score, sentiment shifts, and stock performance — based on recent earnings calls. Use when the user asks about the overall market rather than a specific company or sector. Triggers on phrases like: 'what's moving in the market', 'top movers', 'market recap', 'market summary', 'market overview', 'what happened in the market this week', 'stocks to watch', 'most bullish companies', 'biggest sentiment shifts', 'highest investment scores', 'earnings season highlights', 'which analyst firms are bearish', 'what large caps are outperforming'. Defaults to past 7 days when no time frame is specified. Do not use for a single named company — use the company intelligence skill. Do not use for a specific sector — use the sector intelligence skill."
 metadata:
   author: ProntoNLP
-  version: 1.0.0
+  version: 1.1.0
   mcp-server: prontonlp-mcp-server
   category: finance
 ---
 
 # Market Pulse — Recent Market Intelligence Dashboard
 
-**This skill generates an interactive HTML market intelligence dashboard** using ProntoNLP data. It focuses on companies that have recently published **earnings calls**, giving a fundamentals-driven view of market activity — not just price noise.
+Generates a market intelligence dashboard from recent earnings calls — leaderboards, trending topics, and voice-of-the-market. Data gathering and section logic live here; HTML rendering is delegated to the `pronto-html-renderer` agent.
 
-The report always states the exact time period it covers so the user knows the context.
-
-> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, `deepResearch`, or any interactive visualization tool from this skill. These are user-triggered only. Only call the tools explicitly listed in the batches below.
+> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research` from this skill. These are user-triggered only. Use only the tools listed in Step 2.
 
 ---
 
-## Step 0: Parse the Request — Determine Sections and Filters
-
-Before making any tool calls, analyze what the user is asking for and decide:
+## Step 0: Parse the Request — Sections and Filters
 
 ### A. Which sections to include
 
-| What the user asked | Sections to generate |
-|---------------------|----------------------|
-| "top movers", "what's moving", "show me movers", specific metric like "best stocks this week" | **Movers only** — the leaderboards. No trends, no speakers. |
-| "what happened this week/month", "market recap", "market summary", "market overview", "what's going on in the market", or any broad open-ended question about the market | **Full** — movers + Trending Topics + Voice of the Market |
-| "show me trends", "what topics are trending", "what are executives saying" | **Trends only** or **Speakers only** as relevant |
+| User asked for | Sections |
+|----------------|----------|
+| "top movers", "what's moving", specific metric ("best stocks this week") | **Movers only** — leaderboards |
+| "what happened this week/month", "market recap/summary/overview", broad open-ended | **Full** — movers + Trending Topics + Voice of the Market |
+| "show me trends", "what topics are trending" | **Trends only** |
+| "what are executives saying" | **Speakers only** |
 | "show me [specific thing] only" | **Only that section** |
 
-**The key distinction**: if the user is asking *what's moving* (price/score focus) → Movers only. If they're asking *what's happening* (narrative/context focus) → Full. When in doubt, lean toward Full.
+Key distinction: "what's moving" (price/score) → Movers only. "What's happening" (narrative) → Full. When in doubt, lean Full.
 
 At the end of a Movers-only report, tell the user they can ask for a **full report** to also see Trending Topics and Voice of the Market.
 
-**Only generate what was asked for.** Match the HTML output to the request exactly.
+### B. Market cap filter
 
-### B. Which market cap filter to apply
+| User says | `marketCaps` filter |
+|-----------|---------------------|
+| Nothing specific (default) | `$300M+` — Small + Mid + Large + Mega |
+| "large caps", "big companies" | `$10B+` — Large + Mega |
+| "mega cap", "only the biggest", "S&P 500 only" | `$200B+` — Mega only |
+| "small caps", "micro cap" | Drop filter; note in report |
+| Specific sector/country/index | Apply those filters; keep $300M+ default |
 
-| User says | Market cap filter |
-|-----------|------------------|
-| Nothing specific (default) | **$300M+** — Small + Mid + Large + Mega |
-| "large companies", "large caps", "big companies" | **$10B+** — Large + Mega |
-| "mega cap", "only the biggest", "S&P 500 only" | **$200B+** — Mega only |
-| "small caps", "small companies", "micro cap" | Drop filter entirely; note it in the report |
-| Specifies a sector, country, or index | Apply those filters; keep the $300M+ default market cap floor |
-
-Pass `marketCaps` as an array of key strings. Available keys (from smallest to largest):
+`marketCaps` key strings (smallest → largest):
 - `"Nano (under $50mln)"`
 - `"Micro ($50mln - $300mln)"`
 - `"Small ($300mln - $2bln)"`
@@ -55,52 +50,56 @@ Pass `marketCaps` as an array of key strings. Available keys (from smallest to l
 - `"Large ($10bln - $200bln)"`
 - `"Mega ($200bln & more)"`
 
-**Default filter ($300M+):**
-```json
-["Small ($300mln - $2bln)", "Mid ($2bln - $10bln)", "Large ($10bln - $200bln)", "Mega ($200bln & more)"]
-```
+**Default ($300M+):** `["Small ($300mln - $2bln)", "Mid ($2bln - $10bln)", "Large ($10bln - $200bln)", "Mega ($200bln & more)"]`
+**Large only ($10B+):** `["Large ($10bln - $200bln)", "Mega ($200bln & more)"]`
+**Mega only:** `["Mega ($200bln & more)"]`
 
-**Large companies filter ($10B+):**
-```json
-["Large ($10bln - $200bln)", "Mega ($200bln & more)"]
-```
+### C. Optional filters
 
-**Mega cap filter ($200B+):**
-```json
-["Mega ($200bln & more)"]
-```
-
-### C. Optional user-specified filters
-
-Apply any of these when the user specifies them:
-- `sectors` — e.g., `["Information Technology", "Financials"]`
-- `country` — e.g., `"United States"`
-- `indices` — e.g., `["SP500_IND"]`
+- `sectors` — e.g. `["Information Technology", "Financials"]`
+- `country` — e.g. `"United States"`
+- `indices` — e.g. `["SP500_IND"]`
 
 ---
 
-## Step 1: Determine the Date Range
+## Step 1: Date Range
 
-- If the user specifies a time frame ("this month", "last 2 weeks", "past quarter"), use that.
-- If the user says "recently", "currently", "now", "latest", or gives no time frame → **default to the past 7 days**.
+- User-specified time frame → honor it.
+- "recently", "currently", "now", "latest", or no time frame → **past 7 days**.
 - Format: `YYYY-MM-DD`.
-- Store a human-readable label (e.g., "Past 7 Days", "Past 30 Days", "Mar 1 – Mar 26, 2026") — it appears in the report header and every section heading.
+- Store a human-readable label (e.g. "Past 7 Days", "Mar 1 – Mar 26, 2026") for the report header.
+
+---
+
+## Confirm Before Proceeding
+
+After Steps 0–1, **before calling any tools**, present a short summary and wait for the user to confirm.
+
+Show the user:
+- **Date range:** the resolved period (e.g. "Past 7 Days — Apr 12 to Apr 19, 2026")
+- **Market cap filter:** e.g. "$300M+ (Small, Mid, Large, Mega)" or "Large caps only ($10B+)"
+- **Sections:** which sections will be included (Movers / Trending Topics / Voice of the Market)
+- **Filters:** any sector, country, or index filter applied
+
+Then ask: *"Ready to generate the Market Pulse report. Reply **yes** to continue, or clarify anything above."*
+
+**Do not call any tools until the user confirms.**
 
 ---
 
 ## Step 2: Call Data Tools
 
-Fire all applicable calls **simultaneously**. Always include `getOrganization` — the returned `org` value is required for all company link URLs (see Company Link Format below).
+Fire all applicable calls simultaneously. Always include `getOrganization` — the `org` value is required by the renderer for citation/company links.
 
 ```
-getOrganization    → save org (required for all company links: https://{org}.prontonlp.com/#/ref/$COMPANY{id})
+getOrganization    → save org
 ```
 
-Only make the remaining calls needed for the sections determined in Step 0.
+Only make the remaining calls needed for the sections chosen in Step 0.
 
-### 2a. getTopMovers — Single Call with Multiple Sort Criteria *(when movers section is needed)*
+### 2a. getTopMovers *(movers section)*
 
-Make **one `getTopMovers` call** passing `sortBy` as an array of all needed sort criteria. The tool returns an independent ranked result set for each criterion — one call replaces many.
+Make **one call** with `sortBy` as an array of all needed criteria. The response is keyed by criterion.
 
 ```
 getTopMovers(
@@ -114,39 +113,24 @@ getTopMovers(
 )
 ```
 
-**If the user asked for only a specific metric** (e.g., "top stock movers"), pass only the relevant criterion in the `sortBy` array.
+If the user asked for only one metric, pass only that criterion.
 
-**The response is keyed by sort criterion:**
-```json
-{
-  "stockChange":          { "topMovers": [...], "underperforming": [...], "overperforming": [...] },
-  "investmentScore":      { "topMovers": [...], "underperforming": [...], "overperforming": [...] },
-  "investmentScoreChange":{ "topMovers": [...], "underperforming": [...], "overperforming": [...] },
-  "sentimentScore":       { "topMovers": [...], "underperforming": [...], "overperforming": [...] },
-  "sentimentScoreChange": { "topMovers": [...], "underperforming": [...], "overperforming": [...] },
-  "aspectScore":          { "topMovers": [...], "underperforming": [...], "overperforming": [...] },
-  "marketcap":            { "topMovers": [...], "underperforming": [...], "overperforming": [...] }
-}
-```
+**Leaderboard mapping** (renderer emits one card per criterion fetched):
 
-**Leaderboard mapping** (render one leaderboard card per criterion):
+| sortBy | Card title | Source array |
+|--------|-----------|--------------|
+| `stockChange` | Top Stock Movers | `topMovers` |
+| `investmentScore` | Highest Investment Score | `topMovers` |
+| `investmentScoreChange` | Biggest Investment Gain | `topMovers` |
+| `sentimentScore` | Most Positive Sentiment | `topMovers` |
+| `sentimentScoreChange` (bullish) | Biggest Sentiment Shift — Most Bullish | `topMovers` |
+| `sentimentScoreChange` (bearish) | Biggest Sentiment Shift — Most Bearish | `underperforming` |
+| `aspectScore` | Top Aspect Score | `topMovers` |
+| `marketcap` | Largest by Market Cap | `topMovers` |
 
-| sortBy criterion | Card title | Primary column | Source array |
-|------------------|-----------|----------------|--------------|
-| `stockChange` | Top Stock Movers | Stock Δ (%) | `topMovers` |
-| `investmentScore` | Highest Investment Score | Investment Score | `topMovers` |
-| `investmentScoreChange` | Biggest Investment Gain | Investment Score Δ | `topMovers` |
-| `sentimentScore` | Most Positive Sentiment | Sentiment Score | `topMovers` |
-| `sentimentScoreChange` (desc) | Biggest Sentiment Shift — Most Bullish | Sentiment Δ | `topMovers` |
-| `sentimentScoreChange` (asc) | Biggest Sentiment Shift — Most Bearish | Sentiment Δ | `underperforming` |
-| `aspectScore` | Top Aspect Score | Aspect Score | `topMovers` |
-| `marketcap` | Largest by Market Cap | Market Cap | `topMovers` |
+**Sparse data:** if any leaderboard returns fewer than 5 companies, widen the date range by 7 days and re-call that criterion only. Note the expansion in the payload so the renderer can surface it.
 
-**Sentiment Shift card**: render as a single card with two sub-tables — Most Bullish (from `topMovers`) on top, Most Bearish (from `underperforming`) below. This gives both sides of the sentiment picture from the single `sentimentScoreChange` call.
-
-**Handling sparse data:** If any leaderboard returns fewer than 5 companies, widen the date range by 7 days and re-call for that criterion only — note the expansion in the relevant leaderboard heading.
-
-### 2b. getTrends *(when trends section is needed)*
+### 2b. getTrends *(trends section)*
 
 ```
 getTrends(
@@ -158,87 +142,84 @@ getTrends(
 )
 ```
 
-Note: `getTrends` does not accept a `marketCaps` parameter — the market cap filter only applies to `getTopMovers`.
+`getTrends` does not accept `marketCaps`.
 
-### 2c. getSpeakers — Executives *(when Voice of the Market is needed)*
+### 2c / 2d. getSpeakers — Executives and Analysts *(Voice of the Market)*
 
-**Most bullish:** `speakerTypes: ["Executives"]`, `sortBy: "sentiment"`, `sortOrder: "desc"`, `limit: 20`, with the same date range and `documentTypes: ["Earnings Calls"]`
-
-**Most bearish:** Same but `sortOrder: "asc"`, `limit: 10`
-
-### 2d. getSpeakers — Analysts *(when Voice of the Market is needed)*
-
-Same as 2c but `speakerTypes: ["Analysts"]`.
+Most bullish (both speaker types): `sortBy: "sentiment"`, `sortOrder: "desc"`, `limit: 20`, `documentTypes: ["Earnings Calls"]`, same date range.
+Most bearish: same but `sortOrder: "asc"`, `limit: 10`.
 
 ---
 
-## Step 3: Process the Data
+## Step 3: Process Data
 
-### getTopMovers results
+Each criterion key in `getTopMovers` contains `topMovers`, `underperforming`, and `overperforming` arrays. Use `topMovers` for each leaderboard. For the Sentiment Shift card, pair `topMovers` (bullish) with `underperforming` (bearish).
 
-Each criterion key in the response contains `topMovers`, `underperforming`, and `overperforming` arrays. Use `topMovers` as the primary source for each leaderboard. For the Sentiment Shift card, combine `topMovers` (bullish) and `underperforming` (bearish) for `sentimentScoreChange`.
+Build a deduplicated master list by `id` across all arrays for the total company count.
 
-Build a deduplicated master list by `id` across all arrays — use this for the header company count.
-
-### Field Reference
-
-See `reference/api-fields.md` for the complete field reference.
+Field reference: [reference/api-fields.md](./reference/api-fields.md).
 
 ---
 
-## Step 4: Generate the Report
+## Step 4: Render
 
-Always write the report as an HTML file using the `Write` tool. Save to `market-pulse-report.html` and tell the user the filename.
+Delegate the entire HTML output to the `pronto-html-renderer` agent (`subagent_type: prontonlp-plugin:pronto-html-renderer`). Pass the structured data — do not render HTML here.
 
-**Design the layout and visual style yourself.** Read `reference/html-spec.md` for the required sections and data fields.
-
-### HTML rules:
-- **No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags** — output only a `<style>` block followed by the HTML content
-- Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-text-tertiary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--font-mono)`, `var(--border-radius-lg)`, `var(--border-radius-md)`
-- For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
-- **Value coloring rule — applies to every numeric value, score, and % change rendered in the report:**
-  - Value **> 0** (positive sentiment, positive stock change, positive delta): text color `#1D9E75` (green)
-  - Value **< 0** (negative sentiment, negative stock change, negative delta): text color `#D85A30` (red)
-  - Value **= 0**: no color — use default inherited text color
-- **Score display rule:** Investment scores and sentiment scores are raw API values in the **0.0–1.0 range**. Display them exactly as returned — never multiply, never append "/10", never reformat as a fraction. Example: show `0.71`, not `7.1` or `7.1/10`. `sentimentScoreChange` and `investmentScoreChange` are percentage changes — always display with a `%` suffix (e.g. `+4.2%`, `-1.8%`). Any negative number or negative percentage (value < 0) **must** render in red `#D85A30` — this includes stock changes, score changes, deltas, and any other numeric field with a minus sign.
-- All data embedded as inline JS constants at the top of the `<script>` block
-- Company names must link to ProntoNLP (see Company Link Format below)
-- **Only include sections the user asked for.** Use flex or grid so removing a section never breaks the layout.
-
-### Sections to include:
-
-| Section | Include when |
-|---------|-------------|
-| **Highlights of the Week** (leaderboard cards in a responsive grid) | User asked for movers or a broad overview |
-| **Trending Topics** | User asked for trends or full report |
-| **Voice of the Market** (Executives + Analysts) | User asked for speakers or full report |
-
-Each section is independently removable. The grid/flex layout must reflow cleanly.
-
----
-
-## Company Link Format
-
-Call `getOrganization` at the start of the skill to get `org`. Use it in all company links:
-
-```html
-<a href="https://{org}.prontonlp.com/#/ref/$COMPANY{id}" class="co-link">{name}</a>
+```
+report_type: marketpulse
+org: <from getOrganization>
+filename: market-pulse-<YYYYMMDD>.html
+title: "Market Pulse — <date range label>"
+subtitle: "<total companies> companies · <market cap filter label> · Earnings Calls"
+data:
+  meta:
+    dateRangeLabel: <human label>
+    sinceDay: <YYYY-MM-DD>
+    untilDay: <YYYY-MM-DD>
+    marketCapFilter: <label>
+    totalCompanies: <deduped count>
+    filters: { sectors?, country?, indices? }
+  leaderboards:
+    # Only include keys that were fetched in Step 2a.
+    stockChange:          { topMovers: [...] }
+    investmentScore:      { topMovers: [...] }
+    investmentScoreChange:{ topMovers: [...] }
+    sentimentScore:       { topMovers: [...] }
+    sentimentScoreChange: { topMovers: [...], underperforming: [...] }
+    aspectScore:          { topMovers: [...] }
+    marketcap:            { topMovers: [...] }
+  trends: [ { name, explanation, score, hits, change }, ... ]   # when trends fetched
+  speakers:                                                      # when speakers fetched
+    execBullish:    [ { name, company, companyId, sentimentScore, numOfSentences } ]
+    execBearish:    [ ... ]
+    analystBullish: [ ... ]
+    analystBearish: [ ... ]
 ```
 
-where `{id}` is the numeric company `id` field from the tool response (prefix with `$COMPANY`).
+The renderer applies the shared conventions (color rule, score display, company links, signal badges like `Potential Buy` / `Watch` / `Caution`). Do not reimplement any of that here.
 
 ---
 
-## Delivery
+## Step 5: Delivery
 
-See `examples/sample-delivery.md` for concrete delivery examples.
+After the renderer returns the saved filename, summarize:
+- Time period + any date-range expansion applied
+- Company count + filters applied
+- Top company by stock performance over the period
+- Companies appearing across multiple leaderboards (consistent outperformers)
+- Potential Buy signals (high investment score + in `underperforming` category)
+- Top trend *(if trends included)*
+- Most bullish / bearish executive and analyst *(if speakers included)*
+- If Movers-only: mention a full report will add Trending Topics and Voice of the Market.
 
-After generating the HTML, summarize key findings:
-- **Time period**: exact dates covered (and any date range expansion applied)
-- **Companies**: count and filters applied
-- **Top stock mover**: name, ticker, % change (from the `stockChange` leaderboard)
-- **Notable signals**: companies appearing across multiple leaderboards (consistent outperformers)
-- **Potential Buy signals**: companies from `underperforming` category with strong investment scores
-- **Top trend** *(if trends included)*: #1 topic and its change %
-- **Most bullish / bearish** executive and analyst *(if speakers included)*
-- If Movers-only, mention that asking for a **full report** will also surface Trending Topics and Voice of the Market.
+See [examples/sample-delivery.md](./examples/sample-delivery.md) for delivery phrasing.
+
+---
+
+## Best Practices
+
+1. Always pass `marketCaps` as an array — never a plain string.
+2. `getTrends` does not accept `marketCaps` — scope only with `documentTypes` and date range.
+3. Never fabricate — missing data → omit the leaderboard key entirely.
+4. Maximize parallelism — all tool calls in Step 2 fire simultaneously.
+5. Do not mention tool names in responses — describe the action ("I analyzed earnings calls from the past 7 days", not "I called getTopMovers").

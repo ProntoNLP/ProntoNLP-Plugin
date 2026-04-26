@@ -3,59 +3,48 @@ name: pronto-company-intelligence
 description: "Generates a full intelligence report for a single named company or ticker — covering earnings sentiment, investment score, stock performance, analyst and executive sentiment, trending topics, risk factors, and financial forecasts. Use when the user mentions one specific company name or ticker and asks about analysis, earnings, sentiment, financials, investment potential, stock performance, risks, or analyst opinions for that company. Triggers on phrases like: 'how is [company] doing', 'analyze [ticker]', '[company] earnings', 'should I buy [company]', 'what do analysts say about [company]', 'deep dive on [company]', '[company] sentiment', '[company] risks', '[ticker] outlook', 'give me a report on [company]'. Do not use when the user asks to compare two or more companies — use the compare-companies skill instead. Do not use for broad market overviews or sector-wide questions."
 metadata:
   author: ProntoNLP
-  version: 1.0.0
+  version: 1.1.0
   mcp-server: prontonlp-mcp-server
   category: finance
 ---
 
 # Company Intelligence Report Generator
 
-> ⚠️ **OUTPUT RULE — READ FIRST:**
-> Always write the report as an **HTML file**. Use the `Write` tool to save it to `[ticker]-report.html` (e.g. `NVDA-report.html`), then tell the user the filename.
+Produces a single-company intelligence report. Centerpiece: **quarter-over-quarter comparison of every earnings call in the past year**, explicitly showing whether sentiment, investment scores, and stock price reaction are RISING or FALLING. Layered on top: analyst forecasts, competitive benchmarks, trending topics, management quotes, and risk factors.
 
-> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, `deepResearch`, or any interactive visualization tool from this skill. These are user-triggered only. Only call the tools explicitly listed in the batches below.
+Data gathering and per-quarter analysis live here; HTML rendering is delegated to the `pronto-html-renderer` agent.
 
-Produces company intelligence reports using ProntoNLP tools. The centerpiece is a **quarter-over-quarter comparison of every earnings call in the past year** — explicitly showing whether sentiment, investment scores, and stock price reaction are RISING or FALLING. Layered on top: analyst forecasts, competitive benchmarks, trending topics, management quotes, and risk factors.
-
----
-
-## Output Format
-
-Always write the report as an HTML file using the `Write` tool. Save to `[ticker]-report.html` (e.g. `NVDA-report.html`) and tell the user the filename.
-
-### HTML rules:
-- No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags — output only a `<style>` block followed by HTML content and `<script>` blocks
-- Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-text-tertiary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--border-radius-lg)`, `var(--border-radius-md)`
-- For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
-- **Value coloring rule — applies to every numeric value, score, and % change rendered in the report:**
-  - Value **> 0** (positive sentiment, positive stock change, positive delta): text color `#1D9E75` (green)
-  - Value **< 0** (negative sentiment, negative stock change, negative delta): text color `#D85A30` (red)
-  - Value **= 0**: no color — use default inherited text color
-- **Score display rule:** Investment scores and sentiment scores are raw API values in the **0.0–1.0 range**. Display them exactly as returned — never multiply, never append "/10", never reformat as a fraction. Example: show `0.71`, not `7.1` or `7.1/10`. `sentimentScoreChange` and `investmentScoreChange` are percentage changes — always display with a `%` suffix (e.g. `+4.2%`, `-1.8%`). Any negative number or negative percentage (value < 0) **must** render in red `#D85A30` — this includes stock changes, score changes, deltas, and any other numeric field with a minus sign.
-- **Company link format:** Use `org` from `getOrganization` (called in Batch 1) to build all company and competitor links:
-  ```html
-  <a href="https://{org}.prontonlp.com/#/ref/$COMPANY{id}" class="co-link">{name}</a>
-  ```
-  where `{id}` is the numeric company `id` field from the tool response.
-- Load Chart.js once: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
-- All chart data as inline JS constants — never reference external files
-- Clean layout: styled cards, HTML tables, badges, section headers
+> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research`. These are user-triggered only.
 
 ---
 
-## Step 0: Choose Your Report Mode
+## Step 0: Choose Report Mode
 
-Before making any tool calls, decide which template fits the user's request:
+| Mode | Use when | Tool calls | Sections included (payload keys) |
+|------|----------|------------|----------------------------------|
+| **Full Report** (default) | Deep dive, no specific focus | ~40 | meta, kpi, quartersChart, stockChart, competitors, trends, speakers, quotes, predictions, risks |
+| **Quick Report** | "quick", "overview", "brief" | ~13 | meta, kpi, stockChart, predictions |
+| **Sentiment Report** | Earnings/sentiment focus | ~25 | meta, kpi, quartersChart, speakers, trends, quotes (bull/bear/forecast) |
+| **Competitive Report** | Competitor/peer focus | ~15 | meta, kpi, stockChart, competitors |
+| **Risk Assessment** | Downside focus | ~20 | meta, kpi, quartersChart, risks, quotes (bear/risk), speakers (analysts only) |
 
-| Mode | Use when | Tool calls | Sections |
-|------|----------|------------|---------|
-| **Full Report** (default) | Deep dive, no specific focus | ~40 | All 11 |
-| **Quick Report** | "quick", "overview", "brief" | ~13 | 1–3 |
-| **Sentiment Report** | Earnings/sentiment focus | ~25 | 1, 4–7 |
-| **Competitive Report** | Competitor/peer focus | ~15 | 1–2, 9 |
-| **Risk Assessment** | Downside/risks focus | ~20 | 1, 4, 7, 9–10 |
+Default to Full Report unless the user signals a narrower scope. See [reference/report-template-guide.md](./reference/report-template-guide.md) for per-mode batch plans.
 
-See `reference/report-template-guide.md` for the batch plan of each template. Default to **Full Report** unless the user explicitly signals a narrower scope.
+---
+
+## Confirm Before Proceeding
+
+After Step 0, **before calling any tools**, present a short summary and wait for the user to confirm.
+
+Show the user:
+- **Company:** name and ticker as understood
+- **Report mode:** which mode was selected and why
+- **Date range:** e.g. "Past year — Apr 2025 to Apr 2026"
+- **Sections:** brief list of what will be included
+
+Then ask: *"Ready to generate the report. Reply **yes** to continue, or clarify anything above."*
+
+**Do not call any tools until the user confirms.**
 
 ---
 
@@ -73,29 +62,27 @@ See `reference/report-template-guide.md` for the batch plan of each template. De
 | 8 | `getTrends` | Trending topics | `companyName` |
 | 9 | `getSpeakers` | Per-executive/analyst sentiment | `companyName` |
 | 10 | `getSpeakerCompanies` | Analyst firm sentiment | `companyName` |
-| 11 | `search` | Key quotes from filings | `companyName` or `companyIDs` |
+| 11 | `search` | Key quotes from filings (via search-summarizer) | — |
 
-### ID Flow (critical)
+### ID Flow
 
-IDs must be extracted and passed between tools. See `reference/tool-cheatsheet.md` for the full diagram. Summary:
+- `getCompanyDescription` → `companyId` → pass to `getStockPrices`, `getStockChange`, `getPredictions`
+- `getCompanyCompetitors` → competitor `companyId`s → pass to `getStockChange` (per competitor)
+- `getCompanyDocuments` → `transcriptId` per doc → pass to `getAnalytics` and `search` per quarter
 
-- `getCompanyDescription` → yields `companyId` → pass to `getStockPrices`, `getStockChange`, `getPredictions`
-- `getCompanyCompetitors` → yields competitor `companyId` list → pass to `getStockChange` (per competitor)
-- `getCompanyDocuments` → yields `transcriptId` per document → pass to `getAnalytics` (per quarter), `search` (per quarter)
-
-When a tool accepts both `companyName` and `companyId`, prefer `companyId` for precision.
+Prefer `companyId` over `companyName` when a tool accepts both.
 
 ---
 
 ## Parallel Execution — Full Report
 
-Run each batch in sequence; within a batch, fire all calls simultaneously.
+Batches run sequentially; within a batch, fire all calls simultaneously.
 
-**Batch 1** — foundation (no dependencies):
+**Batch 1** — foundation:
 ```
 getCompanyDescription    → save companyId, sector, risks
 getCompanyCompetitors    → save competitor companyIds[]
-getOrganization          → save org (used for citation links and Batch 4 agent)
+getOrganization          → save org (required by renderer for citation links)
 ```
 
 **Batch 2** — data collection (needs companyId):
@@ -107,10 +94,10 @@ getPredictions ×6        (revenue, epsGaap, ebitda, netIncomeGaap, freeCashFlow
 getTrends
 ```
 
-**Batch 3** — deep analysis (needs transcriptIds and companyId):
+**Batch 3** — deep analysis (needs transcriptIds):
 ```
 getAnalytics ×4          (one per earnings call, pass documentID)
-getStockPrices ×4        (1 week before/after each call date, interval: "day")
+getStockPrices ×4        (1 week before/after each call, interval: "day")
 getSpeakers              (Executives, sortBy: count)
 getSpeakers              (Executives_CEO)
 getSpeakers              (Executives_CFO)
@@ -119,39 +106,36 @@ getSpeakerCompanies      (Analysts)
 getStockChange per competitor
 ```
 
-**Batch 4** — quotes and forecasts (**REQUIRED — do not skip, do not render the report until this completes**):
+**Batch 4** — quotes and forecasts (**REQUIRED — do not render before this completes**):
 
-Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
+Delegate to ONE `pronto-search-summarizer` (`subagent_type: prontonlp-plugin:pronto-search-summarizer`):
 ```
-"org: [org from getOrganization]
+org: [org from getOrganization]
 
 Fetch all quotes needed for the [company] intelligence report. Run these searches:
-1. Forecast/guidance quotes — Q1 (documentIDs: [doc_q1]), topicSearchQuery: 'forecast guidance outlook', sentiment: positive, size: 3
-2. Forecast/guidance quotes — Q2 (documentIDs: [doc_q2]), topicSearchQuery: 'forecast guidance outlook', sentiment: positive, size: 3
-3. Forecast/guidance quotes — Q3 (documentIDs: [doc_q3]), topicSearchQuery: 'forecast guidance outlook', sentiment: positive, size: 3
-4. Forecast/guidance quotes — Q4 (documentIDs: [doc_q4]), topicSearchQuery: 'forecast guidance outlook', sentiment: positive, size: 3
-5. Most bullish executive quotes — companyName: [company], speakerTypes: Executives, sentiment: positive, documentTypes: ["Earnings Calls"], size: 3
-6. Top risk/bearish quotes — companyName: [company], topicSearchQuery: 'risk challenge headwind', sentiment: negative, documentTypes: ["Earnings Calls"], size: 3
-7. Notable analyst questions — companyName: [company], sections: EarningsCalls_Question, documentTypes: ["Earnings Calls"], size: 3
-Return all results with speaker name, role, and date."
+1–4. Forecast/guidance quotes per quarter — documentIDs: [doc_qN], topicSearchQuery: 'forecast guidance outlook', sentiment: positive, size: 3
+5.   Most bullish executive quotes — companyName, speakerTypes: Executives, sentiment: positive, documentTypes: ["Earnings Calls"], size: 3
+6.   Top risk/bearish quotes — topicSearchQuery: 'risk challenge headwind', sentiment: negative, documentTypes: ["Earnings Calls"], size: 3
+7.   Notable analyst questions — sections: EarningsCalls_Question, documentTypes: ["Earnings Calls"], size: 3
+Return with speaker name, role, date, and refId.
 ```
 
-→ Save the top 1–2 quotes per task with speaker name, role, and date. Do not proceed to Batch 5 until Batch 4 results are in hand.
+Save the top 1–2 quotes per task, tagging each by section (`bull`, `bear`, `forecast`, `risk`).
 
-**Batch 5** — render the full HTML report: write to `[ticker]-report.html` using the `Write` tool.
+**Batch 5** — render (see Step 4 below).
 
 ---
 
 ## Core: Per-Quarter Earnings Comparison
 
-This is the heart of the report. Instead of one aggregate analytics call, run `getAnalytics` **separately for each of the past year's earnings calls**. This is how RISING/FALLING comparisons are possible.
+This is the heart of the report. Run `getAnalytics` **separately for each of the past year's earnings calls** — the only way to produce RISING/FALLING comparisons.
 
-For each earnings call (typically 4):
+For each earnings call:
 
 ```
 getAnalytics:
   companyName: "<name>"
-  documentIDs: ["<transcriptId for that quarter>"]
+  documentIDs: ["<transcriptId>"]
   documentTypes: ["Earnings Calls"]
   sinceDay / untilDay: bracket the quarter
   analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment", "importance"]
@@ -160,26 +144,19 @@ getAnalytics:
 getStockPrices (1 week window around call):
   companyId: "<id>"
   fromDate: 7 days before call date
-  toDate: 7 days after call date
+  toDate:   7 days after call date
   interval: "day"
   → compute: % change before vs after = stock reaction
 ```
 
-**Build the comparison table:**
+Compute for each quarter: `sentimentDirection`, `investmentDirection`, `stockReaction`. Compare first vs last quarter for overall trajectory.
 
-| Quarter | Date | Sentiment | Direction | Investment | Direction | Stock After | Direction |
-|---------|------|-----------|-----------|------------|-----------|-------------|-----------|
-| Q1 2025 | Apr 28 | 0.32 | — | 0.61 | — | +2.3% | — |
-| Q2 2025 | Jul 31 | 0.38 | RISING | 0.65 | RISING | +4.1% | RISING |
-| Q3 2025 | Oct 30 | 0.35 | FALLING | 0.68 | RISING | -1.2% | FALLING |
-| Q4 2025 | Jan 30 | 0.41 | RISING | 0.71 | RISING | +3.5% | RISING |
+Always surface in the narrative:
+1. "Sentiment is [RISING/FALLING] — from X.XX (Q1) to X.XX (Q4)"
+2. "Investment score is [RISING/FALLING] — from X.XX (Q1) to X.XX (Q4)"
+3. "Stock reacted [positively/negatively] to [N] of [total] earnings calls"
 
-**You must explicitly state all three verdicts:**
-1. "Sentiment score is [RISING/FALLING] — from X.XX (Q1) to X.XX (Q4)"
-2. "Investment score is [RISING/FALLING] — from X.X (Q1) to X.X (Q4)"
-3. "Stock price reacted [positively/negatively] to [N] of [total] earnings calls"
-
-**Divergences are the most valuable insights — always highlight them:**
+**Divergences are the most valuable insights.** Flag them in the executive summary:
 - Sentiment falling + stock rising → market disagrees with tone
 - Sentiment rising + stock falling → market skeptical despite positive language
 - Investment score falling while sentiment rising → deeper issues beneath the surface
@@ -188,194 +165,66 @@ getStockPrices (1 week window around call):
 
 ## Speaker Analysis
 
-Run these calls in parallel (all use `companyName`, 1-year window):
-
-```
-getSpeakers: Executives (sortBy: count, desc, limit: 20)
-getSpeakers: Executives_CEO (limit: 5)
-getSpeakers: Executives_CFO (limit: 5)
-getSpeakers: Analysts (sortBy: sentiment, desc, limit: 20)  ← top 5 = bullish, bottom 5 = bearish
-getSpeakerCompanies: Analysts (sortBy: sentiment, desc, limit: 20)
-```
-
-Compute and state explicitly in the report:
+After Batch 3 completes, compute and include in the narrative:
 - Average executive sentiment vs average analyst sentiment
-- **"Executives are MORE POSITIVE/MORE NEGATIVE than analysts by X.XX"**
-- **"CEO is MORE BULLISH/MORE CAUTIOUS than CFO"** (compare their individual scores)
-- Most bullish analyst: [Name] from [Firm] (X.XX) | Most bearish analyst: [Name] from [Firm] (X.XX)
-- Gap interpretation: >+0.10 = management may be over-optimistic; <-0.10 = street sees more upside
-
----
-
-## Report Structure
-
-### Title
-```
-# [Company Name] ([Ticker]) — Intelligence Report
-Generated: [Date] | Sector: [Sector] | Sub-Sector: [Sub-Sector]
-Market Cap: [Cap] | Pronto Company ID: [companyId]
-```
-
-### Section 1: Executive Summary
-2–3 paragraphs explicitly stating:
-- Stock performance vs peers and S&P 500
-- "Sentiment is RISING/FALLING from X.XX to X.XX over the past year"
-- "Investment score is RISING/FALLING from X.X to X.X"
-- "Stock reacted positively/negatively to N of M earnings calls"
-- "Forecast tone is IMPROVING/DETERIORATING"
 - "Executives are MORE POSITIVE/MORE NEGATIVE than analysts by X.XX"
-- Key thesis (bullish/bearish/neutral) + 3 supporting points
-
-### Section 2: Stock Performance
-Chart 5 + Chart 6 | Table: YTD/6M/1Y vs peers and S&P 500
-
-### Section 3: Financial Outlook
-Table: Revenue, EPS, EBITDA, Net Income, FCF, CapEx — actuals + consensus forward estimates (FY-2 through FY+1)
-
-### Section 4: Earnings Call Comparison — Quarter Over Quarter *(CORE)*
-Charts 1–4, 8 | Quarter comparison table with Direction columns | Verdicts | Per-quarter event breakdown | Divergence analysis
-
-**Quarter Card Layout (use this exact HTML structure — prevents text overlap):**
-
-Render **one card per available earnings call** — typically 4, but some companies have only 1, 2, or 3 quarters of data. Use `auto-fit` so the grid adjusts automatically to however many cards exist. Do NOT use `display: flex` with multiple children — cards become too narrow and text overlaps.
-
-```html
-<style>
-  .qtr-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-    margin: 24px 0;
-  }
-  .qtr-card {
-    border: 1px solid #d1d5db;
-    border-radius: 12px;
-    padding: 16px;
-    background: #fff;
-    min-width: 0; /* allow card to shrink inside grid */
-  }
-  .qtr-card.latest { border-color: #6AA64A; border-width: 2px; }
-  .qtr-header {
-    font-size: 12px;
-    font-weight: 600;
-    color: #6b7280;
-    margin-bottom: 12px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .qtr-metric {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 8px;
-    margin-bottom: 6px;
-    font-size: 13px;
-  }
-  .qtr-metric .label {
-    color: #374151;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .qtr-metric .value {
-    font-weight: 600;
-    text-align: right;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: #111827;
-  }
-  .qtr-metric .arrow-up   { color: #1D9E75; }
-  .qtr-metric .arrow-down { color: #D85A30; }
-  .qtr-badge {
-    display: inline-block;
-    margin: 10px 0 8px;
-    padding: 2px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 600;
-  }
-  .badge-green { background: #dcfce7; color: #15803d; }
-  .badge-red   { background: #fee2e2; color: #b91c1c; }
-  .badge-blue  { background: #dbeafe; color: #1d4ed8; }
-  .badge-amber { background: #fef3c7; color: #92400e; }
-  .qtr-notes {
-    font-size: 12px;
-    color: #4b5563;
-    line-height: 1.5;
-    margin-top: 6px;
-  }
-</style>
-
-<div class="qtr-grid">
-  <!-- One .qtr-card per available earnings call (1–4 total, whatever getCompanyDocuments returned) -->
-  <div class="qtr-card [add 'latest' class for most recent]">
-    <div class="qtr-header">Q2 FY2025 · May 1, 2025</div>
-    <div class="qtr-metric">
-      <span class="label">Sentiment</span>
-      <span class="value">0.32 <span class="arrow-up">▲</span></span>
-    </div>
-    <div class="qtr-metric">
-      <span class="label">Investment</span>
-      <span class="value">0.61 <span class="arrow-down">▼</span></span>
-    </div>
-    <div class="qtr-metric">
-      <span class="label">Pattern +/−</span>
-      <span class="value">+0.05 / −0.02</span>
-    </div>
-    <div class="qtr-metric">
-      <span class="label">Revenue</span>
-      <span class="value">$94.9B</span>
-    </div>
-    <span class="qtr-badge badge-red">Weakest quarter</span>
-    <div class="qtr-notes">Top risk: tariffs ($900M cost impact flagged). RiskFactor event score: −0.95.</div>
-  </div>
-</div>
-```
-
-**Key rules:**
-- `grid-template-columns: repeat(auto-fit, minmax(220px, 1fr))` — adapts to 1, 2, 3, or 4 available quarters automatically; each column is at least 220px wide
-- Every metric row uses `justify-content: space-between` so label and value never collide
-- Direction arrows (▲▼) stay inline with the value, colored green/red
-- Badge color: Weakest → red, Strong recovery → green, Record → blue, Best score → amber (pick closest fit)
-- Notes section is the 2–3 sentence qualitative summary for that quarter
-
-### Section 5: Management Forecast & Outlook
-Table: Quarter | Forecast Tone | Key Guidance Points | 1–2 direct quotes per quarter
-State: "Guidance was RAISED/LOWERED/MAINTAINED in N of [total] quarters"
-
-### Section 6: Trending Topics
-Chart 7 | Top 20 trends table (score, hits, % change, RISING/DECLINING)
-
-### Section 7: Executive Sentiment & Commentary
-Chart 10 | CEO vs CFO table | Top executives by sentence volume | Key quotes with attribution
-
-### Section 8: Analyst & Investor Sentiment
-Chart 9 | Most bullish/bearish analysts (top/bottom 5) | Firm ranking | Exec vs Analyst gap table + interpretation
-
-### Section 9: Competitive Landscape
-1Y stock % change vs competitors (from `getStockChange` per competitor)
-
-### Section 10: Risk Factors
-Risks from `getCompanyDescription` + negative event types from analytics + analyst concerns
-
-### Section 11: Appendix
-Documents analyzed (title, date, transcriptId) | Pronto company ID | Date ranges used
+- "CEO is MORE BULLISH/MORE CAUTIOUS than CFO" (compare individual scores)
+- Most bullish analyst: [Name] from [Firm] (X.XX); most bearish: [Name] from [Firm] (X.XX)
+- Gap interpretation: `> +0.10` = management may be over-optimistic; `< -0.10` = street sees more upside
 
 ---
 
-## Charts
+## Step 4: Render
 
-Charts are included in the HTML file. Use `assets/charts-template.html` as a reference for the 10 Chart.js configurations (canvas IDs c1–c10, chart types, options). Populate the data arrays from tool results.
+Delegate the HTML output to `pronto-html-renderer` (`subagent_type: prontonlp-plugin:pronto-html-renderer`). Do not render HTML here.
 
-**Chart placement:**
-- Load Chart.js once near the top of the HTML output: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
-- Place Charts 1–4 and 8 inside **Section 4** (Earnings Call Comparison), after the quarter comparison table
-- Place Chart 5 inside **Section 2** (Stock Performance)
-- Place Charts 6 inside **Section 9** (Competitive Landscape)
-- Place Chart 7 inside **Section 6** (Trending Topics)
-- Place Charts 9–10 inside **Section 8** (Analyst & Investor Sentiment) and **Section 7** (Executive Sentiment)
-- All chart data defined as JS constants at the point of use (or collected into one `<script>` block near the end)
+```
+report_type: company
+org: <from getOrganization>
+filename: <TICKER>-report-<YYYYMMDD>.html
+title: "<Company Name> (<Ticker>) — Intelligence Report"
+subtitle: "Generated: <date> · Sector: <sector> · Market Cap: <cap>"
+data:
+  meta: { ticker, companyId, companyName, sector, subSector, asOfDate }
+  kpi:  { investmentScore, investmentScoreChange, sentimentScore, sentimentScoreChange,
+          stockChangeYTD, stockChange6M, stockChange1Y }
+  quartersChart:
+    quarters:          [ "Q1 2025", "Q2 2025", ... ]
+    sentimentScores:   [ ... ]
+    investmentScores:  [ ... ]
+    stockReactions:    [ ... ]
+    positiveEvents:    [ ... ]
+    negativeEvents:    [ ... ]
+  quarterCards: [ { label, date, sentiment, sentimentArrow, investment, investmentArrow,
+                    patternPos, patternNeg, revenue, badge, notes, isLatest } ]
+  stockChart: { dates: [...], prices: [...], earningsCallIndices: [...] }
+  competitors: [ { name, ticker, return1Y, isTarget } ]           # sorted desc, target first
+  trends: [ { name, score, change, hits, explanation } ]
+  speakers:
+    executives: [ { name, role, sentiment, sentenceCount } ]       # incl. CEO, CFO, execAvg rows
+    analysts:   [ { name, firm, sentiment, sentenceCount } ]
+    gap:        { execAvg, analystAvg, interpretation }
+  quotes: [ { text, speakerName, role, company, date, refId, section } ]  # section ∈ {bull, bear, forecast, risk}
+  predictions: { revenue: [...], epsGaap: [...], ebitda: [...],
+                 netIncomeGaap: [...], freeCashFlow: [...], capitalExpenditure: [...] }
+  risks: [ { title, evidence, refId } ]
+narrative:
+  executiveSummary: "<2–3 paragraphs that explicitly state all RISING/FALLING verdicts, the exec-vs-analyst gap, and the thesis>"
+  verdict: "<bullish / bearish / neutral + 3 supporting points>"
+```
+
+**Report section order** (renderer follows this sequence):
+1. Header
+2. Executive Summary
+3. Stock Performance — stock chart + stock KPI tiles (YTD · 6M · 1Y)
+4. Financial Outlook — predictions table (Revenue, EPS, EBITDA, Net Income, FCF, CapEx)
+5. Quarter Cards — one card per earnings call
+6. Competitors — peer return table
+7. KPI grid (full — all 7 metrics)
+8. Quarters chart (sentiment + investment lines + stock reaction bars)
+9. Trends, Speakers, Quotes, Risks, Verdict
+
+The renderer applies shared conventions (color rule, score display, company/citation links, chart palette, quarter-card styling, badge rules). For narrower report modes, omit payload keys that were not gathered — the renderer skips absent sections.
 
 ---
 
@@ -388,33 +237,31 @@ YTD:           sinceDay = Jan 1,        untilDay = today
 Past 6 months: sinceDay = 6 months ago, untilDay = today
 ```
 
-**Important:** `getAnalytics` cannot handle date ranges over 1 year. Split longer requests into multiple yearly calls.
+`getAnalytics` max range: 1 year — split longer requests into multiple yearly calls.
 
 ---
 
-## Error Handling & Common Issues
+## Error Handling
 
 | Problem | What to do |
 |---------|-----------|
 | Company not found | Try ticker instead of name (or vice versa); check spelling |
-| `getCompanyDescription` returns no result | Ask user to verify; do not proceed without companyId |
-| Fewer than 4 earnings calls | Work with available quarters; note the gap in the comparison table |
-| No predictions for a metric | Show "N/A" in that cell; skip gracefully |
-| Analytics returns empty | Verify date range ≤ 1 year; try without `documentIDs` filter as fallback |
-| No competitors returned | Skip competitive section; note it in the report |
-| No quotes from search | Note "No matching quotes found" — never fabricate |
+| `getCompanyDescription` returns nothing | Ask user to verify; do not proceed without companyId |
+| Fewer than 4 earnings calls | Work with available quarters; note the gap in the payload |
+| No predictions for a metric | Omit from payload; renderer skips absent rows |
+| Analytics returns empty | Verify date range ≤ 1 year; try without `documentIDs` filter |
+| No competitors returned | Omit `competitors` from payload |
+| No quotes returned | Omit `quotes` — never fabricate |
 | Private/unlisted company | ProntoNLP covers public companies only — tell the user |
-| companyId not in response | Check for `id` or nested field; inspect the full response object |
+| companyId missing from response | Inspect the full object for `id` or nested field |
 
 ---
 
 ## Best Practices
 
-1. **Always write to file** — write the HTML report to `[ticker]-report.html` using the `Write` tool
-2. Save `companyId` the moment you get it from `getCompanyDescription`
-3. Maximize parallelism — batch all independent calls per the strategy above
-4. Never fabricate data — if a tool returns nothing, say so honestly
-5. Always cite quotes: `"Quote text" — [Name], [Role], [Company] ([Date])`
-6. Present both sides — always pair positive findings with negative/risk findings
-7. Prefer `companyId` over `companyName` when a tool accepts both
-8. Do not mention tool names in responses — describe the action instead (e.g. "I analyzed 4 earnings calls" not "I called getAnalytics 4 times")
+1. Save `companyId` the moment you get it from `getCompanyDescription`.
+2. Maximize parallelism — batch all independent calls per the strategy above.
+3. Never fabricate data — if a tool returns nothing, omit the corresponding payload key.
+4. Never reformat raw scores — pass `0.71`, not `7.1` or `7.1/10` (renderer enforces).
+5. Prefer `companyId` over `companyName` when a tool accepts both.
+6. Do not mention tool names in responses — describe the action ("I analyzed 4 earnings calls", not "I called getAnalytics 4 times").

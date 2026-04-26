@@ -61,7 +61,7 @@ This file defines what a correct, high-quality response from `pronto-compare` lo
 | Criterion | Pass condition |
 |-----------|---------------|
 | Correct number of dimensions scored | 9 for company-vs-company; 7 for sector-vs-sector; 7 universal + 2 company-only for mixed |
-| Explicit winner per dimension | Every scoreable row has a `🏆` winner |
+| Explicit winner per dimension | Every scoreable row has a winner marked |
 | N/A shown for company-only rows in sector columns | Sector columns show "N/A — Sector" in Earnings Reaction and Financial Outlook rows |
 | Win tally computed | "Overall Wins" row shows count (e.g. "6 / 7") |
 | Overall leader named explicitly | "Overall leader: [Entity] — wins N of M dimensions" |
@@ -74,22 +74,22 @@ This file defines what a correct, high-quality response from `pronto-compare` lo
 
 ---
 
-## 5. Report Structure
+## 5. HTML Output
 
 | Criterion | Pass condition |
 |-----------|---------------|
-| Output is HTML only | Zero markdown tables, zero plain text paragraphs, zero code blocks in response |
-| No DOCTYPE / html / head / body tags | Fragment starts with `<style>` |
+| Output is a saved HTML file | Renderer writes a standalone `.html` file — not inline markdown |
+| Filename includes date stamp | `<tickerA>-vs-<tickerB>-<YYYYMMDD>.html` (or sector equivalent) |
+| Standalone HTML document | File contains DOCTYPE, `<html>`, `<head>`, `<body>` — not a fragment |
 | Chart.js loaded exactly once | CDN script tag appears exactly one time |
 | Section 1 — Scorecard | One column per entity + Winner column; correct rows for mode; N/A cells for sector in company-only rows |
-| Section 2 — Quarter cards for companies | Companies show Q1–Q4 quarter cards; sectors show sector summary cards (not quarter cards) |
-| Section 2 — Sector summary cards | Sector entities show: sentiment score, investment score, top mover, fastest-rising theme, dominant events |
-| Section 3 — Stock performance | Chart 1 present; companies show YTD/6M/1Y; sectors show top-mover YTD with footnote |
+| Section 2 — Quarter/summary cards | Companies show Q1–Q4 quarter cards; sectors show sector summary cards |
+| Section 3 — Stock performance | Chart present; companies show YTD/6M/1Y; sectors show top-mover proxy with footnote |
 | Section 4 — Financials | Present for company modes; OMITTED if all entities are sectors |
 | Section 5 — Speaker sentiment | Companies show CEO/CFO/Exec/Analyst; sectors show sector leader exec + analyst firm |
 | Section 6 — Topics | Overlap flagged; unique topics called out per entity; systemic risk topics marked |
-| Section 7 — Risk table | ✅ / — per entity per risk; Type column shows Systemic or Idiosyncratic |
-| Section 8 — Verdict | 3–4 paragraphs; leader, divergence signal, highest risk, bottom-line pick; mixed comparison adds context paragraph |
+| Section 7 — Risk table | Present/absent per entity per risk; Type column shows Systemic or Idiosyncratic |
+| Section 8 — Verdict | 3–4 paragraphs; leader, divergence signal, highest risk, bottom-line pick |
 
 ---
 
@@ -99,11 +99,11 @@ This file defines what a correct, high-quality response from `pronto-compare` lo
 |-----------|---------------|
 | Entity colors consistent | Each entity uses its assigned color throughout all charts, cards, and headers |
 | Entity type labeled | "(Company)" or "(Sector)" appears after entity name in headers and section labels |
-| CSS design tokens used | `var(--color-text-primary)` etc. used for layout — not hardcoded |
-| Signal colors correct | `#1D9E75` for RISING/positive; `#D85A30` for FALLING/negative |
-| 2-entity rule: winner green + loser red | With 2 entities, both winner=green AND loser=red in scorecard |
+| CSS design tokens used | `var(--text-primary)`, `var(--bg-card)` etc. used for layout — not hardcoded |
+| Signal colors correct | `#6AA64A` for RISING/positive; `#ED4545` for FALLING/negative |
+| 2-entity rule: winner green + loser red | With 2 entities, winner=`#6AA64A` AND loser=`#ED4545` in scorecard |
 | 3+ entity rule: winner green only | No red loser cells with 3+ entities |
-| N/A cells styled correctly | Sector N/A cells use neutral styling (`var(--color-text-tertiary)`) — not green or red |
+| N/A cells styled correctly | Sector N/A cells use neutral styling (`var(--text-muted)`) — not green or red |
 
 ---
 
@@ -144,7 +144,7 @@ A response passes evaluation if it meets:
 - **All** triggering and entity classification criteria
 - **All** data collection criteria
 - **≥ 9 of 11** scoring and synthesis criteria
-- **All** applicable report sections for the comparison mode
+- **All** applicable HTML output sections for the comparison mode
 - **≥ 6 of 7** visual design criteria
 - **All** formatting criteria
 - **≥ 6 of 8** error handling criteria (only evaluated when errors occur)

@@ -13,7 +13,7 @@ You are a top-tier Themes Broker Analyst. Your job is to produce a sophisticated
 - You ONLY synthesize the `searchResults` block provided to you.
 
 You will receive the following inputs:
-- `topicSearchQuery`: The core topic or research question.
+- `topicSearchQuery` *(optional)*: The core topic or research question — use it for context when provided.
 - `org`: The organization string necessary for formatting citation links.
 - `searchResults`: The complete set of retrieved evidence to be synthesized.
 

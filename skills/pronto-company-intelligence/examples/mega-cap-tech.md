@@ -327,42 +327,68 @@ reasonable alignment between company narrative and analyst expectations.
 [... Sections 9-11 continue with Competitors, Risks, Appendix ...]
 ```
 
-## Phase 8: Generate Charts
+## Phase 8: Render
 
-After all data is collected, write an HTML file with Chart.js:
+Delegate to `pronto-html-renderer` (`subagent_type: prontonlp-plugin:pronto-html-renderer`):
 
 ```
-Write file: /tmp/apple-report-charts.html
+report_type: company
+org: "acme"                         ← from getOrganization (Batch 1)
+filename: AAPL-report-20260419.html
+title: "Apple Inc. (AAPL) — Intelligence Report"
+subtitle: "Generated: Apr 19, 2026 · Sector: Information Technology · Market Cap: $3.2T"
+data:
+  meta: { ticker: "AAPL", companyId: "4567", companyName: "Apple Inc.",
+          sector: "Information Technology", asOfDate: "2026-04-19" }
+  kpi:  { investmentScore: 7.4, investmentScoreChange: +0.6,
+          sentimentScore: 0.41, sentimentScoreChange: +0.09,
+          stockChangeYTD: +12.3, stockChange6M: +18.7, stockChange1Y: +22.1 }
+  quartersChart:
+    quarters:        ["Q1 FY2025", "Q2 FY2025", "Q3 FY2025", "Q4 FY2025"]
+    sentimentScores: [0.32, 0.38, 0.35, 0.41]
+    investmentScores:[Q1_score, Q2_score, Q3_score, Q4_score]
+    stockReactions:  [2.0, 4.3, -1.3, 3.5]
+    positiveEvents:  [42, 51, 38, 55]
+    negativeEvents:  [8, 5, 14, 6]
+  quarterCards: [ { label: "Q1 FY2025", date: "2025-04-28", sentiment: 0.32,
+                    sentimentArrow: "up", investment: Q1_score, investmentArrow: "flat",
+                    patternPos: 42, patternNeg: 8, badge: null, isLatest: false },
+                  ... ]
+  stockChart: { dates: [...52 weekly dates...], prices: [...52 weekly prices...],
+                earningsCallIndices: [4, 17, 30, 43] }
+  competitors: [ { name: "Apple",      ticker: "AAPL", return1Y: 22.1, isTarget: true },
+                 { name: "Microsoft",  ticker: "MSFT", return1Y: 18.3, isTarget: false },
+                 { name: "Alphabet",   ticker: "GOOGL", return1Y: 16.7, isTarget: false },
+                 { name: "Samsung",    ticker: "005930", return1Y: 12.5, isTarget: false },
+                 { name: "Dell",       ticker: "DELL",  return1Y: 8.9,  isTarget: false } ]
+  trends: [ { name: "Apple Intelligence", score: 95, change: +45, hits: 312 },
+            { name: "Vision Pro",         score: 82, change: -12, hits: 187 },
+            { name: "Services Revenue",   score: 78, change: +22, hits: 241 } ]
+  speakers:
+    executives: [ { name: "Tim Cook",    role: "CEO", sentiment: 0.42, sentenceCount: 84 },
+                  { name: "Kevan Parekh", role: "CFO", sentiment: 0.35, sentenceCount: 51 } ]
+    analysts:   [ { name: "Analyst A", firm: "Goldman Sachs", sentiment: 0.65, sentenceCount: 12 },
+                  { name: "Analyst B", firm: "Morgan Stanley", sentiment: 0.52, sentenceCount: 9 } ]
+    gap: { execAvg: 0.37, analystAvg: 0.29, interpretation: "Executives are MORE POSITIVE than analysts by 0.08" }
+  quotes: [ { text: "...", speakerName: "Tim Cook", role: "CEO", company: "Apple",
+               date: "2026-01-29", refId: "AAPL_Q4_2025_044", section: "bull" }, ... ]
+  predictions: { revenue: [...], epsGaap: [...], ebitda: [...],
+                 netIncomeGaap: [...], freeCashFlow: [...], capitalExpenditure: [...] }
+  risks: [ { title: "China Revenue Concentration", evidence: "...", refId: "AAPL_Q4_2025_112" } ]
+narrative:
+  executiveSummary: "Apple sentiment is RISING — from 0.32 (Q1) to 0.41 (Q4)..."
+  verdict: "Bullish — investment score rising, stock outperforming peers, CEO notably more positive than analysts."
 
-Populate the data arrays from tool results:
-  sentimentScores = [0.32, 0.38, 0.35, 0.41]
-  investmentScores = [Q1_score, Q2_score, Q3_score, Q4_score]  // raw values from API
-  stockReactions = [2.0, 4.3, -1.3, 3.5]
-  weeklyDates = [... 52 weekly dates from getStockPrices ...]
-  weeklyPrices = [... 52 weekly prices ...]
-  competitorNames = ['Apple', 'Samsung', 'Microsoft', 'Alphabet', 'Dell', 'S&P 500']
-  competitorReturns = [22.1, 12.5, 18.3, 16.7, 8.9, 11.8]
-  trendNames = ['Apple Intelligence', 'Vision Pro', 'Services Revenue', ...]
-  trendScores = [95, 82, 78, ...]
-  trendChanges = [45, -12, 22, ...]  // % change — positive = green, negative = red
-  speakerLabels = ['CEO', 'CFO', 'Exec Avg', 'Analyst Avg']
-  speakerSentiments = [0.42, 0.35, 0.37, 0.29]
-  positiveEvents = [42, 51, 38, 55]
-  negativeEvents = [8, 5, 14, 6]
-  analystNames = ['Analyst A', 'Analyst B', ...]
-  analystSentiments = [0.65, 0.52, ...]
-
-→ This produces 9 interactive charts in a 2-column grid layout.
-→ User can open /tmp/apple-report-charts.html in any browser.
+→ Renderer writes AAPL-report-20260419.html
 ```
 
 ## Tool Call Summary
 
 | Batch | Calls | What |
 |-------|-------|------|
-| 1 | 2 | getCompanyDescription + getCompanyCompetitors |
+| 1 | 3 | getCompanyDescription + getCompanyCompetitors + getOrganization |
 | 2 | 12 | docs + stock prices + 3 stock changes + 6 predictions + trends |
-| 3 | 19 | 4 analytics (per quarter) + 4 stock around calls + 5 speakers (all execs, CEO, CFO, analysts, firms) + deep research avg + 4 competitor changes |
-| 4 | 7 | 4 forecast searches + positive quotes + negative quotes + analyst Q&A |
-| 5 | 1 | Write HTML charts file |
-| **Total** | **~41** | **5 sequential batches, heavily parallelized** |
+| 3 | 19 | 4 analytics (per quarter) + 4 stock around calls + 5 speakers (all execs, CEO, CFO, analysts, firms) + 4 competitor changes |
+| 4 | 1 | pronto-search-summarizer (forecast + bull + bear + analyst Q&A searches) |
+| 5 | 1 | pronto-html-renderer → writes AAPL-report-20260419.html |
+| **Total** | **~36** | **5 sequential batches, heavily parallelized** |

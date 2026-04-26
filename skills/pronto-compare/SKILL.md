@@ -3,102 +3,78 @@ name: pronto-compare
 description: "Generates a unified side-by-side comparison report for two or more named companies, tickers, market sectors, or any mix of companies and sectors — scoring each across sentiment, investment score, stock performance, trending topics, and risk factors to determine an overall leader. Use when the user wants to compare specific companies, sectors, or a company against a sector. Triggers on phrases like: '[company] vs [company]', '[sector] vs [sector]', '[company] vs [sector]', 'compare [company] and [sector]', 'tech vs healthcare', 'NVDA vs the tech sector', 'which sector leads — IT or financials', 'how does [company] compare to [sector]', 'semiconductors vs software'. Supports 2 to 5 entities (companies, sectors, or mixed). Do not use for a single named company — use the company intelligence skill. Do not use for a single sector — use the sector intelligence skill. Do not use for broad market overviews — use the market pulse skill."
 metadata:
   author: ProntoNLP
-  version: 1.0.0
+  version: 1.1.0
   mcp-server: prontonlp-mcp-server
   category: finance
 ---
 
 # Universal Comparison Report Generator
 
-Produces a self-contained side-by-side intelligence comparison of two or more entities — which may be named companies, market sectors, or a mix of both. Collects sentiment, investment scores, stock performance, trending topics, and risk factors for every entity using ProntoNLP MCP tools directly, then synthesizes all data into a single unified comparison report with scoring, charts, and a clear verdict.
+Side-by-side intelligence comparison of 2–5 entities (companies, sectors, or mixed). Gathers per-entity data, scores each across shared dimensions, picks a winner per dimension, synthesizes a verdict.
 
-> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, `deepResearch`, or any interactive visualization tool from this skill. These are user-triggered only. Only call the tools explicitly listed in the batches below.
+Data gathering + scoring live here; HTML rendering is delegated to the `pronto-html-renderer` agent.
 
----
-
-## Output Format
-
-Always write the report as an HTML file using the `Write` tool, then tell the user the filename.
-
-File naming:
-- Company vs company: `[tickerA]-vs-[tickerB]-report.html` (e.g. `NVDA-vs-AMD-report.html`)
-- Company vs sector: `[ticker]-vs-[sector-slug]-report.html` (e.g. `NVDA-vs-tech-report.html`)
-- Sector vs sector: `[sectorA-slug]-vs-[sectorB-slug]-report.html` (e.g. `tech-vs-healthcare-report.html`)
-
-### HTML rules:
-- No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags — output only a `<style>` block followed by HTML content and `<script>` blocks
-- Use Claude's native CSS design tokens: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-text-tertiary)`, `var(--color-background-primary)`, `var(--color-background-secondary)`, `var(--color-border-tertiary)`, `var(--font-sans)`, `var(--border-radius-lg)`, `var(--border-radius-md)`
-- For green/red signal colors, hardcode: green `#1D9E75`, red `#D85A30`
-- **Value coloring rule — applies to every numeric value, score, and % change rendered in the report:**
-  - Value **> 0** (positive sentiment, positive stock change, positive delta): text color `#1D9E75` (green)
-  - Value **< 0** (negative sentiment, negative stock change, negative delta): text color `#D85A30` (red)
-  - Value **= 0**: no color — use default inherited text color
-- **Score display rule:** Investment scores and sentiment scores are raw API values in the **0.0–1.0 range**. Display them exactly as returned — never multiply, never append "/10", never reformat as a fraction. Example: show `0.71`, not `7.1` or `7.1/10`. `sentimentScoreChange` and `investmentScoreChange` are percentage changes — always display with a `%` suffix (e.g. `+4.2%`, `-1.8%`). Any negative number or negative percentage (value < 0) **must** render in red `#D85A30` — this includes stock changes, score changes, deltas, and any other numeric field with a minus sign.
-- Load Chart.js once: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
-- All chart data as inline JS constants — never reference external files
+> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research`. These are user-triggered only.
 
 ---
 
 ## Step 1: Parse Entities & Assign Types
 
-Extract all entities from the user's request. Identify each as either a **company** or a **sector**.
+Extract all entities from the request. Classify each as **company** or **sector**. Support **2–5** entities; if more, ask the user to narrow.
 
-**Support 2–5 entities maximum.** If the user requests more than 5, ask them to narrow it down.
+### Entity classification
 
-### Entity Classification
+| Type | Identifies as | Examples |
+|------|--------------|----------|
+| Company | Named company or ticker | "NVDA", "Apple", "Tesla" |
+| Sector | Market sector or sub-sector | "tech sector", "healthcare", "semiconductors" |
 
-| Entity type | Identifies as | Examples |
-|-------------|--------------|----------|
-| **Company** | Named company or ticker | "NVDA", "Apple", "Tesla", "MSFT" |
-| **Sector** | Market sector or sub-sector | "tech sector", "healthcare", "semiconductors", "financials" |
+Signal phrases: "NVDA vs the tech sector" (company + sector) · "tech vs healthcare" (sector + sector) · "NVDA vs AMD vs semiconductors" (mixed).
 
-**Company vs sector signal phrases:**
-- "NVDA vs the tech sector" → company + sector
-- "how does Apple compare to consumer discretionary" → company + sector
-- "tech vs healthcare" → sector + sector
-- "NVDA vs AMD vs semiconductors" → 2 companies + 1 sector
+### Sector name normalization
 
-### Sector Name Normalization
-
-Map informal sector names to the exact API strings:
-
-| User says | Exact API string |
-|-----------|-----------------|
+| User says | API string |
+|-----------|-----------|
 | tech, technology | `Information Technology` |
 | healthcare, health, pharma, biotech, medtech | `Health Care` |
-| financials, finance, banking, financial services | `Financials` |
+| financials, finance, banking | `Financials` |
 | energy, oil, gas | `Energy` |
 | consumer discretionary, retail, auto | `Consumer Discretionary` |
 | consumer staples, food, beverage | `Consumer Staples` |
-| industrials, industrial, aerospace, defense | `Industrials` |
+| industrials, aerospace, defense | `Industrials` |
 | utilities | `Utilities` |
 | real estate, reits | `Real Estate` |
 | materials, chemicals, mining | `Materials` |
 | communication, media, telecom | `Communication Services` |
 | semiconductors | `Information Technology-Semiconductors and Semiconductor Equipment` |
-| software | `Information Technology-Software` |
-| cloud | `Information Technology-Software` |
+| software, cloud | `Information Technology-Software` |
 | ev sector, electric vehicles | `Consumer Discretionary-Automobiles` |
 
-### Color Assignment
+### Entity colors (passed in payload; renderer uses them consistently)
 
-Assign a color per entity (used consistently throughout all charts, cards, and scorecard columns):
-
-- Entity A: `#3B82F6` (blue)
-- Entity B: `#8B5CF6` (purple)
-- Entity C: `#F59E0B` (orange)
-- Entity D: `#14B8A6` (teal)
-- Entity E: `#EC4899` (pink)
+Entity A `#3B82F6` · B `#8B5CF6` · C `#F59E0B` · D `#14B8A6` · E `#EC4899`
 
 ---
 
-## Step 2: Batch 1 — Foundation (fire all simultaneously)
+## Confirm Before Proceeding
 
-Actions differ by entity type — fire all in parallel across all entities:
+After Step 1, **before calling any tools**, present a short summary and wait for the user to confirm.
 
-**Always:**
+Show the user:
+- **Entities:** each entity name, its type (Company / Sector), and the normalized API string (e.g. `Information Technology-Semiconductors…`)
+- **Comparison mode:** company-vs-company / sector-vs-sector / mixed — and how many scoring dimensions will be used
+- **Date range:** e.g. "Past year — Apr 2025 to Apr 2026"
+
+Then ask: *"Ready to generate the comparison report. Reply **yes** to continue, or clarify anything above."*
+
+**Do not call any tools until the user confirms.**
+
+---
+
+## Step 2: Batch 1 — Foundation (parallel across all entities)
+
 ```
-getOrganization    → save org (used for citation links and Batch 4 agent)
+getOrganization    → save org
 ```
 
 **For each COMPANY:**
@@ -107,427 +83,203 @@ getCompanyDescription(companyNameOrTicker: "<company>")
   → save: companyId, sector, subSector, description, risks[]
 ```
 
-**For each SECTOR:**
-- No API call needed — normalize the sector name to exact API string (done in Step 1)
-- Mark entity type as `sector` and save the exact API string for use in all subsequent calls
+**For each SECTOR:** no API call — use the normalized exact sector string.
 
-After Batch 1 completes:
-- Every company has a `companyId` — required for all stock calls
-- Every entity has a confirmed entity type (company or sector) and display name
+After Batch 1: every company has `companyId`; every entity has a confirmed type and display name.
 
 ---
 
-## Step 3: Batch 2 — Core Data (fire all simultaneously, all entities at once)
+## Step 3: Batch 2 — Core Data (parallel across all entities)
 
-Actions differ by entity type — fire all in one parallel batch across all entities:
-
-### Companies — Batch 2 calls:
+### Per COMPANY:
 ```
-getCompanyDocuments(companyName: "<name>", documentTypes: ["Earnings Calls"], limit: 4)
-  → save: transcriptId[] and call dates for Q1–Q4
-
-getStockChange(companyId: "<id>", sinceDay: "<YTD start>", untilDay: "<today>")     → YTD %
-getStockChange(companyId: "<id>", sinceDay: "<6M ago>",    untilDay: "<today>")     → 6M %
-getStockChange(companyId: "<id>", sinceDay: "<1Y ago>",    untilDay: "<today>")     → 1Y %
-
-getPredictions(companyId: "<id>", metric: "revenue")
-getPredictions(companyId: "<id>", metric: "epsGaap")
-getPredictions(companyId: "<id>", metric: "ebitda")
-getPredictions(companyId: "<id>", metric: "freeCashFlow")
-  → save: forward consensus estimates
-
-getTrends(companyName: "<name>", documentTypes: ["Earnings Calls"],
-  sinceDay: "<1Y ago>", untilDay: "<today>", limit: 10)
-  → save: top trending topics with score and change %
+getCompanyDocuments(companyName, documentTypes: ["Earnings Calls"], limit: 4)
+  → save transcriptId[] and call dates Q1–Q4
+getStockChange ×3   (YTD, 6M, 1Y)
+getPredictions ×4   (revenue, epsGaap, ebitda, freeCashFlow)
+getTrends(companyName, documentTypes: ["Earnings Calls"], sinceDay: 1Y ago, limit: 10)
 ```
 
-### Sectors — Batch 2 calls:
+### Per SECTOR:
 ```
-getAnalytics(sectors: ["<Exact Sector String>"], documentTypes: ["Earnings Calls"],
+getAnalytics(sectors, documentTypes: ["Earnings Calls"],
   analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment"],
-  sinceDay: "<1Y ago>", untilDay: "<today>")
-  → save: sentimentScore, investmentScore, sentiment direction, investment direction,
-           top positive events, top negative events, top aspects
+  sinceDay: 1Y ago, untilDay: today)
+  → sentimentScore, investmentScore, directions, top positive/negative events, top aspects
 
-getTrends(sectors: ["<Exact Sector String>"], documentTypes: ["Earnings Calls"],
-  sinceDay: "<1Y ago>", untilDay: "<today>", limit: 10)
-  → save: top trending topics with score and change %
-  NOTE: do NOT pass a query or topicSearchQuery to getTrends
+getTrends(sectors, documentTypes: ["Earnings Calls"], sinceDay: 1Y ago, limit: 10)
+  (NEVER pass `query` or `topicSearchQuery` to getTrends)
 
-getTopMovers(sectors: ["<Exact Sector String>"], documentTypes: ["Earnings Calls"],
-  sortBy: ["investmentScore", "sentimentScore", "stockChange", "investmentScoreChange", "sentimentScoreChange"],
-  limit: 10, sinceDay: "<1Y ago>", untilDay: "<today>")
-  → save: top company by investment score (name + score), top company by sentiment (name + score),
-           top company by stock change (name + %), underperformers (high score + weak stock)
+getTopMovers(sectors, documentTypes: ["Earnings Calls"],
+  sortBy: ["investmentScore", "sentimentScore", "stockChange",
+           "investmentScoreChange", "sentimentScoreChange"],
+  limit: 10, sinceDay: 1Y ago)
+  → top by investment, top by sentiment, top by stock, underperformers
 ```
 
 ---
 
-## Step 4: Batch 3 — Deep Analysis (fire all simultaneously, all entities at once)
+## Step 4: Batch 3 — Deep Analysis (parallel across all entities)
 
-Actions differ by entity type — fire all in one parallel batch:
-
-### Companies — Batch 3 calls (using transcriptIds from Batch 2):
+### Per COMPANY (uses transcriptIds from Batch 2):
 ```
-getAnalytics(companyName: "<name>", documentIDs: ["<Q1 transcriptId>"],
-  analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment"])
-  → save: sentimentScore_Q1, investmentScore_Q1, top events Q1
-
-getAnalytics(companyName: "<name>", documentIDs: ["<Q2 transcriptId>"], ...)  → Q2
-getAnalytics(companyName: "<name>", documentIDs: ["<Q3 transcriptId>"], ...)  → Q3
-getAnalytics(companyName: "<name>", documentIDs: ["<Q4 transcriptId>"], ...)  → Q4
-
-getStockPrices(companyId: "<id>", fromDate: "<call date minus 2 days>",
-  toDate: "<call date plus 5 days>", interval: "day")
-  → compute: stock reaction % for Q1, Q2, Q3, Q4
-
-getSpeakers(companyName: "<name>", speakerTypes: ["Executives"],
-  sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
-  → save: exec avg sentiment
-
-getSpeakers(companyName: "<name>", speakerTypes: ["Executives_CEO"], limit: 3, documentTypes: ["Earnings Calls"])
-  → save: CEO sentiment
-
-getSpeakers(companyName: "<name>", speakerTypes: ["Executives_CFO"], limit: 3, documentTypes: ["Earnings Calls"])
-  → save: CFO sentiment
-
-getSpeakers(companyName: "<name>", speakerTypes: ["Analysts"],
-  sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
-  → save: analyst avg sentiment, most bullish, most bearish
-
-getSpeakerCompanies(companyName: "<name>", speakerTypes: ["Analysts"],
-  sortBy: "sentiment", sortOrder: "desc", limit: 10)
-  → save: most bullish analyst firm, most bearish analyst firm
+getAnalytics ×4   (per quarter, pass documentIDs, analyticsType: scores/events/aspects/patternSentiment)
+getStockPrices ×4 (call date ±5 days, interval: "day" → stock reaction per quarter)
+getSpeakers       (Executives, sortBy: sentiment, limit: 20)
+getSpeakers       (Executives_CEO, limit: 3)
+getSpeakers       (Executives_CFO, limit: 3)
+getSpeakers       (Analysts, sortBy: sentiment, limit: 20)
+getSpeakerCompanies (Analysts, sortBy: sentiment, limit: 10)
 ```
 
-### Sectors — Batch 3 calls (using top companies from getTopMovers in Batch 2):
+### Per SECTOR (uses top companies from getTopMovers):
 ```
-searchTopCompanies(sectors: ["<Exact Sector String>"], eventTypes: ["GrowthDriver"],
-  limit: 5, sinceDay: "<1Y ago>", untilDay: "<today>")
-  → save: top 3 companies driving growth in this sector
-
-searchTopCompanies(sectors: ["<Exact Sector String>"], eventTypes: ["RiskFactor"],
-  limit: 5, sinceDay: "<1Y ago>", untilDay: "<today>")
-  → save: top 3 companies with highest risk factor exposure
-
-getSpeakers(companyName: "<top company from getTopMovers>", speakerTypes: ["Executives"],
-  sortBy: "sentiment", sortOrder: "desc", limit: 10, documentTypes: ["Earnings Calls"])
-  → save: most bullish executive in the sector (name + score)
-
-getSpeakerCompanies(companyName: "<top company from getTopMovers>",
-  speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 10)
-  → save: most bullish analyst firm covering sector leader
+searchTopCompanies(sectors, eventTypes: ["GrowthDriver"], limit: 5)
+searchTopCompanies(sectors, eventTypes: ["RiskFactor"],   limit: 5)
+getSpeakers(companyName: "<sector's top company>", speakerTypes: ["Executives"], limit: 10)
+getSpeakerCompanies(companyName: "<sector's top company>", speakerTypes: ["Analysts"], limit: 10)
 ```
 
-Run all company AND sector calls simultaneously in one batch.
-
-After Batch 3, compute per company:
+Compute per company:
 - `sentimentDirection` (RISING if Q4 > Q1, FALLING if Q4 < Q1)
 - `investmentDirection` (same logic)
-- `positiveCallCount` (quarters where stock reaction > 0)
-- `execAnalystGap` = execAvg − analystAvg
+- `positiveCallCount` (quarters with stock reaction > 0)
+- `execAnalystGap = execAvg - analystAvg`
 
 ---
 
-## Step 5: Batch 4 — Quotes (**REQUIRED — do not skip, do not proceed to Step 6 until this completes**)
+## Step 5: Batch 4 — Quotes (**REQUIRED — do not proceed until complete**)
 
-Delegate to ONE `pronto-search-summarizer` (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
+Delegate to ONE `pronto-search-summarizer` (`subagent_type: prontonlp-plugin:pronto-search-summarizer`):
 
 ```
-"org: [org from getOrganization]
-sinceDay: <1Y ago>
-untilDay: <today>
+org: [org]
+sinceDay: 1Y ago
+untilDay: today
 
-Fetch all quotes needed for the comparison report. Run these searches:
+Fetch quotes for the comparison report.
 
-For each company entity — [company 1], [company 2], ...:
-  - Bullish executive quotes: companyName: [company], speakerTypes: Executives, sentiment: positive, topicSearchQuery: 'growth outlook guidance', documentTypes: ["Earnings Calls"], sinceDay: <1Y ago>, untilDay: <today>, size: 3
-  - Bearish/risk quotes: companyName: [company], sentiment: negative, topicSearchQuery: 'risk challenge headwind', documentTypes: ["Earnings Calls"], sinceDay: <1Y ago>, untilDay: <today>, size: 3
-  - Notable analyst questions: companyName: [company], sections: EarningsCalls_Question, documentTypes: ["Earnings Calls"], sinceDay: <1Y ago>, untilDay: <today>, size: 3
+Per COMPANY entity:
+- Bullish executive quotes — speakerTypes: Executives, sentiment: positive,
+  topicSearchQuery: 'growth outlook guidance', documentTypes: ["Earnings Calls"], size: 3
+- Bearish/risk quotes — sentiment: negative,
+  topicSearchQuery: 'risk challenge headwind', size: 3
+- Notable analyst questions — sections: EarningsCalls_Question, size: 3
 
-For each sector entity — use [top company in sector] as the representative:
-  - Bullish quotes from [top company]: companyName: [top company], speakerTypes: Executives, sentiment: positive, topicSearchQuery: 'sector growth momentum', documentTypes: ["Earnings Calls"], sinceDay: <1Y ago>, untilDay: <today>, size: 3
-  - Bearish/risk quotes from [top company]: companyName: [top company], sentiment: negative, topicSearchQuery: 'sector risk headwind', documentTypes: ["Earnings Calls"], sinceDay: <1Y ago>, untilDay: <today>, size: 3
+Per SECTOR entity (use the sector's top company as representative):
+- Bullish quotes — companyName: [top company], speakerTypes: Executives, sentiment: positive,
+  topicSearchQuery: 'sector growth momentum', size: 3
+- Bearish/risk quotes — sentiment: negative,
+  topicSearchQuery: 'sector risk headwind', size: 3
 
-Return all results with speaker name, role, and date."
+Return with speaker name, role, date, refId.
 ```
 
-→ Save the top 1–2 quotes per task with speaker name, role, and date. Do not proceed to Step 6 until all quotes are in hand.
+Tag each quote by section (`bull`, `bear`, `analyst-question`) and by entity.
 
 ---
 
-## Step 6: Synthesize & Score
+## Step 6: Score Entities
 
-### Scoring Rules by Comparison Mode
+### Company-only comparison — 9 dimensions
 
-**Company vs Company — 9 dimensions (all entities are companies):**
-
-| Dimension | How to determine winner |
-|-----------|------------------------|
-| Sentiment trend | Highest Q4 sentiment score; tiebreak: RISING direction preferred |
-| Investment score | Highest Q4 investment score (raw API value) |
-| Stock YTD | Best YTD % change |
-| Earnings call reaction | Most quarters with positive stock reaction (N of M) |
+| Dimension | Winner |
+|-----------|--------|
+| Sentiment trend | Highest Q4 sentiment; tiebreak RISING |
+| Investment score | Highest Q4 raw score |
+| Stock YTD | Best YTD % |
+| Earnings reaction | Most N of M positive quarters |
 | Analyst consensus | Highest analyst avg sentiment |
-| Revenue (fwd) | Best forward revenue estimate |
+| Revenue (fwd) | Best forward revenue |
 | EPS (fwd) | Highest forward EPS |
 | Exec confidence | Highest executive avg sentiment |
-| Risk profile | Fewest and least severe risks |
+| Risk profile | Fewest/least severe risks |
 
-**Sector vs Sector — 7 dimensions (all entities are sectors):**
+### Sector-only — 7 dimensions
 
-| Dimension | How to determine winner |
-|-----------|------------------------|
-| Sentiment score | Highest aggregate sector sentiment score |
-| Investment score | Highest aggregate sector investment score (raw) |
-| Sentiment direction | RISING preferred over FALLING |
-| Investment direction | RISING preferred over FALLING |
-| Stock performance | Sector's top mover YTD % (or avg of top 5 from getTopMovers) |
+| Dimension | Winner |
+|-----------|--------|
+| Sentiment score | Highest aggregate |
+| Investment score | Highest aggregate raw |
+| Sentiment direction | RISING > FALLING |
+| Investment direction | RISING > FALLING |
+| Stock performance | Sector's top mover YTD % (or avg of top 5) |
 | Theme momentum | Fastest-rising topic change % |
-| Risk profile | Fewer dominant negative events / lower risk severity |
+| Risk profile | Fewer negative events / lower severity |
 
-**Mixed (company + sector) — 7 universal dimensions + 2 company-only:**
+### Mixed (company + sector) — 7 universal + 2 company-only (N/A for sectors)
 
-Score all entities on universal dimensions. Company-only dimensions show N/A for sector entities in the scorecard.
+Universal rows: sentiment score, investment score, sentiment direction, investment direction, stock performance, theme momentum, risk profile.
+Company-only rows: earnings reaction, financial outlook (revenue + EPS).
 
-| Dimension | Companies | Sectors |
-|-----------|-----------|---------|
-| Sentiment score | Q4 score | Aggregate score |
-| Investment score | Q4 raw score | Aggregate raw score |
-| Sentiment direction | RISING/FALLING Q1→Q4 | RISING/FALLING (YoY) |
-| Investment direction | RISING/FALLING Q1→Q4 | RISING/FALLING (YoY) |
-| Stock performance | Company YTD % | Sector's top mover YTD % |
-| Theme momentum | Fastest-rising topic change % | Fastest-rising topic change % |
-| Risk profile | Risk count and severity | Dominant negative event severity |
-| Earnings reaction *(company-only)* | N of M positive quarters | N/A |
-| Financial outlook *(company-only)* | Revenue + EPS forward | N/A |
+### Always compute
 
-### Always Compute and State:
-- Sentiment direction per entity: "RISING (X.XX → X.XX)" or "FALLING (X.XX → X.XX)"
-- Investment direction per entity: "RISING / FALLING"
-- Stock performance context: for sectors, note this is the top mover, not the full sector average
-- Divergence signal: any entity with rising investment score + weak stock = potential undervalued / re-rating signal
-- Topic overlap: shared topics across entities = macro theme; unique topics = entity-specific narrative
-- Risk overlap: risks in 2+ entities = systemic; in 1 entity = idiosyncratic
+- Per-entity sentiment direction: `"RISING (X.XX → X.XX)"` or `"FALLING"`
+- Per-entity investment direction
+- Stock context: for sectors, note this is the top mover, not full-sector average
+- Divergence: rising investment + weak stock = potential undervalued / re-rating signal
+- Topic overlap: shared = macro theme; unique = entity-specific narrative
+- Risk overlap: in 2+ entities = systemic; in 1 = idiosyncratic
 
 ---
 
-## Step 7: Render the Comparison Report
+## Step 7: Render
 
-Generate a single unified HTML report.
+Delegate HTML output to `pronto-html-renderer` (`subagent_type: prontonlp-plugin:pronto-html-renderer`).
 
----
-
-### Title Block
+File naming:
+- Company vs company: `<tickerA>-vs-<tickerB>-<YYYYMMDD>.html`
+- Company vs sector: `<ticker>-vs-<sector-slug>-<YYYYMMDD>.html`
+- Sector vs sector: `<sectorA-slug>-vs-<sectorB-slug>-<YYYYMMDD>.html`
 
 ```
-[Entity A] vs [Entity B] [vs ...] — Comparison Report
-Generated: [Date] | [N] Entities ([type breakdown, e.g. "2 Companies", "1 Company / 1 Sector"]) | Period: Past Year
+report_type: compare
+org: <org>
+filename: <as above>
+title: "<Entity A> vs <Entity B> [vs ...] — Comparison Report"
+subtitle: "<N> Entities (<type breakdown>) · Period: Past Year"
+data:
+  entities: [ { type, name, displayLabel, ticker?, sectorString?, color } ]
+  scorecard: [ { metric, values: { <entityName>: { raw, formatted, direction? } },
+                 winner: <entityName or "—">, companyOnly?: bool } ]
+  overallWins: { <entityName>: <int> }
+  companies:  # keyed by entity name, company entities only
+    <name>:
+      quarters: [ { label, date, sentiment, investment, stockReaction } ]
+      kpi: { sentimentQ4, investmentQ4, stockYTD, stock6M, stock1Y }
+      speakers: { ceo, cfo, execAvg, analystAvg, mostBullishAnalystFirm, mostBearishAnalystFirm }
+      predictions: { revenueFwd, epsFwd, ebitdaFwd, fcfFwd }
+      trends: [ { name, score, change } ]
+      risks:  [ { title, evidence, refId } ]
+      quotes: [ { text, speakerName, role, date, refId, section } ]
+  sectors:   # keyed by sector string, sector entities only
+    <sector>:
+      scores: { sentiment: { value, direction }, investment: { value, direction } }
+      topMover:        { company, ytdChange }
+      fastestRisingTheme: { name, change }
+      dominantPositiveEvent: { name, hits }
+      dominantNegativeEvent: { name, hits }
+      trends:  [ { name, score, change } ]
+      quotes:  [ { text, speakerName, role, date, refId, section } ]
+  topicMatrix: [ [ { entity, topic, change } ] ]         # per-entity top-10 topic lists
+  overlap: { sharedAll: [...], sharedBy2: [...], uniqueTo: { <entity>: [...] } }
+  riskMatrix: [ { risk, byEntity: { <entity>: bool }, type: "Systemic"|"Idiosyncratic" } ]
+narrative:
+  verdict:
+    overallLeader: "<paragraph — cite the specific metrics that decided the winner>"
+    undervaluedSignal: "<paragraph — cite the divergence signal if present>"
+    highestRisk: "<paragraph — cite the dominant risk and which entity it affects>"
+    bottomLine: "<one-liner: 'If you had to pick one: <entity> — because…'>"
+  verdictEvidence:
+    # Select 1–2 quotes per entity from their quotes array that best support the verdict claims.
+    # Pick bull quotes for the winner, bear/risk quotes for the loser or the highest-risk entity.
+    # Each entry must include entityName so the renderer groups them by entity.
+    [ { text, speakerName, role, company, date, refId, entityName } ]
 ```
 
----
+**Populating `verdictEvidence`:** After writing the verdict paragraphs, look at each entity's `quotes` array (in `data.companies.<name>.quotes` or `data.sectors.<name>.quotes`). Select the 1–2 quotes that most directly back up the claim made in the corresponding verdict paragraph — e.g. if the `overallLeader` paragraph cites NVDA's investment score rising, pick a bullish executive quote from NVDA's `bull` section. Include the `entityName` field on every entry so the renderer can group by entity.
 
-### Section 1: Overall Scorecard
-
-One column per entity + Winner column. Every scoreable row must have an explicit winner.
-
-**Row coloring (cell background):**
-- 2 entities: winner cell = green background (`#dcfce7`) + green text (`#15803d`), loser cell = red background (`#fee2e2`) + red text (`#b91c1c`)
-- 3+ entities: winner cell = green background + green text only; all other cells neutral
-- N/A cells (sector entity in company-only row): neutral background, muted text (`var(--color-text-tertiary)`), labeled "N/A — Sector"
-
-**Value text coloring (applied INSIDE each cell, independent of winner/loser background):**
-- Positive numbers (`+X%`, positive sentiment, positive stock, value **> 0**): text color `#1D9E75` (green)
-- Negative numbers (`−X%`, negative sentiment, negative stock, value **< 0**): text color `#D85A30` (red)
-- Zero (value **= 0**): no color — use default inherited text color
-- N/A: `var(--color-text-tertiary)`
-
-**Winner column — every row must show the actual entity name:**
-- Every dimension row: `🏆 [EntityName]` (e.g. `🏆 NVDA`, `🏆 IT Sector`) — never just a letter like `🏆 A`
-- Direction-only rows (Sentiment Direction, Investment Direction): use `—` if both entities share the same direction; otherwise name the RISING entity
-- Overall Wins row: `🏆 [EntityName] (N wins)`
-
-| Metric | [A] | [B] | [C] | Winner |
-|--------|-----|-----|-----|--------|
-| Sentiment Score | 0.67 ↑ | 0.39 ↓ | 0.48 | 🏆 NVDA |
-| Investment Score | 0.71 | 0.52 | 0.63 | 🏆 NVDA |
-| Sentiment Direction | RISING | FALLING | RISING | 🏆 NVDA / IT Sector |
-| Investment Direction | RISING | RISING | FALLING | — |
-| Stock Performance | +38.4% | −12.3% | +22.1% | 🏆 NVDA |
-| Theme Momentum | +91% | +84% | +68% | 🏆 NVDA |
-| Risk Profile | Low | Medium | High | 🏆 NVDA |
-| Earnings Reaction *(co. only)* | 4/4 | 2/4 | N/A — Sector | 🏆 NVDA |
-| Financial Outlook *(co. only)* | $48B rev | $9B rev | N/A — Sector | 🏆 NVDA |
-| **Overall Wins** | **7** | **1** | **1** | 🏆 **NVDA (7 wins)** |
-
----
-
-### Section 2: Quarter-Over-Quarter Sentiment (companies) / Sector Trend Summary (sectors)
-
-**For each COMPANY entity:** Show quarter cards (same layout as company vs company):
-
-```html
-<div class="co-section">
-  <div class="co-label">
-    <span class="co-dot" style="background:#3B82F6"></span> NVDA
-    <span style="font-size:11px;color:var(--color-text-tertiary)">Company</span>
-  </div>
-  <div class="qtr-grid">
-    <div class="qtr-card">
-      <div class="qtr-header">Q1 · [Date]</div>
-      <div class="qtr-metric"><span class="label">Sentiment</span><span class="value">X.XX</span></div>
-      <div class="qtr-metric"><span class="label">Investment</span><span class="value">X.X</span></div>
-      <div class="qtr-metric"><span class="label">Stock Reaction</span><span class="value up">+X%</span></div>
-    </div>
-    <!-- Q2, Q3, Q4 cards -->
-  </div>
-</div>
-```
-
-**For each SECTOR entity:** Show a sector summary card instead of quarter cards:
-
-```html
-<div class="co-section">
-  <div class="co-label">
-    <span class="co-dot" style="background:#8B5CF6"></span> Information Technology
-    <span style="font-size:11px;color:var(--color-text-tertiary)">Sector</span>
-  </div>
-  <div class="sector-summary-grid">
-    <div class="sector-card">
-      <div class="sector-card-label">Sentiment Score</div>
-      <div class="sector-card-value">X.XX <span class="up">↑ RISING</span></div>
-    </div>
-    <div class="sector-card">
-      <div class="sector-card-label">Investment Score</div>
-      <div class="sector-card-value">[raw] <span class="up">↑ RISING</span></div>
-    </div>
-    <div class="sector-card">
-      <div class="sector-card-label">Top Mover</div>
-      <div class="sector-card-value">[Company] +X% YTD</div>
-    </div>
-    <div class="sector-card">
-      <div class="sector-card-label">Fastest Rising Theme</div>
-      <div class="sector-card-value">[Topic] +X%</div>
-    </div>
-    <div class="sector-card">
-      <div class="sector-card-label">Dominant Positive Event</div>
-      <div class="sector-card-value">[EventType] (N hits)</div>
-    </div>
-    <div class="sector-card">
-      <div class="sector-card-label">Dominant Negative Event</div>
-      <div class="sector-card-value">[EventType] (N hits)</div>
-    </div>
-  </div>
-</div>
-```
-
-Place **Chart 3** (multi-line sentiment trend) after all blocks:
-- For companies: Q1–Q4 per quarter
-- For sectors: single point (aggregate score) — render as a flat line or a single marker on the chart with a label
-
-Place **Chart 4** (multi-line investment trend) with the same logic.
-
-After all blocks, include the comparison callout:
-> 📊 Comparison: [Entity A] sentiment is **RISING**, [Entity B] sector sentiment is **RISING** — similar trajectory but [A] leads by X.XX points.
-
----
-
-### Section 3: Stock Performance
-
-**Chart 1** — Grouped bar: YTD / 6M / 1Y for all entities.
-- For companies: actual stock change from `getStockChange`
-- For sectors: top mover's stock change from `getTopMovers` — label clearly as "Sector leader ([Company]) YTD"
-
-Table below chart with a footnote if any value is a sector top-mover proxy rather than sector average.
-
----
-
-### Section 4: Financial Outlook (companies only)
-
-Shown only if at least one entity is a company. Sector columns show "N/A — Sector" in this section.
-
-| Metric | [Company A] | [Sector B] | [Company C] | Leader |
-|--------|------------|------------|------------|--------|
-| Revenue (fwd) | $XB | N/A — Sector | $XB | 🏆 A |
-| EPS GAAP (fwd) | X.XX | N/A — Sector | X.XX | 🏆 C |
-| EBITDA (fwd) | $XB | N/A — Sector | $XB | 🏆 A |
-| FCF (fwd) | $XB | N/A — Sector | $XB | 🏆 A |
-
-If ALL entities are sectors, omit Section 4 entirely.
-
----
-
-### Section 5: Speaker Sentiment
-
-**For company entities:** CEO / CFO / Exec avg / Analyst avg (same as company vs company).
-
-**For sector entities:** Show most bullish exec from sector's top company + most bullish analyst firm.
-
-| Speaker | [Company A] | [Sector B] | [Company C] |
-|---------|------------|------------|------------|
-| CEO | X.XX | N/A — Sector | X.XX |
-| CFO | X.XX | N/A — Sector | X.XX |
-| Exec Avg | X.XX | X.XX (sector leader) | X.XX |
-| Analyst Avg | X.XX | N/A | X.XX |
-| Exec-Analyst Gap | +X.XX | — | +X.XX |
-| Most Bullish Analyst Firm | [Firm] (X.XX) | [Firm] (sector leader) | [Firm] (X.XX) |
-
-**Chart 2** — Grouped bar: entities side by side with available speaker scores.
-
----
-
-### Section 6: Trending Topics — Overlap & Divergence
-
-Side-by-side topic lists, one column per entity. Flag overlapping themes.
-
-| [Entity A] Topics | [Entity B] Topics | [Entity C] Topics |
-|------------------|------------------|------------------|
-| 1. Topic X ↑+84% | 1. Topic X ↑+61% | 1. Topic Y ↑+42% |
-| 2. Topic Y ↑+38% | 2. Topic Z ↑+29% | 2. Topic X ↑+18% |
-
-Below: three-part overlap analysis:
-- **Shared across all:** [Topic] → **Macro theme**
-- **Shared by 2:** [Topic] in [A] and [B] → **Emerging convergence**
-- **Unique to one:** [Topic] in [A] only → **[A] narrative**
-- **Systemic risk:** risk topic in 2+ entities → **Sector-wide risk**
-
----
-
-### Section 7: Risk Comparison
-
-| Risk | [A] | [B] | [C] | Type |
-|------|-----|-----|-----|------|
-| [Risk name] | ✅ | ✅ | — | Systemic |
-| [Risk name] | — | ✅ | — | Idiosyncratic |
-
-For company entities: risks from `getCompanyDescription` and negative events from `getAnalytics`.
-For sector entities: dominant negative event types from `getAnalytics` at sector level.
-
----
-
-### Section 8: Verdict
-
-4 concise paragraphs:
-1. **Overall leader** — which entity wins most scored dimensions and why
-2. **Most undervalued / re-rating signal** — entity with rising investment score but weak stock performance
-3. **Highest risk** — which entity carries the most concentrated or idiosyncratic risk
-4. **Bottom line** — "If you had to pick one: [Entity] — because..."
-
-For mixed company-vs-sector comparisons, acknowledge the different nature in the verdict:
-> "Comparing [Company] to the broader [Sector] is not apples-to-apples — [Company] carries single-stock concentration risk while [Sector] provides breadth. On the metrics available for both, [Company] leads on sentiment and investment score, suggesting significant alpha vs the sector."
-
----
-
-## Charts Reference
-
-| Chart | Section | Type | Data |
-|-------|---------|------|------|
-| Chart 1 | Section 3 | Grouped bar | Stock % change (YTD/6M/1Y) per entity |
-| Chart 2 | Section 5 | Grouped bar | Speaker scores per entity (CEO/CFO/Exec/Analyst where available) |
-| Chart 3 | Section 2 | Multi-line | Sentiment score trend per entity (companies: Q1–Q4; sectors: single aggregate point) |
-| Chart 4 | Section 2 | Multi-line | Investment score trend per entity |
-
-Load Chart.js once at the top of the HTML. All data as inline JS constants.
+The renderer handles the scorecard coloring (green for winner, red for loser in 2-entity mode; green for winner only in 3+), N/A cells for company-only rows on sector entities, entity colors across all charts, and quarter-card / sector-summary layouts.
 
 ---
 
@@ -546,27 +298,26 @@ Load Chart.js once at the top of the HTML. All data as inline JS constants.
 
 | Problem | What to do |
 |---------|-----------|
-| Company not found by `getCompanyDescription` | Try ticker; note and continue with remaining entities |
-| Sector name unrecognized | Try top-level sector if sub-sector fails; note mapping used |
-| Fewer than 4 quarters for a company | Show available quarters only; note the gap |
-| No predictions for a company metric | Show "N/A" — never fabricate |
-| No analyst data for a company | Show "N/A" for analyst rows — do not skip the row |
-| `getTopMovers` returns fewer than 3 companies for a sector | Widen date range; remove `documentTypes` filter |
-| More than 5 entities requested | Ask user to narrow to 5 or fewer |
-| All-sector comparison — financial outlook is empty | Omit Section 4; note it applies to company comparisons only |
+| Company not found | Try ticker; note and continue with remaining entities |
+| Sector unrecognized | Try top-level sector if sub-sector fails; note mapping |
+| Fewer than 4 quarters | Use available quarters; note gap |
+| No predictions for a company metric | Emit null in payload — renderer shows "N/A" |
+| No analyst data | Emit null — renderer shows "N/A" |
+| `getTopMovers` returns < 3 for a sector | Widen date range; remove `documentTypes` filter |
+| More than 5 entities | Ask user to narrow to 5 |
+| All-sector comparison | Omit company-only scorecard rows from payload |
 
 ---
 
 ## Best Practices
 
-1. **Always write to file** — write the HTML report using the `Write` tool (see Output Format for filename rules)
-2. **Save `companyId` immediately** after Batch 1 for every company entity — required for all stock calls
-3. **Fire all entities simultaneously within each batch** — never process one entity at a time
-4. **Adapt the scorecard** — when sectors are present, show N/A clearly in company-only rows rather than leaving them blank
-5. **Label entity types** in all section headers — "(Company)" or "(Sector)" after each entity name so the reader knows what they're comparing
-6. **Divergence signal** — entity with rising investment score but weak stock performance is the most actionable insight
-7. **Never fabricate** — missing metric = "N/A", never an invented number
-8. **Consistent entity colors** across all charts, cards, and scorecard column headers
+1. Save `companyId` immediately for every company entity.
+2. Fire all entities simultaneously within each batch — never process one at a time.
+3. Scorecard adapts to entity mix — use null / companyOnly flag for sector entities on company-only rows.
+4. Label entity types in every section header (renderer does this from the `type` field).
+5. Divergence signal (rising investment + weak stock) is the most actionable insight.
+6. Never fabricate — missing data → null.
+7. Consistent entity colors across charts (passed in `data.entities[*].color`).
 
 ---
 
@@ -574,10 +325,9 @@ Load Chart.js once at the top of the HTML. All data as inline JS constants.
 
 | File | Purpose |
 |------|---------|
-| `reference/tool-cheatsheet.md` | Exact tool parameters per entity type (company vs sector), scoring matrix, enum reference |
-| `reference/report-template-guide.md` | HTML layout, section structure, chart placement, formatting rules for mixed entity types |
-| `examples/nvda-vs-amd.md` | Full worked example: company vs company (NVDA vs AMD) |
-| `examples/nvda-vs-tech-sector.md` | Full worked example: company vs sector (NVDA vs Information Technology) |
-| `examples/it-vs-healthcare.md` | Full worked example: sector vs sector (Information Technology vs Health Care) |
-| `evaluations/criteria.md` | Evaluation rubric — triggering, data collection, adaptive scoring, HTML structure |
-| `evals/evals.json` | Structured test cases covering all comparison modes |
+| [reference/tool-cheatsheet.md](./reference/tool-cheatsheet.md) | Tool params per entity type, scoring matrix, enum reference |
+| [examples/nvda-vs-amd.md](./examples/nvda-vs-amd.md) | Worked example: company vs company |
+| [examples/nvda-vs-tech-sector.md](./examples/nvda-vs-tech-sector.md) | Worked example: company vs sector |
+| [examples/it-vs-healthcare.md](./examples/it-vs-healthcare.md) | Worked example: sector vs sector |
+| [evaluations/criteria.md](./evaluations/criteria.md) | Evaluation rubric |
+| [evals/evals.json](./evals/evals.json) | Structured test cases |

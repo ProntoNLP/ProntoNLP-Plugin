@@ -13,7 +13,7 @@
 
 - Mode: Company vs Company → all 9 scoring dimensions
 - Period: Past Year (default)
-- Output file: `NVDA-vs-AMD-report.html`
+- Output file: `NVDA-vs-AMD-<YYYYMMDD>.html`
 
 ---
 

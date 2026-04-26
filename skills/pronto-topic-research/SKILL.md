@@ -3,160 +3,165 @@ name: pronto-topic-research
 description: "Performs qualitative topic-based research across the market — how a keyword or theme shows up across documents. Produces an HTML report with an Executive Summary, Themes with verbatim quotes as evidence, and a Conclusion. Use when the user wants topic intelligence, macro-style narrative on a theme, or market-wide discussion of a concept. Triggers on phrases like: 'how is [topic] discussed', 'top themes around [topic]', 'executive summary on [topic]'. Do not use for a single named company — use the company intelligence skill."
 metadata:
   author: ProntoNLP
-  version: 1.0.0
+  version: 1.1.0
   mcp-server: prontonlp-mcp-server
   category: finance
 ---
 
 # Topic Research Report Generator
 
-> ⚠️ **OUTPUT RULE — READ FIRST:**
-> Always write the report as an **HTML file**. Use the `Write` tool to save it to `[topic]-topic-research.html`, then tell the user the filename.
+Produces a topic-focused research report. Centerpiece: **themes broker synthesis** of verbatim evidence across the market, layered with hits-overtime, related sectors, companies, documents, and keywords.
 
-> 🔑 **ORG RULE:** Call `getOrganization` once in Step 1. Save the returned `org` value and use it everywhere links appear: `https://{org}.prontonlp.com/#/ref/...`
+Data gathering and themes synthesis live here; HTML rendering is delegated to the `pronto-html-renderer` agent.
+
+> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research`. These are user-triggered only.
 
 ---
 
 ## Step 0: Parse the Topic
 
-Extract the **subject phrase** the user is asking about (the topic itself).
+Extract the **subject phrase** the user is researching. Formulate a clean **`topicSearchQuery`** (e.g. `war with Iran`, `inflation`, `AI regulation`) — use it for the report title and for every subagent/tool query. You may rephrase for better searchability.
 
-- Formulate a **`topicSearchQuery`**: the core concept the user is researching (e.g. `war with Iran`, `inflation`, `AI regulation`). You may rephrase or clean it up for better searchability rather than using their exact wording.
-- Use **`topicSearchQuery`** for report titles and for the subagent search queries.
+---
+
+## Confirm Before Proceeding
+
+After Step 0, **before calling any tools**, present a short summary and wait for the user to confirm.
+
+Show the user:
+- **Topic:** the `topicSearchQuery` as interpreted (e.g. "AI regulation")
+- **Date range:** e.g. "Past 90 days — Jan 19 to Apr 19, 2026 · Overtime chart: past 15 months"
+- **Source:** Earnings Calls · S&P Transcripts
+
+Then ask: *"Ready to generate the topic research report. Reply **yes** to continue, or clarify anything above."*
+
+**Do not call any tools until the user confirms.**
 
 ---
 
 ## Step 1: Initial Setup
 
-Call this before data collection to get the organization for citation links:
 ```
-getOrganization → save org
+getOrganization → save org (required by the renderer for citation links)
 ```
 
 ---
 
 ## Step 2: Parallel Data Collection
 
-Prior to engaging the themes broker, execute all data collection in one parallel batch: the 5 trend tools + the search agent.
-> ⚠️ **CRITICAL TOOL/AGENT RULE**: Use ONLY the specific tools/agent listed below for this step.
+Execute all data collection in one parallel batch: the 5 trend tools + the search summarizer agent.
 
+**Required tools (only these):**
 1. `getTrendOvertime`
 2. `getTrendRelatedSectors`
 3. `getTrendWordsByCompany`
 4. `getTrendWordsByDocument`
 5. `getTrendNetwork`
-6. `pronto-search-summarizer` (as subagent: `prontonlp-plugin:pronto-search-summarizer`)
+6. `pronto-search-summarizer` (subagent)
 
-Ensure you pass the following params natively to **ALL** 5 tools: `topicSearchQuery`, `documentTypes: ["Earnings Calls"]`, `dateRange: { gte: <sinceDay>, lte: <untilDay> }`, and `corpus: ["S&P Transcripts"]`.
-For `getTrendOvertime`, always pass `timeframeInterval: "quarter"`.
+**Common params (pass to all 5 trend tools):**
+- `topicSearchQuery: <topicSearchQuery>`
+- `documentTypes: ["Earnings Calls"]`
+- `dateRange: { gte: <sinceDay>, lte: <untilDay> }`
+- `corpus: ["S&P Transcripts"]`
 
-Date default rules are strict and must always be passed explicitly:
-- For `getTrendOvertime`: default `dateRange.gte` = 15 months ago, `dateRange.lte` = today.
-- For all other tools: default `dateRange.gte` = 90 days ago, `dateRange.lte` = today.
-- If the user explicitly gives a timeframe, honor it and still pass `dateRange` (both `gte` and `lte`) to every tool.
+**`getTrendOvertime`** additionally requires `timeframeInterval: "quarter"`.
 
-For the `pronto-search-summarizer` call in this same parallel batch, use:
-- `description: "Search best sentences from parameters"`
-- Prompt:
-  ```
-  org: [org from getOrganization]
-  topicSearchQuery: <topicSearchQuery>
-  sinceDay: <range start>
-  untilDay: <range end>
-  documentTypes: ["Earnings Calls"]
-  instruction: Return ONLY the best actual sentences (verbatim evidence), not raw JSON and not extra metadata blocks. Retrieve as many relevant/high-quality sentences as possible for this topic, prioritize the most important and most interesting ones, and exclude weak/off-topic/bad sentences. Output must be plain text, one sentence per line, no bullets/no numbering/no headers, and each line must end with exactly one citation link in this format: [Link: https://{org}.prontonlp.com/#/ref/<FULL_ID>].
-  ```
+**Date defaults** (always pass `dateRange` explicitly):
+- `getTrendOvertime`: `gte` = 15 months ago, `lte` = today.
+- All other tools: `gte` = 90 days ago, `lte` = today.
+- Honor any user-provided timeframe; still pass `gte` and `lte` to every tool.
 
-Save the agent output as `searchResults`, and write it to `[topic]-search-results.txt` so the text results are available for viewing.
+**Search-summarizer call** (same parallel batch, `subagent_type: prontonlp-plugin:pronto-search-summarizer`):
+```
+description: "Search best sentences from parameters"
 
-Do not artificially offset the dates beyond these rules. Keep all Step 2 outputs in context for synthesis.
+org: [org from getOrganization]
+topicSearchQuery: <topicSearchQuery>
+sinceDay: <range start>
+untilDay: <range end>
+documentTypes: ["Earnings Calls"]
+instruction: Return ONLY the best verbatim sentences — no JSON, no metadata. Prioritize the most important and interesting sentences; exclude weak/off-topic. Plain text, one sentence per line, no bullets or headers. Each line ends with one citation: [Link: https://{org}.prontonlp.com/#/ref/<FULL_ID>].
+```
+
+Save the agent output as `searchResults`.
 
 ---
 
-## Step 3: Themes Broker Agent
-Delegate to **ONE** `pronto-themes-broker` agent next (use `subagent_type: prontonlp-plugin:pronto-themes-broker`).
+## Step 3: Themes Broker Synthesis
 
-Use this exact agent-call metadata:
-- `description: "Themes broker synthesis from search results"`
+Delegate to **one** `pronto-themes-broker` agent (`subagent_type: prontonlp-plugin:pronto-themes-broker`).
 
-Prompt format (`searchResults`-first input; no topic request):
 ```
+description: "Themes broker synthesis from search results"
+
 org: [org from getOrganization]
 sinceDay: <range start>
 untilDay: <range end>
 documentTypes: ["Earnings Calls"]
 corpus: ["S&P Transcripts"]
 searchResults:
-<paste the full output from Step 2 search agent>
+<paste the full output from Step 2 search-summarizer>
 ```
 
-→ The `pronto-themes-broker` agent must return only a **themes broker summary** from `searchResults` (e.g., Executive Summary, Themes, Conclusion content). It must not invoke any other skill/agent/tool.
+The broker returns three sections only: **Executive Summary**, **Themes** (each with verbatim evidence + citation IDs), and **Conclusion**. The broker must not invoke any other tool.
 
 ---
 
-## Step 4: Compile the HTML Report
+## Step 4: Render
 
-Generate the final HTML file by merging the **themes broker summary output** from Step 3 with the **data gathered in Step 2**.
+Delegate the HTML output to `pronto-html-renderer` (`subagent_type: prontonlp-plugin:pronto-html-renderer`). Do not render HTML here.
 
-### Final Report Structure
-Your output MUST follow this exact structure:
+```
+report_type: topic
+org: <from getOrganization>
+filename: <topic-slug>-research-<YYYYMMDD>.html
+title: "Topic Research: <topicSearchQuery>"
+subtitle: "<dateRangeLabel> · Earnings Calls"
+data:
+  meta: { topic, dateRangeLabel, sinceDay, untilDay, companiesCovered }
+  hitsOvertime:
+    dates:         [ "Q1 2024", "Q2 2024", ... ]   # quarterly buckets
+    totalHits:     [ ... ]
+    positiveHits:  [ ... ]
+    negativeHits:  [ ... ]
+  relatedSectors:  [ { name, hits, score } ]
+  relatedCompanies: [ { name, ticker, companyId, score,
+                        positive, negative, neutral, hits } ]
+  relatedDocuments: [ { name, date, company, refId,
+                        positive, negative, neutral, hits } ]
+  relatedKeywords:  [ { name, hits, score, explanation } ]
+  themes: [ { title, insight, marketImplications,
+              evidence: [ { text, company, refId } ] } ]
+narrative:
+  executiveSummary: "<verbatim from themes broker>"
+  conclusion:       "<verbatim from themes broker>"
+```
 
-1. **TITLE**:
-   ```html
-   <h1 class="title">Topic Research: [Topic]</h1>
-   <p class="subtitle">Generated: [Date] | Period: [Period string, e.g. "Last 90 Days"]</p>
-   ```
-   *Note: Extract the period name from the user's prompt (or use the default).
-2. **Executive Summary**: Embed the Executive Summary from the broker agent.
-3. **GRAPHS**:
-   - Add `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`.
-   - **Hits Overtime** (from `getTrendOvertime`): Create a `<canvas>` element. Use Chart.js to render a **Line Chart**. X-axis = Quarters/Dates. Y-axis = Hits.
-     - **Colors:** Total = Blue (`#338FEB`), Positive = Green (`#6AA64A`), Negative = Red (`#ED4545`).
-     - **Tooltip:** Show Total Hits, Positive Hits, and Negative Hits (do not show neutral).
-     - **Constraint:** Must be titled exactly "Hits Overtime". Ensure the word "Mentions" and the word "Trends" NEVER appear in this report anywhere.
-   - **Related Sectors** (from `getTrendRelatedSectors`): Create a `<canvas>` element. Use Chart.js to render a **Bar Chart**. The chart title must be "Related Sectors".
-4. **TABLES**:
-   - **Related Companies** (from `getTrendWordsByCompany`): Write an `<h2>Related Companies</h2>`. Then HTML `<table>`. Columns: *Company Name, Symbol (Ticker), Score, Sentiment (Positive/Negative/Neutral counts), Hits (total)*.
-   - **Related Documents** (from `getTrendWordsByDocument`): Write an `<h2>Related Documents</h2>`. Then HTML `<table>`. Columns: *Document Name, Date, Sentiment (Positive/Negative/Neutral counts), Hits*.
-   - **Related Keywords** (from `getTrendNetwork`): Write an `<h2>Related Keywords</h2>`. Then HTML `<table>`. Columns: *Name of keyword, Hits, Score, Explanation*. Write a 1-sentence explanation for the keyword if omitted.
-5. **THEMES**: Embed the Themes section from the broker agent. **ALWAYS** convert the citation links into anchor tags that open in a new tab: `<a href="..." target="_blank" class="co-link">{ID}</a>`.
-6. **CONCLUSION**: Embed the Conclusion section from the broker agent.
+**Naming rules the renderer enforces:**
+- Section titled exactly "Hits Overtime" — the words "Mentions" and "Trends" never appear.
+- Citation IDs inside themes evidence become anchor tags to `https://{org}.prontonlp.com/#/ref/<FULL_ID>`.
 
-### HTML Formatting Rules
-
-- No `<!DOCTYPE html>`, no `<html>`, `<head>`, or `<body>` tags — output only a `<style>` block followed by HTML content and `<script>` blocks.
-- Use a clean section-first layout (similar philosophy to company-intelligence):
-  - Title block
-  - Executive Summary section
-  - Charts section
-  - Tables section
-  - Themes section
-  - Conclusion section
-- Keep styling modern and readable in light mode with subtle cards, spacing, and clear typography. Do not over-constrain with rigid pixel-perfect CSS; prioritize a polished, professional report layout.
-- Use semantic wrappers (`section`, `header`, `article`) so the structure remains maintainable.
-- **Chart.js Light Mode Defaults:** In your `<script>`, ensure default colors are light mode friendly (`Chart.defaults.color = '#475569'; Chart.defaults.borderColor = '#e2e8f0';`).
-
-Write the full HTML to `[topic]-topic-research.html` using your tool to write files.
+For related-keywords rows missing an explanation, supply a 1-sentence explanation in the payload — the renderer does not invent one.
 
 ---
 
 ## Date Handling
 
 ```
-Past 90 days:        sinceDay = 90 days ago,   untilDay = today
-Past year:           sinceDay = 1 year ago,    untilDay = today
-Past 6 months:       sinceDay = 6 months ago,  untilDay = today
-YTD:                 sinceDay = Jan 1,         untilDay = today
+Past 90 days (default):     gte = 90 days ago,  lte = today
+getTrendOvertime default:   gte = 15 months ago
+Past year:                  gte = 1 year ago,   lte = today
+Past 6 months:              gte = 6 months ago, lte = today
+YTD:                        gte = Jan 1,        lte = today
 ```
 
-Default to **Past 90 days** for all requests, EXCEPT for `getTrendOvertime` where `sinceDay` defaults to **15 months** ago.
-
-Always pass `dateRange` (both `gte` and `lte`) on every request, even when using defaults. Always set `corpus: ["S&P Transcripts"]` for every tool request natively.
+Always pass `dateRange` (both `gte` and `lte`) and `corpus: ["S&P Transcripts"]` on every tool request.
 
 ---
 
 ## Best Practices
 
-1. **Always write to HTML file** using the `Write` tool — never output HTML inline.
-2. **Never fabricate data.** Rely solely on the output from `pronto-themes-broker`.
-3. **Use "Hits"** everywhere rather than "Mentions" for occurrences of the topic if you add any extra text manually.
+1. Never fabricate — themes and evidence come solely from the broker's synthesis.
+2. Use "Hits" everywhere — never "Mentions" or "Trends" in any manually authored text.
+3. Do not mention tool names in responses — describe the action.

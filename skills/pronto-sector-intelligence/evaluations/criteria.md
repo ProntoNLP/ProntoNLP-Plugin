@@ -66,12 +66,13 @@ This file defines what a correct, high-quality response from `pronto-sector-inte
 
 ---
 
-## 5. Report Structure
+## 5. HTML Output
 
 | Criterion | Pass condition |
 |-----------|---------------|
-| Output is HTML only | Response contains zero markdown tables, zero plain text paragraphs |
-| No DOCTYPE / html / head / body tags | Fragment starts with `<style>` or content element |
+| Output is a saved HTML file | Renderer writes a standalone `.html` file — not inline markdown |
+| Filename includes date stamp | `<sector-slug>-report-<YYYYMMDD>.html` format |
+| Standalone HTML document | File contains DOCTYPE, `<html>`, `<head>`, `<body>` — not a fragment |
 | Chart.js loaded exactly once | CDN script tag appears exactly one time |
 | Section 1 — Executive Summary | 2–3 paragraphs; direction, top performers, divergence signal, 3-point thesis |
 | Section 2 — Leaderboard cards | At least 6 leaderboard cards in responsive grid; Chart 1 and Chart 2 present |
@@ -80,7 +81,7 @@ This file defines what a correct, high-quality response from `pronto-sector-inte
 | Section 5 — Event Analysis | Positive and negative event tables; Chart 6 and Chart 7; per-event company rankings |
 | Section 6 — Company Rankings | Per-theme company ranking table; Chart 8; cross-sector comparison |
 | Section 7 — Speaker Voice | Exec/analyst sentiment; Chart 9; explicit bullish/bearish exec and analyst firm statements |
-| Section 8 — Risk Themes | Risk exposure table; bearish quotes; ⚠️ risk callout box |
+| Section 8 — Risk Themes | Risk exposure table; bearish quotes; highlighted risk callout |
 
 ---
 
@@ -88,12 +89,12 @@ This file defines what a correct, high-quality response from `pronto-sector-inte
 
 | Criterion | Pass condition |
 |-----------|---------------|
-| CSS design tokens used | `var(--color-text-primary)`, `var(--color-background-primary)` etc. — not hardcoded colors for layout |
-| Signal colors correct | Green `#1D9E75`, red `#D85A30` for RISING/FALLING and positive/negative signals |
+| CSS design tokens used | `var(--text-primary)`, `var(--bg-page)` etc. — not hardcoded colors for layout |
+| Signal colors correct | Green `#6AA64A`, red `#ED4545` for RISING/FALLING and positive/negative signals |
 | RISING badge green, FALLING badge red | Direction badges use correct background colors |
 | Company links formatted correctly | Links use `https://{org}.prontonlp.com/#/ref/$COMPANY{id}` format |
 | Leaderboard cards in responsive grid | `grid-template-columns: repeat(auto-fit, minmax(...))` or equivalent |
-| Potential Buy Signals card present | 🔍 icon; shows high-score companies with falling stock |
+| Potential Buy Signals card present | Shows high-score companies with falling stock |
 
 ---
 
@@ -131,7 +132,7 @@ A response passes evaluation if it meets:
 - **All** triggering criteria
 - **All** parallel execution criteria
 - **≥ 8 of 9** key signals extracted
-- **All** applicable sections present for the report mode
+- **All** applicable HTML output sections for the report mode
 - **≥ 5 of 6** visual design criteria
 - **All** formatting criteria
 - **≥ 5 of 7** error handling criteria (only evaluated when errors occur in the test run)
