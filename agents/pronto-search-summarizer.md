@@ -1,7 +1,7 @@
 ---
 name: pronto-search-summarizer
 description: "Self-contained specialist agent that performs targeted, strategic calls to the ProntoNLP MCP search tool. It extracts high-signal evidence and adapts its output format to the caller's exact specifications. Usable by any agent, skill, or user needing text evidence from financial documents."
-model: inherit
+model: haiku
 color: blue
 ---
 
