@@ -8,11 +8,11 @@ metadata:
   category: finance
 ---
 
-# Market Pulse — Recent Market Intelligence Dashboard
+# Market Pulse — Live Artifact Dashboard
 
-Generates a market intelligence dashboard from recent earnings calls — leaderboards, trending topics, and voice-of-the-market. Data gathering and section logic live here; HTML rendering is delegated to the `pronto-html-renderer` agent.
+Generates a Market Pulse **Live Artifact** — a self-refreshing dashboard that fetches live market data via the MCP App protocol each time it is opened. This skill resolves the request parameters and delegates artifact generation; it does not call data tools itself.
 
-> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research` from this skill. These are user-triggered only. Use only the tools listed in Step 2.
+> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, `deep-research`, `getTopMovers`, `getTrends`, `getSpeakers`, or `getOrganization` from this skill. The generated artifact fetches all data live.
 
 ---
 
@@ -87,139 +87,63 @@ Then ask: *"Ready to generate the Market Pulse report. Reply **yes** to continue
 
 ---
 
-## Step 2: Call Data Tools
+## Step 2: Generate the Live Artifact
 
-Fire all applicable calls simultaneously. Always include `getOrganization` — the `org` value is required by the renderer for citation/company links.
-
-```
-getOrganization    → save org
-```
-
-Only make the remaining calls needed for the sections chosen in Step 0.
-
-### 2a. getTopMovers *(movers section)*
-
-Make **one call** with `sortBy` as an array of all needed criteria. The response is keyed by criterion.
+Delegate to `pronto-marketpulse-artifact` (`subagent_type: prontonlp-plugin:pronto-marketpulse-artifact`). Pass exactly:
 
 ```
-getTopMovers(
-  sinceDay:      <period start>
-  untilDay:      <today>
-  documentTypes: ["Earnings Calls"]
-  marketCaps:    <filter from Step 0>
-  limit:         10
-  sortBy:        ["stockChange", "investmentScore", "investmentScoreChange",
-                  "sentimentScore", "sentimentScoreChange", "aspectScore", "marketcap"]
-)
+sinceDay:        <ISO date from Step 1>
+untilDay:        <ISO date from Step 1>
+dateRangeLabel:  <human label from Step 1, e.g. "Past 7 Days — Apr 21 to Apr 28, 2026">
+marketCaps:      <array from Step 0.B>
+marketCapFilter: <human label from Step 0.B, e.g. "$300M+ (Small, Mid, Large, Mega)">
+sections:
+  movers:   <true|false>
+  trends:   <true|false>
+  speakers: <true|false>
+sortBy: <criteria array — include only criteria matching included sections>
 ```
 
-If the user asked for only one metric, pass only that criterion.
+`sortBy` reference by section:
+- **Movers (full):** `["stockChange", "investmentScore", "investmentScoreChange", "sentimentScore", "sentimentScoreChange", "aspectScore", "marketcap"]`
+- **Single metric only:** pass only that criterion, e.g. `["stockChange"]`
+- **Trends/Speakers only (no movers):** `[]`
 
-**Leaderboard mapping** (renderer emits one card per criterion fetched):
-
-| sortBy | Card title | Source array |
-|--------|-----------|--------------|
-| `stockChange` | Top Stock Movers | `topMovers` |
-| `investmentScore` | Highest Investment Score | `topMovers` |
-| `investmentScoreChange` | Biggest Investment Gain | `topMovers` |
-| `sentimentScore` | Most Positive Sentiment | `topMovers` |
-| `sentimentScoreChange` (bullish) | Biggest Sentiment Shift — Most Bullish | `topMovers` |
-| `sentimentScoreChange` (bearish) | Biggest Sentiment Shift — Most Bearish | `underperforming` |
-| `aspectScore` | Top Aspect Score | `topMovers` |
-| `marketcap` | Largest by Market Cap | `topMovers` |
-
-**Sparse data:** if any leaderboard returns fewer than 5 companies, widen the date range by 7 days and re-call that criterion only. Note the expansion in the payload so the renderer can surface it.
-
-### 2b. getTrends *(trends section)*
-
-```
-getTrends(
-  documentTypes: ["Earnings Calls"]
-  sinceDay:      <period start>
-  untilDay:      <today>
-  limit:         30
-  sortBy:        "score"
-)
-```
-
-`getTrends` does not accept `marketCaps`.
-
-### 2c / 2d. getSpeakers — Executives and Analysts *(Voice of the Market)*
-
-Most bullish (both speaker types): `sortBy: "sentiment"`, `sortOrder: "desc"`, `limit: 20`, `documentTypes: ["Earnings Calls"]`, same date range.
-Most bearish: same but `sortOrder: "asc"`, `limit: 10`.
+The agent returns complete HTML as plain text. Do not call any MCP tools yourself.
 
 ---
 
-## Step 3: Process Data
+## Step 3: Emit the Artifact
 
-Each criterion key in `getTopMovers` contains `topMovers`, `underperforming`, and `overperforming` arrays. Use `topMovers` for each leaderboard. For the Sentiment Shift card, pair `topMovers` (bullish) with `underperforming` (bearish).
+Wrap the HTML returned by the agent in `<antArtifact>` tags and emit it in your response:
 
-Build a deduplicated master list by `id` across all arrays for the total company count.
+```
+<antArtifact identifier="market-pulse-{YYYYMMDD}" type="text/html" title="Market Pulse — {dateRangeLabel}">
+{full HTML from agent — paste verbatim}
+</antArtifact>
+```
 
-Field reference: [reference/api-fields.md](./reference/api-fields.md).
+- `identifier` must be `market-pulse-` followed by today's date in `YYYYMMDD` format.
+- `title` must match the `dateRangeLabel` exactly as confirmed with the user.
+- Paste the HTML verbatim — do not truncate or modify it.
 
 ---
 
-## Step 4: Render
+## Step 4: Delivery
 
-Delegate the entire HTML output to the `pronto-html-renderer` agent (`subagent_type: prontonlp-plugin:pronto-html-renderer`). Pass the structured data — do not render HTML here.
+After emitting the artifact, send a short message:
 
-```
-report_type: marketpulse
-org: <from getOrganization>
-filename: market-pulse-<YYYYMMDD>.html
-title: "Market Pulse — <date range label>"
-subtitle: "<total companies> companies · <market cap filter label> · Earnings Calls"
-data:
-  meta:
-    dateRangeLabel: <human label>
-    sinceDay: <YYYY-MM-DD>
-    untilDay: <YYYY-MM-DD>
-    marketCapFilter: <label>
-    totalCompanies: <deduped count>
-    filters: { sectors?, country?, indices? }
-  leaderboards:
-    # Only include keys that were fetched in Step 2a.
-    stockChange:          { topMovers: [...] }
-    investmentScore:      { topMovers: [...] }
-    investmentScoreChange:{ topMovers: [...] }
-    sentimentScore:       { topMovers: [...] }
-    sentimentScoreChange: { topMovers: [...], underperforming: [...] }
-    aspectScore:          { topMovers: [...] }
-    marketcap:            { topMovers: [...] }
-  trends: [ { name, explanation, score, hits, change }, ... ]   # when trends fetched
-  speakers:                                                      # when speakers fetched
-    execBullish:    [ { name, company, companyId, sentimentScore, numOfSentences } ]
-    execBearish:    [ ... ]
-    analystBullish: [ ... ]
-    analystBearish: [ ... ]
-```
-
-The renderer applies the shared conventions (color rule, score display, company links, signal badges like `Potential Buy` / `Watch` / `Caution`). Do not reimplement any of that here.
-
----
-
-## Step 5: Delivery
-
-After the renderer returns the saved filename, summarize:
-- Time period + any date-range expansion applied
-- Company count + filters applied
-- Top company by stock performance over the period
-- Companies appearing across multiple leaderboards (consistent outperformers)
-- Potential Buy signals (high investment score + in `underperforming` category)
-- Top trend *(if trends included)*
-- Most bullish / bearish executive and analyst *(if speakers included)*
-- If Movers-only: mention a full report will add Trending Topics and Voice of the Market.
-
-See [examples/sample-delivery.md](./examples/sample-delivery.md) for delivery phrasing.
+- Confirm the time period and market cap filter that will be applied on each refresh.
+- List the sections included (Movers / Trending Topics / Voice of the Market).
+- Tell the user: *"This is a live dashboard — it fetches fresh market data each time you open it from the Live Artifacts tab."*
+- If Movers-only: mention they can ask for a **full report** to also get Trending Topics and Voice of the Market.
 
 ---
 
 ## Best Practices
 
-1. Always pass `marketCaps` as an array — never a plain string.
-2. `getTrends` does not accept `marketCaps` — scope only with `documentTypes` and date range.
-3. Never fabricate — missing data → omit the leaderboard key entirely.
-4. Maximize parallelism — all tool calls in Step 2 fire simultaneously.
-5. Do not mention tool names in responses — describe the action ("I analyzed earnings calls from the past 7 days", not "I called getTopMovers").
+1. Never call data tools from this skill — the artifact fetches everything live.
+2. Pass `marketCaps` as an array — never a plain string.
+3. Include only the `sortBy` criteria that match the sections being shown.
+4. Pass `dateRangeLabel` and `marketCapFilter` exactly as shown to the user in the confirm step — the artifact header displays them verbatim.
+5. Do not mention tool names in responses.
