@@ -109,7 +109,7 @@ getTopMovers(
   marketCaps:    <filter from Step 0>
   limit:         10
   sortBy:        ["stockChange", "investmentScore", "investmentScoreChange",
-                  "sentimentScore", "sentimentScoreChange", "aspectScore", "marketcap"]
+                  "sentimentScore", "sentimentScoreChange"]
 )
 ```
 
@@ -125,8 +125,6 @@ If the user asked for only one metric, pass only that criterion.
 | `sentimentScore` | Most Positive Sentiment | `topMovers` |
 | `sentimentScoreChange` (bullish) | Biggest Sentiment Shift — Most Bullish | `topMovers` |
 | `sentimentScoreChange` (bearish) | Biggest Sentiment Shift — Most Bearish | `underperforming` |
-| `aspectScore` | Top Aspect Score | `topMovers` |
-| `marketcap` | Largest by Market Cap | `topMovers` |
 
 **Sparse data:** if any leaderboard returns fewer than 5 companies, widen the date range by 7 days and re-call that criterion only. Note the expansion in the payload so the renderer can surface it.
 
@@ -186,8 +184,6 @@ data:
     investmentScoreChange:{ topMovers: [...] }
     sentimentScore:       { topMovers: [...] }
     sentimentScoreChange: { topMovers: [...], underperforming: [...] }
-    aspectScore:          { topMovers: [...] }
-    marketcap:            { topMovers: [...] }
   trends: [ { name, explanation, score, hits, change }, ... ]   # when trends fetched
   speakers:                                                      # when speakers fetched
     execBullish:    [ { name, company, companyId, sentimentScore, numOfSentences } ]
@@ -213,6 +209,44 @@ After the renderer returns the saved filename, summarize:
 - If Movers-only: mention a full report will add Trending Topics and Voice of the Market.
 
 See [examples/sample-delivery.md](./examples/sample-delivery.md) for delivery phrasing.
+
+---
+
+## Step 6: Optional XLSX Export
+
+After delivering the summary, ask the user:
+
+> "Your report is ready: `<filename>.html`. Want this also as an XLSX file? (yes/no)"
+
+**Skip the prompt** if the user explicitly asked for XLSX up front (e.g. "give me the market pulse as xlsx", "in spreadsheet form") — in that case generate both formats automatically.
+
+If the user answers yes (or pre-asked), invoke `anthropic-skills:xlsx` **directly from this skill** (not via a sub-agent) using the same data you already built for the HTML renderer.
+
+**Filename:** same as the HTML file but `.xlsx` extension.
+
+**Sheets to create** (skip any whose source data is missing or empty):
+1. **Summary** *(tab teal `#205262`, no autofilter)* — `meta` fields as Key / Value rows (date range, market cap filter, total companies, filters applied)
+2. **Overview** — one row per leaderboard criterion: Criterion, Top Company, Top Value
+3. **Top Stock Movers** — `leaderboards.stockChange.topMovers`: Rank, Name, Ticker, Sector, Stock Change, Investment Score, Sentiment Score
+4. **Highest Investment** — `leaderboards.investmentScore.topMovers`: same columns
+5. **Investment Gain** — `leaderboards.investmentScoreChange.topMovers`: same columns
+6. **Most Positive** — `leaderboards.sentimentScore.topMovers`: same columns
+7. **Sentiment Shift** — `leaderboards.sentimentScoreChange`: `topMovers` (bullish) and `underperforming` (bearish) in one sheet with a Group column (Bullish / Bearish)
+8. **Trending Topics** — `trends`: Topic, Score, Change, Hits, Explanation
+9. **Voice of Market** — `speakers` all 4 groups in one sheet: Group (Exec Bullish / Exec Bearish / Analyst Bullish / Analyst Bearish), Name, Company, Sentiment Score, Sentences
+
+**Styling** (every sheet):
+- Row 1: fill `#205262`, white bold text, height 22pt, frozen so it stays visible when scrolling
+- Autofilter on header row (all sheets except Summary)
+- Positive numeric values → font `#6AA64A` (green) · Negative → `#ED4545` (red)
+- Scores: `0.00` · Change/% columns: `0.0%` · Counts: whole numbers
+- Hyperlinks: blue underlined, display text "Source"
+- Wrap long text — no column wider than ~50 chars
+- No zebra striping · No cell borders
+
+Report the saved filename to the user when complete.
+
+If the user answers no, end the skill normally.
 
 ---
 

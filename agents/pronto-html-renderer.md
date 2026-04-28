@@ -193,8 +193,6 @@ data:
     investmentScoreChange:{ topMovers: [...] }
     sentimentScore:       { topMovers: [...] }
     sentimentScoreChange: { topMovers: [...], underperforming: [...] }
-    aspectScore:          { topMovers: [...] }
-    marketcap:            { topMovers: [...] }
     # each company: { id, ticker, name, sector, marketCap, category, <criterionField> }
   trends:       [ { name, explanation, score, hits, change } ]
   speakers:
@@ -221,8 +219,6 @@ data:
 | `investmentScoreChange` | Biggest Investment Gain |
 | `sentimentScore` | Most Positive Sentiment |
 | `sentimentScoreChange` | Biggest Sentiment Shift |
-| `aspectScore` | Top Aspect Score |
-| `marketcap` | Largest by Market Cap |
 
 For `sentimentScoreChange`: `topMovers` → Most Bullish sub-table; `underperforming` → Most Bearish sub-table in the same card.
 

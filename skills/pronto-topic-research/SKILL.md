@@ -146,6 +146,42 @@ For related-keywords rows missing an explanation, supply a 1-sentence explanatio
 
 ---
 
+## Step 5: Optional XLSX Export
+
+After the HTML renderer reports success, ask the user:
+
+> "Your report is ready: `<filename>.html`. Want this also as an XLSX file? (yes/no)"
+
+**Skip the prompt** if the user explicitly asked for XLSX up front (e.g. "give me the topic research as xlsx", "in spreadsheet form") — in that case generate both formats automatically.
+
+If the user answers yes (or pre-asked), invoke `anthropic-skills:xlsx` **directly from this skill** (not via a sub-agent) using the same data you already built for the HTML renderer.
+
+**Filename:** same as the HTML file but `.xlsx` extension.
+
+**Sheets to create** (skip any whose source data is missing or empty):
+1. **Summary** *(tab teal `#205262`, no autofilter)* — `meta` fields as Key / Value rows (topic, date range, companies covered), then `narrative.executiveSummary` and `narrative.conclusion` as wrapped text blocks
+2. **Hits Overtime** — Quarter, Total Hits, Positive Hits, Negative Hits
+3. **Related Sectors** — Sector Name, Hits, Score
+4. **Related Companies** — Name, Ticker, Score, Positive, Negative, Neutral, Hits
+5. **Related Documents** — Name, Date, Company, Positive, Negative, Neutral, Hits, Source (hyperlink to refId)
+6. **Related Keywords** — Keyword, Hits, Score, Explanation
+7. **Themes** — Theme Title, Insight, Market Implications, Evidence Text, Company, Source (hyperlink to refId); evidence rows indented below each theme entry
+
+**Styling** (every sheet):
+- Row 1: fill `#205262`, white bold text, height 22pt, frozen so it stays visible when scrolling
+- Autofilter on header row (all sheets except Summary)
+- Positive numeric values → font `#6AA64A` (green) · Negative → `#ED4545` (red)
+- Scores: `0.00` · Change/% columns: `0.0%` · Counts: whole numbers
+- Hyperlinks: blue underlined, display text "Source"
+- Wrap long text (quotes, narratives) — no column wider than ~50 chars
+- No zebra striping · No cell borders
+
+Report the saved filename to the user when complete.
+
+If the user answers no, end the skill normally.
+
+---
+
 ## Date Handling
 
 ```

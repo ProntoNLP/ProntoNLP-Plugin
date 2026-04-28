@@ -53,7 +53,7 @@ This file defines what a correct, high-quality response from `pronto-marketpulse
 |-----------|---------------|
 | All Step 2 calls fire simultaneously | `getOrganization`, `getTopMovers`, `getTrends`, `getSpeakers` all in one parallel batch |
 | `getTopMovers` uses single call with `sortBy` array | All needed criteria in one call — not one call per criterion |
-| All 7 sort criteria fetched for full report | `stockChange`, `investmentScore`, `investmentScoreChange`, `sentimentScore`, `sentimentScoreChange`, `aspectScore`, `marketcap` |
+| All 5 sort criteria fetched for full report | `stockChange`, `investmentScore`, `investmentScoreChange`, `sentimentScore`, `sentimentScoreChange` |
 | Speaker calls: bullish and bearish | Both `sortOrder: "desc"` and `sortOrder: "asc"` called for executives and analysts |
 | Sparse data widened | Leaderboard with <5 companies → date range widened 7 days and re-called |
 | `potentialBuy` signal computed | Cross-filter: high `investmentScore.topMovers` ∩ `stockChange.underperforming` |

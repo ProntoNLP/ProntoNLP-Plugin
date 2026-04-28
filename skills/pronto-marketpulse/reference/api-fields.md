@@ -25,8 +25,6 @@ response = {
 | `"investmentScoreChange"` | Change in investment score vs the prior period |
 | `"sentimentScore"` | Current sentiment score (−1 to +1) |
 | `"sentimentScoreChange"` | Change in sentiment score vs the prior period |
-| `"aspectScore"` | Aspect-level performance score |
-| `"marketcap"` | Market capitalization in USD |
 
 **Company object fields:**
 
@@ -43,7 +41,6 @@ response = {
 | `investmentScoreChange` | Change in investment score vs prior period |
 | `sentimentScore` | Current sentiment score (−1 to +1) |
 | `sentimentScoreChange` | Change in sentiment score vs prior period |
-| `aspectScore` | Aspect-level score |
 | `marketCap` | Market cap in USD |
 | `category` | Source array: `"underperforming"`, `"overperforming"`, or `"topMover"` |
 

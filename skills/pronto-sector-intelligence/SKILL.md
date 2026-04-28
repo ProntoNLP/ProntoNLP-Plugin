@@ -247,6 +247,51 @@ For narrower report modes, omit payload keys not gathered — renderer skips abs
 
 ---
 
+## Step 4: Optional XLSX Export
+
+After the HTML renderer reports success, ask the user:
+
+> "Your report is ready: `<filename>.html`. Want this also as an XLSX file? (yes/no)"
+
+**Skip the prompt** if the user explicitly asked for XLSX up front (e.g. "give me the sector report as xlsx", "in spreadsheet form") — in that case generate both formats automatically.
+
+If the user answers yes (or pre-asked), invoke `anthropic-skills:xlsx` **directly from this skill** (not via a sub-agent) using the same data you already built for the HTML renderer.
+
+**Filename:** same as the HTML file but `.xlsx` extension.
+
+**Sheets to create** (skip any whose source data is missing or empty):
+1. **Summary** *(tab teal `#205262`, no autofilter)* — `meta` fields as Key / Value rows, then `narrative.executiveSummary` as a wrapped text block
+2. **Sector Scores** — Metric (Sentiment Score, Investment Score, Pattern Positive, Pattern Negative, Top Aspects), Value, Direction
+3. **Ranking** — Rank, Ticker, Name, Investment Score, Inv. Score Change, Sentiment Score, Sentiment Change, Stock Change, Category
+4. **Inv. Score** — `leaderboards.investmentScore.topMovers`: Rank, Name, Ticker, Investment Score, Stock Change, Sentiment Score
+5. **Inv. Score Change** — `leaderboards.investmentScoreChange.topMovers`: same columns
+6. **Sentiment Score** — `leaderboards.sentimentScore.topMovers`: same columns
+7. **Sentiment Shift** — `leaderboards.sentimentScoreChange`: `topMovers` (bullish) and `underperforming` (bearish) in one sheet with Group column
+8. **Stock Change** — `leaderboards.stockChange.topMovers`: same columns
+9. **Potential Buy** — `leaderboards.potentialBuy.items`: Name, Ticker, Investment Score, Stock Change
+10. **Events** — Type (Positive/Negative), Event Name, Count, Top Companies
+11. **Trends** — Topic, Score, Change, Hits, Direction
+12. **Theme Rankings** — Theme, Rank, Company, Sector, Sentiment Score, Mentions, Signal (flattened from `companyRankingsByTheme`)
+13. **Bullish Voices** *(tab green `#6AA64A`)* — Name, Role, Company, Sentiment, Quote, Source (hyperlink to refId)
+14. **Bearish Voices** *(tab red `#ED4545`)* — Firm, Sentiment, Quote, Source (hyperlink to refId)
+15. **Themes** — Theme Title, Insight, Evidence Text, Company, Source (hyperlink to refId); evidence rows indented below each theme
+16. **Risks** *(tab red `#ED4545`)* — Risk, Evidence, Source (hyperlink to refId)
+
+**Styling** (every sheet):
+- Row 1: fill `#205262`, white bold text, height 22pt, frozen so it stays visible when scrolling
+- Autofilter on header row (all sheets except Summary)
+- Positive numeric values → font `#6AA64A` (green) · Negative → `#ED4545` (red)
+- Scores: `0.00` · Change/% columns: `0.0%` · Counts: whole numbers
+- Hyperlinks: blue underlined, display text "Source"
+- Wrap long text (quotes, narratives) — no column wider than ~50 chars
+- No zebra striping · No cell borders
+
+Report the saved filename to the user when complete.
+
+If the user answers no, end the skill normally.
+
+---
+
 ## Date Handling
 
 ```

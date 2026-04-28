@@ -228,6 +228,46 @@ The renderer applies shared conventions (color rule, score display, company/cita
 
 ---
 
+## Step 5: Optional XLSX Export
+
+After the HTML renderer reports success, ask the user:
+
+> "Your report is ready: `<filename>.html`. Want this also as an XLSX file? (yes/no)"
+
+**Skip the prompt** if the user explicitly asked for XLSX up front (e.g. "give me the Tesla report as xlsx", "in spreadsheet form") — in that case generate both formats automatically.
+
+If the user answers yes (or pre-asked), invoke `anthropic-skills:xlsx` **directly from this skill** (not via a sub-agent) using the same data you already built for the HTML renderer.
+
+**Filename:** same as the HTML file but `.xlsx` extension.
+
+**Sheets to create** (skip any whose source data is missing or empty):
+1. **Summary** *(tab teal `#205262`, no autofilter)* — `meta` fields as Key / Value rows, then `narrative.executiveSummary` and `narrative.verdict` as wrapped text blocks
+2. **Stock Performance** — `stockChart` dates × prices, followed by a separator and YTD / 6M / 1Y stock-change KPI rows
+3. **Financial Outlook** — `predictions` flattened: one row per (Metric, Period, Estimate, Low, High, Actual) across all 6 metrics
+4. **Quarter Cards** — one row per `quarterCards` entry: Quarter, Date, Sentiment, Investment, Revenue, Badge, Notes
+5. **Competitors** — Company, Ticker, 1Y Return, Target (✓ for `isTarget`)
+6. **KPI Grid** — all 7 KPI metrics as Label / Value rows
+7. **Quarters Chart Data** — Quarter, Sentiment, Investment, Stock Reaction, Positive Events, Negative Events
+8. **Trends** — Topic, Score, Change, Hits, Explanation
+9. **Speakers** — Type (Executive / Analyst), Name, Role / Firm, Sentiment, Sentences; gap footer rows below
+10. **Quotes** — Section, Quote, Speaker, Role, Company, Date, Source (hyperlink to refId)
+11. **Risks** *(tab red `#ED4545`)* — Risk, Evidence, Source (hyperlink to refId)
+
+**Styling** (every sheet):
+- Row 1: fill `#205262`, white bold text, height 22pt, frozen so it stays visible when scrolling
+- Autofilter on header row (all sheets except Summary)
+- Positive numeric values → font `#6AA64A` (green) · Negative → `#ED4545` (red)
+- Scores: `0.00` · Change/% columns: `0.0%` · Counts: whole numbers
+- Hyperlinks: blue underlined, display text "Source"
+- Wrap long text (quotes, narratives) — no column wider than ~50 chars
+- No zebra striping · No cell borders
+
+Report the saved filename to the user when complete.
+
+If the user answers no, end the skill normally.
+
+---
+
 ## Date Handling
 
 ```
