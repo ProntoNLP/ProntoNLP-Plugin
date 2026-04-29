@@ -10,7 +10,7 @@ metadata:
 
 # Market Pulse — Recent Market Intelligence Dashboard
 
-Generates a market intelligence dashboard from recent earnings calls — leaderboards, trending topics, and voice-of-the-market. Data gathering and section logic live here; final presentation is delegated to the `pronto-marketpulse-live-artifact` agent as a Claude live artifact. Market Pulse is the only ProntoNLP skill that should use a live artifact.
+Generates a market intelligence dashboard from recent earnings calls — leaderboards, trending topics, and voice-of-the-market. Data gathering and section logic live here; final presentation is delegated to the `pronto-live-artifact` agent as a Claude live artifact. Market Pulse is the only ProntoNLP skill that should use a live artifact.
 
 > ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research` from this skill. These are user-triggered only. Use only the tools listed in Step 2.
 
@@ -172,7 +172,7 @@ Field reference: [reference/api-fields.md](./reference/api-fields.md).
 
 ## Step 4: Build the Live Artifact
 
-Delegate the final output to the `pronto-marketpulse-live-artifact` agent (`subagent_type: prontonlp-plugin:pronto-live-artifact`). Pass the structured data — do not render HTML here and do not save a standalone report file.
+Delegate the final output to the `pronto-live-artifact` agent (`subagent_type: prontonlp-plugin:pronto-live-artifact`). Pass the structured data — do not render HTML here and do not save a standalone report file.
 
 ```
 artifact_type: live_marketpulse
