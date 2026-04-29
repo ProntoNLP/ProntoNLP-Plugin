@@ -172,7 +172,7 @@ Field reference: [reference/api-fields.md](./reference/api-fields.md).
 
 ## Step 4: Build the Live Artifact
 
-Delegate the final output to the `pronto-marketpulse-live-artifact` agent (`subagent_type: prontonlp-plugin:pronto-marketpulse-live-artifact`). Pass the structured data — do not render HTML here and do not save a standalone report file.
+Delegate the final output to the `pronto-marketpulse-live-artifact` agent (`subagent_type: prontonlp-plugin:pronto-live-artifact`). Pass the structured data — do not render HTML here and do not save a standalone report file.
 
 ```
 artifact_type: live_marketpulse
