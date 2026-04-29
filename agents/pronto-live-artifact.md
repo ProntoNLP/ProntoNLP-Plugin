@@ -162,11 +162,8 @@ data:
       change: number               # % vs prior
 
   documents:
-    upcoming:  [ {id, companyName, ticker, title, date, documentType} ]
-    today:     [ {id, companyName, ticker, title, date, documentType} ]
-    yesterday: [ {id, companyName, ticker, title, date, documentType} ]
-    thisWeek:  [ {id, companyName, ticker, title, date, documentType} ]
-    thisMonth: [ {id, companyName, ticker, title, date, documentType} ]
+    upcoming: [ {companyName, title, date, documentType} ]  # future events
+    recent:   [ {companyName, title, date, documentType} ]  # last 30 days
 ```
 
 ### Rendering structure
@@ -209,11 +206,10 @@ data:
 
 **Documents section:**
 - Section heading: "Documents"
-- Tab strip: Upcoming | Today | Yesterday | This Week | This Month
+- Tab strip: Upcoming | Recent
 - Hide any tab whose bucket array is empty or missing
-- Active tab: first non-empty tab by default (priority: Upcoming > Today > Yesterday > This Week > This Month)
+- Active tab: Upcoming if non-empty, otherwise Recent
 - Per document row: Company Name · Title · Date formatted as "Apr 29, 2026" · [EC] badge
-- Document link: `https://{org}.prontonlp.com/#/ref/{id}` (target="_blank")
 - [EC] badge: small teal badge labeled "Earnings Call" using `.badge` class
 
 ### Color reference
