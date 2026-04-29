@@ -143,10 +143,10 @@ getCompanyDocuments(
   companyId:     <companyId — include only for company context>
 )
 
-# This Week (Mon – day before yesterday)
+# This Week (Mon – yesterday)
 getCompanyDocuments(
   sinceDay:      <Monday of current week, YYYY-MM-DD>
-  untilDay:      <day before yesterday, YYYY-MM-DD>
+  untilDay:      <yesterday, YYYY-MM-DD>
   documentTypes: ["Earnings Calls"]
   limit:         20
   companyId:     <companyId — include only for company context>
