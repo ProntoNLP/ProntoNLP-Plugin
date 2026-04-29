@@ -179,8 +179,14 @@ data:
   - **Default state:** `↻ Refresh` (clickable)
   - **Loading state:** button disabled, label changes to `⟳ Fetching…` with a CSS spin animation on the icon, cursor shows `not-allowed`
   - **On complete:** button re-enables, subtitle timestamp updates to new fetch time
-  - Implement via JS: on click → add `.loading` class to button → disable → on refresh complete → remove `.loading` → re-enable
-  - CSS: `.btn-refresh.loading { opacity: 0.6; cursor: not-allowed; } .btn-refresh.loading .icon { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }`
+  - Implement via JS: on click → add `.loading` class to button → disable → add `.refreshing` class to `#movers-row`, `#trends-table`, `#docs-section` → on refresh complete → replace section content with new data → remove `.refreshing` → remove `.loading` → re-enable
+  - CSS:
+    ```css
+    .btn-refresh.loading { opacity: 0.6; cursor: not-allowed; }
+    .btn-refresh.loading .icon { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .refreshing { opacity: 0.35; pointer-events: none; transition: opacity 0.2s; }
+    ```
 
 **Top Movers section:**
 - Section heading: "Top Movers"
