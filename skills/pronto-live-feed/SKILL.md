@@ -79,28 +79,17 @@ Fire all of the following simultaneously. Always include `getOrganization`.
 getOrganization    → save org (required for artifact links and delegation)
 ```
 
-**Top Movers — current period:**
+**Top Movers:**
 ```
 getTopMovers(
-  sinceDay:      <today − 30 days, YYYY-MM-DD>
-  documentTypes: ["Earnings Calls"]
-  sortBy:        ["sentimentScoreChange"]
-  limit:         10
-  companyIDs:    [<companyId>]   # include only for company context
+  sinceDay:   <today − 30 days, YYYY-MM-DD>
+  sortBy:     ["sentimentScoreChange"]
+  limit:      10
+  companyIDs: [<companyId>]   # include only for company context
 )
 ```
 
-**Top Movers — prior period (for sentimentScoreChange computation):**
-```
-getTopMovers(
-  sinceDay:      <today − 90 days, YYYY-MM-DD>
-  untilDay:      <today − 30 days, YYYY-MM-DD>
-  documentTypes: ["Earnings Calls"]
-  sortBy:        ["sentimentScore"]
-  limit:         10
-  companyIDs:    [<companyId>]   # include only for company context
-)
-```
+> **Note:** The MCP server auto-computes the prior period as `sinceDay − 100 days` to `sinceDay` and returns `sentimentScoreChange` directly. Do not make a separate prior-period call.
 
 **Trends:**
 ```
@@ -163,15 +152,11 @@ After receiving results, filter the `upcoming` call to keep only future-dated do
 
 ## Step 2b: Parallel Batch 2
 
-After Step 2a completes, use `id` and `latestDocDate` from each mover in the **current period** `getTopMovers` result.
+After Step 2a completes, use `id` and `latestDocDate` from each mover in the `getTopMovers` result.
 
-Compute `sentimentScoreChange` for each mover:
-```
-sentimentScoreChange = currentSentimentScore − priorSentimentScore
-```
-Match movers by `id` between current and prior calls. For movers with no prior match, set `sentimentScoreChange = null`.
+`sentimentScoreChange` is returned directly by the tool — use it as-is. If absent for a mover, set to `null`.
 
-Then fire one `getStockPrices` call per mover, all simultaneously:
+Fire one `getStockPrices` call per mover, all simultaneously:
 ```
 # Repeat for each mover (up to 10):
 getStockPrices(
@@ -213,7 +198,6 @@ data:
     generatedAt: <ISO 8601 timestamp>
     topMovers:
       sinceDay: <YYYY-MM-DD>       # today − 30 days
-      priorSinceDay: <YYYY-MM-DD>  # today − 90 days
     trends:
       timeframeDays: 90
 
@@ -222,8 +206,8 @@ data:
       ticker: string
       name: string
       sector: string
-      sentimentScore: number       # 0–1, from current call
-      sentimentScoreChange: number | null  # computed; null if no prior match
+      sentimentScore: number       # 0–1
+      sentimentScoreChange: number | null  # from tool response; null if absent
       stockChange: number          # % market cap change
       marketCap: string            # pre-formatted
       latestDocDate: YYYY-MM-DD
@@ -273,7 +257,7 @@ Do not mention tool names in the summary — describe results, not mechanics.
 
 1. Always fire `getOrganization` — `org` is required by the artifact agent for all links.
 2. Never pass `marketCaps` or `companyId` to `getTrends` — use `companyName` for company context.
-3. `getTopMovers` company filter uses `companyIDs` (array), not `companyId`.
+3. `getTopMovers` company filter uses `companyIDs` (array), not `companyId`. Do not pass a separate prior-period call — the tool computes `sentimentScoreChange` internally.
 4. Never fabricate — empty document buckets → pass empty arrays. Do not invent documents.
 5. Stock prices are optional — if `getStockPrices` fails for a mover, omit `stockPrices`; the artifact skips the sparkline silently.
 6. Do not mention tool names in user-facing messages — describe results, not API calls.
