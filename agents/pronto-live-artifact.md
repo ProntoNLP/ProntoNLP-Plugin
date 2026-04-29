@@ -56,6 +56,8 @@ For manually forced refresh, use the same logic immediately.
 
 ---
 
+> **Adding a new artifact type:** Add a `## N. Dispatch: \`<type>\`` section following the pattern of Sections 5 and 6 (data shape → rendering structure → output line). Add the new value to Section 2's input contract description. No other changes needed.
+
 ## 5. Dispatch: `live_marketpulse`
 
 Handle exactly as the previous dedicated `pronto-marketpulse-live-artifact` agent. No behavioral change.
@@ -67,6 +69,12 @@ Handle exactly as the previous dedicated `pronto-marketpulse-live-artifact` agen
 - Leaderboard cards / tables (criteria: stockChange, investmentScore, investmentScoreChange, sentimentScore, sentimentScoreChange)
 - Trending topics table
 - Voice of the Market tables (execBullish, execBearish, analystBullish, analystBearish)
+
+### Additional rendering notes
+
+**Expansion note:** If `data.meta.expansions` is present and non-empty, render a compact inline note below the relevant leaderboard card: "Date range widened to [widenedSinceDay] for sparse data." Do not render it as a prominent warning — keep it subtle.
+
+**Company links:** Use `org` from the payload for all company links: `https://{org}.prontonlp.com/#/ref/$COMPANY{companyId}`. All links `target="_blank" rel="noopener noreferrer"`. Never hardcode `{org}`.
 
 ### Data shape
 
@@ -139,7 +147,7 @@ data:
       name: string
       sector: string
       sentimentScore: number        # 0–1
-      sentimentScoreChange: number  # % vs prior window
+      sentimentScoreChange: number | null  # % vs prior window; null if no prior match — omit Δ display
       stockChange: number           # % market cap change
       marketCap: string             # pre-formatted: "$1.2T" / "$45B" / "$3.1B" / "$850M"
       latestDocDate: YYYY-MM-DD
