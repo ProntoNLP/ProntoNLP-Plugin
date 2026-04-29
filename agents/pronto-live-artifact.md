@@ -180,11 +180,14 @@ data:
 **Top Movers section:**
 - Section heading: "Top Movers"
 - Timeframe label: "Last 30 days vs prior 90 days · Earnings Calls"
-- Vertical scrollable list of mover cards (up to 10)
-- Per card:
-  - Row 1: Ticker (bold, monospace) · Company Name · Sector badge
-  - Row 2: Sentiment Score value + sentiment label (see table below) · Score Δ colored by sign · Stock Δ colored by sign · Market Cap
-  - Row 3: Sparkline chart (Chart.js line, no axes, no labels, no grid, teal line `#205262`, 7–8 data points from `stockPrices`)
+- **Horizontal scrolling row** of mover cards (up to 10) — cards sit side by side, row overflows horizontally with `overflow-x: auto`
+- Each card: fixed width ~200px, vertical layout inside
+  - Row 1: Ticker (bold, monospace) · Sector badge (small, muted)
+  - Row 2: Company Name (truncated if long)
+  - Row 3: Sentiment Score value + sentiment label (see table below)
+  - Row 4: Score Δ colored by sign · Stock Δ colored by sign
+  - Row 5: Market Cap (muted)
+  - Row 6: Sparkline chart (Chart.js line, no axes, no labels, no grid, teal line `#205262`, 7–8 data points from `stockPrices`; fixed height ~60px)
 
 **Sentiment labels:**
 
