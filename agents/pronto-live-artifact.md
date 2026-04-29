@@ -176,6 +176,11 @@ data:
 - Title: "ProntoNLP Live Feed" (home) or "[companyName] Live Feed" (company)
 - Subtitle: generated timestamp + context label
 - Refresh button (↻) — triggers live artifact refresh using `refresh` recipe
+  - **Default state:** `↻ Refresh` (clickable)
+  - **Loading state:** button disabled, label changes to `⟳ Fetching…` with a CSS spin animation on the icon, cursor shows `not-allowed`
+  - **On complete:** button re-enables, subtitle timestamp updates to new fetch time
+  - Implement via JS: on click → add `.loading` class to button → disable → on refresh complete → remove `.loading` → re-enable
+  - CSS: `.btn-refresh.loading { opacity: 0.6; cursor: not-allowed; } .btn-refresh.loading .icon { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }`
 
 **Top Movers section:**
 - Section heading: "Top Movers"
