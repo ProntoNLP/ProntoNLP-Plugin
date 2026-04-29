@@ -10,7 +10,7 @@ metadata:
 
 # Market Pulse — Recent Market Intelligence Dashboard
 
-Generates a market intelligence dashboard from recent earnings calls — leaderboards, trending topics, and voice-of-the-market. Data gathering and section logic live here; HTML rendering is delegated to the `pronto-html-renderer` agent.
+Generates a market intelligence dashboard from recent earnings calls — leaderboards, trending topics, and voice-of-the-market. Data gathering and section logic live here; final presentation is delegated to the `pronto-marketpulse-live-artifact` agent as a Claude live artifact. Market Pulse is the only ProntoNLP skill that should use a live artifact.
 
 > ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research` from this skill. These are user-triggered only. Use only the tools listed in Step 2.
 
@@ -67,7 +67,18 @@ At the end of a Movers-only report, tell the user they can ask for a **full repo
 - User-specified time frame → honor it.
 - "recently", "currently", "now", "latest", or no time frame → **past 7 days**.
 - Format: `YYYY-MM-DD`.
-- Store a human-readable label (e.g. "Past 7 Days", "Mar 1 – Mar 26, 2026") for the report header.
+- Store a human-readable label (e.g. "Past 7 Days", "Mar 1 – present", "Mar 1 – Mar 26, 2026") for the report header.
+
+### Open-ended vs. fixed ranges
+
+| User says | `sinceDay` | `untilDay` |
+|-----------|-----------|-----------|
+| "past month", "last 30 days", "since March" | 1 month / 30 days / Mar 1 ago | **omit** — open until now |
+| "past week", "last 7 days", "recently" | 7 days ago | **omit** — open until now |
+| "in Q1 2025", "Jan to Feb 2026", fixed historical range | range start | range end (explicit) |
+| No time frame | 7 days ago | **omit** — open until now |
+
+**Rule:** omit `untilDay` whenever the period extends to "now / today". Only pass `untilDay` for fully fixed historical ranges where the end date is explicitly in the past. Never pass today's date as `untilDay` — omitting it achieves the same result and lets the API default to the current moment.
 
 ---
 
@@ -76,7 +87,7 @@ At the end of a Movers-only report, tell the user they can ask for a **full repo
 After Steps 0–1, **before calling any tools**, present a short summary and wait for the user to confirm.
 
 Show the user:
-- **Date range:** the resolved period (e.g. "Past 7 Days — Apr 12 to Apr 19, 2026")
+- **Date range:** the resolved period (e.g. "Past 7 Days — Apr 12 to present", or "Mar 1 – Mar 26, 2026" for a fixed range)
 - **Market cap filter:** e.g. "$300M+ (Small, Mid, Large, Mega)" or "Large caps only ($10B+)"
 - **Sections:** which sections will be included (Movers / Trending Topics / Voice of the Market)
 - **Filters:** any sector, country, or index filter applied
@@ -104,7 +115,7 @@ Make **one call** with `sortBy` as an array of all needed criteria. The response
 ```
 getTopMovers(
   sinceDay:      <period start>
-  untilDay:      <today>
+  untilDay:      <period end — omit if open-ended to now>
   documentTypes: ["Earnings Calls"]
   marketCaps:    <filter from Step 0>
   limit:         10
@@ -134,7 +145,7 @@ If the user asked for only one metric, pass only that criterion.
 getTrends(
   documentTypes: ["Earnings Calls"]
   sinceDay:      <period start>
-  untilDay:      <today>
+  untilDay:      <period end — omit if open-ended to now>
   limit:         30
   sortBy:        "score"
 )
@@ -159,24 +170,25 @@ Field reference: [reference/api-fields.md](./reference/api-fields.md).
 
 ---
 
-## Step 4: Render
+## Step 4: Build the Live Artifact
 
-Delegate the entire HTML output to the `pronto-html-renderer` agent (`subagent_type: prontonlp-plugin:pronto-html-renderer`). Pass the structured data — do not render HTML here.
+Delegate the final output to the `pronto-marketpulse-live-artifact` agent (`subagent_type: prontonlp-plugin:pronto-marketpulse-live-artifact`). Pass the structured data — do not render HTML here and do not save a standalone report file.
 
 ```
-report_type: marketpulse
+artifact_type: live_marketpulse
 org: <from getOrganization>
-filename: market-pulse-<YYYYMMDD>.html
 title: "Market Pulse — <date range label>"
 subtitle: "<total companies> companies · <market cap filter label> · Earnings Calls"
 data:
   meta:
     dateRangeLabel: <human label>
     sinceDay: <YYYY-MM-DD>
-    untilDay: <YYYY-MM-DD>
+    untilDay: <YYYY-MM-DD — omit key entirely if open-ended to now>
     marketCapFilter: <label>
     totalCompanies: <deduped count>
+    sections: [<movers?>, <trends?>, <speakers?>]
     filters: { sectors?, country?, indices? }
+    expansions?: [ { criterion, originalSinceDay, widenedSinceDay } ]
   leaderboards:
     # Only include keys that were fetched in Step 2a.
     stockChange:          { topMovers: [...] }
@@ -190,15 +202,26 @@ data:
     execBearish:    [ ... ]
     analystBullish: [ ... ]
     analystBearish: [ ... ]
+refresh:
+  onOpen: true
+  allowManualRefresh: true
+  tools: [getOrganization, getTopMovers, getTrends, getSpeakers]
+  params:
+    dateRangeMode: <rolling-window or fixed-range>
+    sinceDay: <YYYY-MM-DD>
+    untilDay: <YYYY-MM-DD — omit key entirely if open-ended to now>
+    marketCaps: <filter array from Step 0>
+    filters: { sectors?, country?, indices? }
+    sections: [<movers?>, <trends?>, <speakers?>]
 ```
 
-The renderer applies the shared conventions (color rule, score display, company links, signal badges like `Potential Buy` / `Watch` / `Caution`). Do not reimplement any of that here.
+The live artifact agent is responsible for creating a Claude live artifact that refreshes when reopened. Do not fall back to the shared HTML renderer for Market Pulse.
 
 ---
 
 ## Step 5: Delivery
 
-After the renderer returns the saved filename, summarize:
+After the live artifact is ready, summarize:
 - Time period + any date-range expansion applied
 - Company count + filters applied
 - Top company by stock performance over the period
@@ -207,6 +230,7 @@ After the renderer returns the saved filename, summarize:
 - Top trend *(if trends included)*
 - Most bullish / bearish executive and analyst *(if speakers included)*
 - If Movers-only: mention a full report will add Trending Topics and Voice of the Market.
+- Mention that the Market Pulse now lives in Claude as a live artifact and refreshes on open.
 
 See [examples/sample-delivery.md](./examples/sample-delivery.md) for delivery phrasing.
 
@@ -216,13 +240,13 @@ See [examples/sample-delivery.md](./examples/sample-delivery.md) for delivery ph
 
 After delivering the summary, ask the user:
 
-> "Your report is ready: `<filename>.html`. Want this also as an XLSX file? (yes/no)"
+> "Your live Market Pulse artifact is ready in Claude and refreshes on open. Want this also as an XLSX file? (yes/no)"
 
 **Skip the prompt** if the user explicitly asked for XLSX up front (e.g. "give me the market pulse as xlsx", "in spreadsheet form") — in that case generate both formats automatically.
 
-If the user answers yes (or pre-asked), invoke `anthropic-skills:xlsx` **directly from this skill** (not via a sub-agent) using the same data you already built for the HTML renderer.
+If the user answers yes (or pre-asked), invoke `anthropic-skills:xlsx` **directly from this skill** (not via a sub-agent) using the same data you already built for the live artifact.
 
-**Filename:** same as the HTML file but `.xlsx` extension.
+**Filename:** `market-pulse-<YYYYMMDD>.xlsx`
 
 **Sheets to create** (skip any whose source data is missing or empty):
 1. **Summary** *(tab teal `#205262`, no autofilter)* — `meta` fields as Key / Value rows (date range, market cap filter, total companies, filters applied)
@@ -257,3 +281,4 @@ If the user answers no, end the skill normally.
 3. Never fabricate — missing data → omit the leaderboard key entirely.
 4. Maximize parallelism — all tool calls in Step 2 fire simultaneously.
 5. Do not mention tool names in responses — describe the action ("I analyzed earnings calls from the past 7 days", not "I called getTopMovers").
+6. `pronto-marketpulse` is the only ProntoNLP skill that should create a Claude live artifact. All other ProntoNLP report skills remain regular standalone HTML outputs.

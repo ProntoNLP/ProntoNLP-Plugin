@@ -12,7 +12,7 @@ metadata:
 
 Produces a topic-focused research report. Centerpiece: **themes broker synthesis** of verbatim evidence across the market, layered with hits-overtime, related sectors, companies, documents, and keywords.
 
-Data gathering and themes synthesis live here; HTML rendering is delegated to the `pronto-html-renderer` agent.
+Data gathering and themes synthesis live here; final output is a regular standalone HTML report delegated to the `pronto-html-renderer` agent. This skill is not a live artifact.
 
 > ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research`. These are user-triggered only.
 

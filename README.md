@@ -114,10 +114,14 @@ Generates a broad market intelligence dashboard ranking companies across the ent
 
 Defaults to the **past 7 days** when no time frame is specified. Supports filtering by market cap, sector, and time window.
 
+This is the **only** ProntoNLP skill that should end as a **Claude live artifact**. It should refresh with current data when reopened in Claude Cowork/Desktop.
+
 **Trigger phrases:** *"what's moving in the market"*, *"top movers"*, *"market recap"*, *"most bullish companies"*, *"biggest sentiment shifts"*, *"earnings season highlights"*, *"which large caps are outperforming"*.
 
 > Do not use for a single named company — use `pronto-company-intelligence` instead.
 > Do not use for a specific sector — use `pronto-sector-intelligence` instead.
+
+All other report skills in this plugin stay **regular standalone HTML reports**. They are **not** live artifacts.
 
 ---
 
@@ -153,7 +157,11 @@ A synthesis analyst (powered by Claude Haiku) that receives raw search results a
 
 ### `pronto-html-renderer`
 
-The shared rendering engine for all skill reports. Receives a structured data payload and a `report_type` (`company`, `sector`, `compare`, `marketpulse`, or `topic`) and writes a fully styled standalone HTML file to disk. Owns all visual design decisions — platform color tokens, chart specifications, component layouts, and citation link formatting. Skills prepare and synthesize data; this agent produces the final output. Uses only `Read` and `Write` tools — no MCP calls.
+The shared rendering engine for the regular ProntoNLP HTML reports. Receives a structured data payload and a `report_type` (`company`, `sector`, `compare`, or `topic`) and writes a fully styled standalone HTML file to disk. Owns all visual design decisions — platform color tokens, chart specifications, component layouts, and citation link formatting. Skills prepare and synthesize data; this agent produces the final output. Uses only `Read` and `Write` tools — no MCP calls.
+
+### `pronto-marketpulse-live-artifact`
+
+The dedicated live artifact builder for `pronto-marketpulse`. It creates or updates a Claude live artifact for Market Pulse instead of writing a standalone HTML file. This path is exclusive to Market Pulse; it is responsible for the live, refresh-on-open behavior.
 
 ---
 

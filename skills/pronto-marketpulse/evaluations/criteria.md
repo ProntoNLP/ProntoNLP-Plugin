@@ -61,17 +61,18 @@ This file defines what a correct, high-quality response from `pronto-marketpulse
 
 ---
 
-## 5. HTML Output
+## 5. Live Artifact Output
 
 | Criterion | Pass condition |
 |-----------|---------------|
-| Output is a saved HTML file | Renderer writes a standalone `.html` file — not inline markdown |
-| Filename includes date stamp | `market-pulse-<YYYYMMDD>.html` format |
-| Standalone HTML document | File contains DOCTYPE, `<html>`, `<head>`, `<body>` — not a fragment |
+| Output is a Claude live artifact | Result is a live artifact in Claude — not a saved standalone `.html` file |
+| Market Pulse does not use the shared HTML renderer | Skill delegates to the dedicated live artifact path |
+| Artifact refreshes on open | Reopening the artifact re-runs the same Market Pulse view with fresh current data |
+| Manual refresh is supported | User can force a fresh pull without recreating the artifact |
 | Leaderboard cards present | One card per fetched criterion; correct title per leaderboard mapping |
 | Sentiment Shift card has bullish and bearish lists | `topMovers` (bullish) + `underperforming` (bearish) both present |
 | Signal badges applied | `Potential Buy`, `Watch`, `Caution` badges rendered per renderer conventions |
-| Trends section present (when fetched) | Bar chart or table with name, score, hits, change |
+| Trends section present (when fetched) | Table with name, score, hits, change |
 | Speakers section present (when fetched) | Exec and analyst tables with bullish/bearish split |
 | Company links well-formed | Links use `https://{org}.prontonlp.com/#/ref/$COMPANY{id}` format |
 
@@ -99,6 +100,7 @@ This file defines what a correct, high-quality response from `pronto-marketpulse
 | Potential Buy signals surfaced | High investment score + falling stock companies named |
 | Top trend named (if trends fetched) | #1 trend by score explicitly mentioned |
 | Most bullish/bearish exec and analyst named (if speakers fetched) | Names and firms stated |
+| Live behavior stated | User is told the Market Pulse is now a live artifact that refreshes on open |
 
 ---
 
@@ -120,7 +122,7 @@ A response passes evaluation if it meets:
 - **All** section selection criteria
 - **All** market cap filter criteria
 - **≥ 6 of 7** data collection criteria
-- **All** applicable HTML output sections
+- **All** applicable live artifact output sections
 - **≥ 3 of 4** visual design criteria
 - **All** delivery summary criteria (for sections included)
 - **≥ 3 of 4** error handling criteria (only evaluated when errors occur)

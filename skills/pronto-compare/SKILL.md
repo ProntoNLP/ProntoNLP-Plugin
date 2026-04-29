@@ -12,7 +12,7 @@ metadata:
 
 Side-by-side intelligence comparison of 2–5 entities (companies, sectors, or mixed). Gathers per-entity data, scores each across shared dimensions, picks a winner per dimension, synthesizes a verdict.
 
-Data gathering + scoring live here; HTML rendering is delegated to the `pronto-html-renderer` agent.
+Data gathering + scoring live here; final output is a regular standalone HTML report delegated to the `pronto-html-renderer` agent. This skill is not a live artifact.
 
 > ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research`. These are user-triggered only.
 

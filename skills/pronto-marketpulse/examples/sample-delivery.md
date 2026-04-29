@@ -1,12 +1,12 @@
 # Sample Post-Generation Delivery
 
-This is an example of what Claude should say to the user after generating and writing the HTML report file.
+This is an example of what Claude should say to the user after generating the live Market Pulse artifact in Claude.
 
 ---
 
 ## Example 1: "What's moving in the market this week?" (Movers only — default)
 
-*(report written to `market-pulse-report.html`)*
+*(live Market Pulse artifact created in Claude; refreshes on open)*
 
 ---
 
@@ -21,13 +21,15 @@ Here's your Market Pulse for **Mar 19 – Mar 26, 2026 (Past 7 Days)** — cover
 - CVS Health (CVS) — similar pattern
 - Ford (F) — strong earnings sentiment despite stock weakness
 
+This Market Pulse now lives in Claude as a **live artifact**, so reopening it will refresh the view with current data.
+
 Ask for a **full report** to also see Trending Topics and Voice of the Market (executive and analyst sentiment).
 
 ---
 
 ## Example 2: "What happened in the market this week?" (Full report)
 
-*(report written to `market-pulse-report.html`)*
+*(live Market Pulse artifact created in Claude; refreshes on open)*
 
 ---
 
@@ -45,11 +47,13 @@ Here's your full Market Pulse for **Mar 19 – Mar 26, 2026**, covering **63 uni
 
 **Most bullish analyst:** Erik Woodring (Morgan Stanley) — sentiment +0.78 covering 28 companies this week.
 
+This dashboard is now a **live artifact** in Claude, so when you reopen it the data refreshes instead of staying frozen to today's snapshot.
+
 ---
 
 ## Example 3: "Show me only the top stock movers" (Single leaderboard)
 
-*(report written to `market-pulse-report.html`)*
+*(live Market Pulse artifact created in Claude; refreshes on open)*
 
 ---
 
@@ -63,7 +67,7 @@ Here's your Top Stock Movers leaderboard for **Mar 19 – Mar 26, 2026** ($200M+
 
 ## Example 4: "Top movers, large companies only" (Movers with $5B+ filter)
 
-*(report written to `market-pulse-report.html`)*
+*(live Market Pulse artifact created in Claude; refreshes on open)*
 
 ---
 
@@ -82,3 +86,4 @@ Here's your Market Pulse for **Mar 19 – Mar 26, 2026** — **large companies o
 5. **For full reports:** one standout trend, one bullish exec, one bearish exec, one bullish analyst.
 6. **End with the interactive reminder** if in movers-only mode — a full report adds trends and speakers.
 7. **Keep it scannable** — bold names/tickers, ▲/▼ for directions, ~10 lines total.
+8. **Name the live behavior once** — tell the user the artifact refreshes on open, but do not over-explain it every time.

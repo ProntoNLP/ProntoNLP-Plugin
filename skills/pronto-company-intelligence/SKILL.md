@@ -12,7 +12,7 @@ metadata:
 
 Produces a single-company intelligence report. Centerpiece: **quarter-over-quarter comparison of every earnings call in the past year**, explicitly showing whether sentiment, investment scores, and stock price reaction are RISING or FALLING. Layered on top: analyst forecasts, competitive benchmarks, trending topics, management quotes, and risk factors.
 
-Data gathering and per-quarter analysis live here; HTML rendering is delegated to the `pronto-html-renderer` agent.
+Data gathering and per-quarter analysis live here; final output is a regular standalone HTML report delegated to the `pronto-html-renderer` agent. This skill is not a live artifact.
 
 > ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research`. These are user-triggered only.
 

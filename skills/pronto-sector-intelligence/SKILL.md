@@ -12,7 +12,7 @@ metadata:
 
 Produces sector intelligence reports. Centerpiece: **cross-company view of a sector** — ranking companies by sentiment, investment score, and stock performance; identifying dominant themes and events; surfacing the most bullish and bearish voices; tracking what's RISING or FALLING across the industry.
 
-Data gathering and cross-company analysis live here; HTML rendering is delegated to the `pronto-html-renderer` agent.
+Data gathering and cross-company analysis live here; final output is a regular standalone HTML report delegated to the `pronto-html-renderer` agent. This skill is not a live artifact.
 
 > ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research`. These are user-triggered only.
 
