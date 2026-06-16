@@ -31,7 +31,7 @@ This file defines what a correct, high-quality response from `pronto-topic-resea
 | All topic tools pass `dateRange` explicitly | Both `gte` and `lte` present on every call |
 | All topic tools pass `documentTypes: ["Earnings Calls"]` | Exact string — no variation |
 | All topic tools pass `corpus: ["S&P Transcripts"]` | Exact string — never omitted |
-| No `getTrendAnalysis` or `searchSectors` called | Only the 5 listed native topic tools + search-summarizer subagent used |
+| Only valid topic tools used | Only the 5 listed native topic tools (`getTopicOvertime`, `getSectors`, `getCompanies`, `getDocuments`, `getTopicNetwork`) + search-summarizer subagent — no other tools |
 
 ---
 

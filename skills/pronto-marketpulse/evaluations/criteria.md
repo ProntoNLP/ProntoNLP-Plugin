@@ -43,7 +43,7 @@ This file defines what a correct, high-quality response from `pronto-marketpulse
 | "large caps" → `$10B+` | `["Large ($10bln - $200bln)", "Mega ($200bln & more)"]` |
 | "mega cap" → `$200B+` | `["Mega ($200bln & more)"]` |
 | Sector/country filter applied alongside market cap | Both filters present in the call |
-| `getTrends` called without `marketCaps` | `getTrends` never receives a `marketCaps` parameter |
+| `getTrends` `marketCaps` only when cap-tier narrowing | By default `getTrends` has no `marketCaps`; only pass it when user explicitly narrows by cap tier |
 
 ---
 

@@ -88,18 +88,11 @@ Most tools accept arrays for both `companiesIds` and `transcriptsIds`. Key rules
 
 ---
 
-## Key Parameter Renames (vs old API)
+## Key Parameter Rules
 
-| Old | New |
-|-----|-----|
-| `getMetadata(retrieveType: 'company')` | `getCompanies` |
-| `getMetadata(retrieveType: 'document')` | `getDocuments` |
-| `getCompanyCompetitors` | `getCompanyPeers` |
-| `getStocks(view: 'prices')` | `getStockPrices` |
-| `getStocks(view: 'change')` | `getStockChange` |
-| `getConsensus` | `getCompanyConsensus` |
-| `search` | `searchSentences` |
-| `addContext` | `getSentenceContext` |
+| Wrong | Correct |
+|-------|---------|
 | `companyId` (scalar) | `companiesIds` (array) |
 | `documentID` / `documentIDs` | `transcriptsIds` (array) |
 | `sentiment: 'positive'` | `DLSentiment: ['positive']` |
+| `sinceDay` / `untilDay` as tool input | `dateRange: { gte, lte }` |
