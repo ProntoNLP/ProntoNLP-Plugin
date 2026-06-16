@@ -31,7 +31,7 @@ This file defines what a correct, high-quality response from `pronto-compare` lo
 | Criterion | Pass condition |
 |-----------|---------------|
 | Each entity classified as company or sector | Every entity gets a clear `type: company` or `type: sector` label before any batch |
-| Company entities call `getCompanyDescription` in Batch 1 | One call per company fired simultaneously |
+| Company entities call `getCompanies(companyNameOrTicker)` in Batch 1 | One call per company fired simultaneously |
 | Sector entities require no Batch 1 API call | Sector name is normalized only — no API call wasted |
 | Mode determined correctly | All-company → company mode; all-sector → sector mode; mixed → mixed mode |
 | Correct scoring dimensions applied | Company vs company: 9 dims; sector vs sector: 7 dims; mixed: 7 universal + 2 company-only |
@@ -42,16 +42,16 @@ This file defines what a correct, high-quality response from `pronto-compare` lo
 
 | Criterion | Pass condition |
 |-----------|---------------|
-| Batch 1 fires company descriptions simultaneously | `getCompanyDescription` called for all company entities at once; no call for sector entities |
+| Batch 1 fires company descriptions simultaneously | `getCompanies(companyNameOrTicker)` called for all company entities at once; no call for sector entities |
 | Batch 2 fires all entities simultaneously | Company batch 2 calls + sector batch 2 calls all in one parallel batch |
-| Batch 3 fires all entities simultaneously | All `getAnalytics`, `getStockPrices`, `getSpeakers`, `getSpeakerCompanies`, `searchTopCompanies` in one parallel batch |
-| Batch 4 fires all entities simultaneously | All `search` calls for companies and sectors in one parallel batch |
-| `companyId` saved and used correctly | Company `companyId` from Batch 1 passed to all stock calls in Batches 2–3 |
+| Batch 3 fires all entities simultaneously | All `getAnalytics`, `getStockPrices`, `getSpeakers`, `getDocumentSummary(focus: 'key risks')`, `getCompanies(companySearchMode:'byDocuments')` in one parallel batch |
+| Batch 4 fires all entities simultaneously | All `searchSentences` calls for companies and sectors in one parallel batch |
+| `companiesIds` saved and used correctly | Company `companiesIds` from Batch 1 passed to all stock calls in Batches 2–3 |
 | Per-quarter analytics for companies | `getAnalytics` called once per transcript (Q1, Q2, Q3, Q4 separately) — not one aggregate call |
 | Sector uses `sectors` array (not string) | `sectors: ["Information Technology"]` — never `sectors: "Information Technology"` |
-| `getTrends` has no query param | `getTrends` never called with `query` or `topicSearchQuery` |
-| `searchTopCompanies` — one event type per call | Never combined multiple event types in one call |
-| Sector representative for speakers | `getSpeakers` and `getSpeakerCompanies` called on sector's top company (from `getTopMovers`) |
+| `getTrends` has no `query` param | `getTrends` never called with `query` — `topicSearchQuery` is accepted for subject-area scoping |
+| `getCompanies(companySearchMode:'byDocuments')` — one event type per call | Never combined multiple event types in one call |
+| Sector representative for speakers | `getSpeakers(entityType: 'speaker')` and `getSpeakers(entityType: 'company')` called on sector's top company (from `getTopMovers`) |
 | No external skills invoked | Only MCP tools called directly — no skill-calling-skill |
 
 ---

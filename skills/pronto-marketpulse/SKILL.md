@@ -12,7 +12,7 @@ metadata:
 
 Generates a market intelligence dashboard from recent earnings calls — leaderboards, trending topics, and voice-of-the-market. Data gathering and section logic live here; final presentation is delegated to the `pronto-live-artifact` agent as a Claude live artifact. Market Pulse is the only ProntoNLP skill that should use a live artifact.
 
-> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research` from this skill. These are user-triggered only. Use only the tools listed in Step 2.
+> ⛔ **TOOL RESTRICTION:** Never call `showDocumentMindMap` or `deepResearch` from this skill. These are user-triggered only. Use only the tools listed in Step 2.
 
 ---
 
@@ -71,14 +71,16 @@ At the end of a Movers-only report, tell the user they can ask for a **full repo
 
 ### Open-ended vs. fixed ranges
 
-| User says | `sinceDay` | `untilDay` |
-|-----------|-----------|-----------|
+All tool calls use `dateRange: { gte, lte }`. `gte` is always set; omit `lte` when the range is open-ended to now.
+
+| User says | `dateRange.gte` | `dateRange.lte` |
+|-----------|-----------------|-----------------|
 | "past month", "last 30 days", "since March" | 1 month / 30 days / Mar 1 ago | **omit** — open until now |
 | "past week", "last 7 days", "recently" | 7 days ago | **omit** — open until now |
 | "in Q1 2025", "Jan to Feb 2026", fixed historical range | range start | range end (explicit) |
 | No time frame | 7 days ago | **omit** — open until now |
 
-**Rule:** omit `untilDay` whenever the period extends to "now / today". Only pass `untilDay` for fully fixed historical ranges where the end date is explicitly in the past. Never pass today's date as `untilDay` — omitting it achieves the same result and lets the API default to the current moment.
+**Rule:** omit `lte` whenever the period extends to "now / today". Only set `lte` for fully fixed historical ranges where the end date is explicitly in the past. Never pass today's date as `lte` — omitting it lets the API default to the current moment.
 
 ---
 
@@ -100,13 +102,9 @@ Then ask: *"Ready to generate the Market Pulse report. Reply **yes** to continue
 
 ## Step 2: Call Data Tools
 
-Fire all applicable calls simultaneously. Always include `getOrganization` — the `org` value is required by the renderer for citation/company links.
+Fire all applicable calls simultaneously.
 
-```
-getOrganization    → save org
-```
-
-Only make the remaining calls needed for the sections chosen in Step 0.
+Only make the calls needed for the sections chosen in Step 0.
 
 ### 2a. getTopMovers *(movers section)*
 
@@ -114,8 +112,7 @@ Make **one call** with `sortBy` as an array of all needed criteria. The response
 
 ```
 getTopMovers(
-  sinceDay:      <period start>
-  untilDay:      <period end — omit if open-ended to now>
+  dateRange:     { gte: <period start>, lte: <period end — omit lte if open-ended to now> }
   documentTypes: ["Earnings Calls"]
   marketCaps:    <filter from Step 0>
   limit:         10
@@ -144,18 +141,17 @@ If the user asked for only one metric, pass only that criterion.
 ```
 getTrends(
   documentTypes: ["Earnings Calls"]
-  sinceDay:      <period start>
-  untilDay:      <period end — omit if open-ended to now>
+  dateRange:     { gte: <period start>, lte: <period end — omit lte if open-ended to now> }
   limit:         30
   sortBy:        "score"
 )
 ```
 
-`getTrends` does not accept `marketCaps`.
+> **Note:** `getTrends` accepts `marketCaps` — apply the same filter if narrowing to a specific cap tier.
 
 ### 2c / 2d. getSpeakers — Executives and Analysts *(Voice of the Market)*
 
-Most bullish (both speaker types): `sortBy: "sentiment"`, `sortOrder: "desc"`, `limit: 20`, `documentTypes: ["Earnings Calls"]`, same date range.
+Most bullish (both speaker types): `entityType: 'speaker'`, `sortBy: "sentiment"`, `sortOrder: "desc"`, `limit: 20`, `documentTypes: ["Earnings Calls"]`, same dateRange.
 Most bearish: same but `sortOrder: "asc"`, `limit: 10`.
 
 ---
@@ -176,7 +172,6 @@ Delegate the final output to the `pronto-live-artifact` agent (`subagent_type: p
 
 ```
 artifact_type: live_marketpulse
-org: <from getOrganization>
 title: "Market Pulse — <date range label>"
 subtitle: "<total companies> companies · <market cap filter label> · Earnings Calls"
 data:
@@ -205,7 +200,7 @@ data:
 refresh:
   onOpen: true
   allowManualRefresh: true
-  tools: [getOrganization, getTopMovers, getTrends, getSpeakers]
+  tools: [getTopMovers, getTrends, getSpeakers]
   params:
     dateRangeMode: <rolling-window or fixed-range>
     sinceDay: <YYYY-MM-DD>
@@ -277,7 +272,7 @@ If the user answers no, end the skill normally.
 ## Best Practices
 
 1. Always pass `marketCaps` as an array — never a plain string.
-2. `getTrends` does not accept `marketCaps` — scope only with `documentTypes` and date range.
+2. All date ranges use `dateRange: {gte, lte}` format — never `sinceDay`/`untilDay`.
 3. Never fabricate — missing data → omit the leaderboard key entirely.
 4. Maximize parallelism — all tool calls in Step 2 fire simultaneously.
 5. Do not mention tool names in responses — describe the action ("I analyzed earnings calls from the past 7 days", not "I called getTopMovers").

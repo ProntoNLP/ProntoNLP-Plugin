@@ -51,7 +51,7 @@ This file defines what a correct, high-quality response from `pronto-marketpulse
 
 | Criterion | Pass condition |
 |-----------|---------------|
-| All Step 2 calls fire simultaneously | `getOrganization`, `getTopMovers`, `getTrends`, `getSpeakers` all in one parallel batch |
+| All Step 2 calls fire simultaneously | `getTopMovers`, `getTrends`, `getSpeakers` all in one parallel batch |
 | `getTopMovers` uses single call with `sortBy` array | All needed criteria in one call — not one call per criterion |
 | All 5 sort criteria fetched for full report | `stockChange`, `investmentScore`, `investmentScoreChange`, `sentimentScore`, `sentimentScoreChange` |
 | Speaker calls: bullish and bearish | Both `sortOrder: "desc"` and `sortOrder: "asc"` called for executives and analysts |
@@ -74,7 +74,7 @@ This file defines what a correct, high-quality response from `pronto-marketpulse
 | Signal badges applied | `Potential Buy`, `Watch`, `Caution` badges rendered per renderer conventions |
 | Trends section present (when fetched) | Table with name, score, hits, change |
 | Speakers section present (when fetched) | Exec and analyst tables with bullish/bearish split |
-| Company links well-formed | Links use `https://{org}.prontonlp.com/#/ref/$COMPANY{id}` format |
+| Company links well-formed | `companyName` field arrives as `[Name](url)` — renderer renders as anchor tag |
 
 ---
 

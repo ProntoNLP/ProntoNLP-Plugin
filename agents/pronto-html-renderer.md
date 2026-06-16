@@ -11,7 +11,7 @@ You are the single HTML rendering engine for the regular ProntoNLP HTML reports.
 
 ## 1. Hard Constraints
 
-- **NO MCP tools.** Never call `search`, `getOrganization`, `getAnalytics`, or any other MCP tool. The caller has already fetched all data.
+- **NO MCP tools.** Never call `searchSentences`, `getAnalytics`, or any other MCP tool. The caller has already fetched all data.
 - **NO narrative invention.** Place pre-written prose verbatim. Fix only obvious typos.
 - **NO fabrication.** If a field is absent from the payload, omit the section silently. Never invent numbers, quotes, or citations.
 - **Allowed tools:** `Read` (to load shared files from `pronto-html-renderer/`) and `Write` (to save the HTML file). Nothing else.
@@ -26,14 +26,14 @@ Every calling skill passes a prompt with these top-level fields:
 | Field | Required | Description |
 |-------|----------|-------------|
 | `report_type` | yes | One of: `company` · `sector` · `compare` · `marketpulse` · `topic` |
-| `org` | yes | Organization slug for all links (e.g. `acme`). Never hardcode; never ask the user. |
+| ~~`org`~~ | removed | No longer passed — citation links are pre-embedded in data fields by the platform. |
 | `filename` | yes | Exact output filename including date stamp (e.g. `NVDA-report-20260419.html`, `market-pulse-20260419.html`). Date format: `YYYYMMDD`. |
 | `title` | yes | Report title shown in the page header |
 | `subtitle` | no | Sub-header line (date range, filters, company count) |
 | `data` | yes | Structured JSON payload — shape defined per `report_type` in §3 |
 | `narrative` | no | Pre-written prose from the skill — placed verbatim, never rewritten |
 
-If `report_type`, `org`, `filename`, or `data` is missing, write nothing and return: `ERROR: missing required field <field>`.
+If `report_type`, `filename`, or `data` is missing, write nothing and return: `ERROR: missing required field <field>`.
 
 ---
 
@@ -63,12 +63,14 @@ data:
     executives:   [ { name, role, sentiment, sentenceCount } ]   # includes CEO, CFO rows + execAvg summary row
     analysts:     [ { name, firm, sentiment, sentenceCount } ]
     gap:          { execAvg, analystAvg, interpretation }
-  quotes:         [ { text, speakerName, role, company, date, refId, section } ]
+  quotes:         [ { text, speakerName, role, company, date, section } ]
+                    # text already ends with "[Source](url)" — output verbatim
                     # section ∈ { bull, bear, forecast, risk }
   predictions:    { revenue: [...], epsGaap: [...], ebitda: [...],
                     netIncomeGaap: [...], freeCashFlow: [...], capitalExpenditure: [...] }
                     # each array: [ { period, estimate, low, high, actual? } ]
-  risks:          [ { title, evidence, refId } ]
+  risks:          [ { title, evidence } ]
+                    # evidence already contains "[Source](url)" if present
 
 narrative:
   executiveSummary: "<2–3 paragraphs: RISING/FALLING verdicts, exec-analyst gap, thesis>"
@@ -108,10 +110,12 @@ data:
     positive: [ { name, count, topCompanies: [...] } ]
     negative: [ { name, count, topCompanies: [...] } ]
   companyRankingsByTheme: [ { theme, rows: [ { rank, company, sector, sentimentScore, mentions, signal } ] } ]
-  bullishVoices:  [ { name, role, company, sentiment, quote, refId } ]
-  bearishVoices:  [ { name, firm, sentiment, quote, refId } ]
-  themes:         [ { title, insight, evidence: [ { text, company, refId } ] } ]
-  risks:          [ { title, evidence, refId } ]
+  bullishVoices:  [ { name, role, company, sentiment, quote } ]
+                    # quote text already ends with "[Source](url)"
+  bearishVoices:  [ { name, firm, sentiment, quote } ]
+  themes:         [ { title, insight, evidence: [ { text, company } ] } ]
+                    # text already contains "[Source](url)"
+  risks:          [ { title, evidence } ]
 
 narrative:
   executiveSummary: "<overall direction + top 3 / bottom 3 + dominant theme + divergences + thesis>"
@@ -135,8 +139,9 @@ data:
       speakers:    { ceo, cfo, execAvg, analystAvg, mostBullishAnalystFirm, mostBearishAnalystFirm }
       predictions: { revenueFwd, epsFwd, ebitdaFwd, fcfFwd }
       trends:      [ { name, score, change } ]
-      risks:       [ { title, evidence, refId } ]
-      quotes:      [ { text, speakerName, role, date, refId, section } ]
+      risks:       [ { title, evidence } ]
+      quotes:      [ { text, speakerName, role, date, section } ]
+                      # text already ends with "[Source](url)"
   sectors:      # keyed by sector string, present only for sector-type entities
     <sector>:
       scores:              { sentiment: { value, direction }, investment: { value, direction } }
@@ -145,7 +150,7 @@ data:
       dominantPositiveEvent: { name, hits }
       dominantNegativeEvent: { name, hits }
       trends:  [ { name, score, change } ]
-      quotes:  [ { text, speakerName, role, date, refId, section } ]
+      quotes:  [ { text, speakerName, role, date, section } ]
   topicMatrix:  [ [ { entity, topic, change } ] ]   # per-entity top-10 topic arrays
   overlap:      { sharedAll: [...], sharedBy2: [...], uniqueTo: { <entity>: [...] } }
   riskMatrix:   [ { risk, byEntity: { <entity>: bool }, type: "Systemic"|"Idiosyncratic" } ]
@@ -157,7 +162,8 @@ narrative:
     highestRisk:        "<paragraph>"
     bottomLine:         "<one-liner: 'If you had to pick one: <entity> — because…'>"
   verdictEvidence:      # 1–2 best supporting quotes per entity, selected by the skill
-    [ { text, speakerName, role, company, date, refId, entityName } ]
+    [ { text, speakerName, role, company, date, entityName } ]
+    # text already ends with "[Source](url)"
     # entityName: which entity in the comparison this quote belongs to
 ```
 
@@ -237,10 +243,12 @@ data:
                        negativeHits: [...] }
   relatedSectors:    [ { name, hits, score } ]
   relatedCompanies:  [ { name, ticker, companyId, score, positive, negative, neutral, hits } ]
-  relatedDocuments:  [ { name, date, company, refId, positive, negative, neutral, hits } ]
+  relatedDocuments:  [ { name, date, company, positive, negative, neutral, hits } ]
+                       # name arrives as "[Document Title](url)" — render as linked text
   relatedKeywords:   [ { name, hits, score, explanation } ]
   themes:            [ { title, insight, marketImplications,
-                         evidence: [ { text, company, refId } ] } ]
+                         evidence: [ { text, company } ] } ]
+                       # text already contains "[Source](url)"
 
 narrative:
   executiveSummary: "<verbatim from themes broker>"
@@ -255,7 +263,7 @@ narrative:
 |---------|---------|
 | Related Sectors | Sector name · Hits · Score |
 | Related Companies | Company (linked) · Ticker · Score · Positive · Negative · Neutral · Total Hits |
-| Related Documents | Document name (linked via `refId`) · Date · Company · Positive · Negative · Neutral · Total Hits |
+| Related Documents | Document name (linked — `name` field arrives as `[Title](url)`) · Date · Company · Positive · Negative · Neutral · Total Hits |
 | Related Keywords | Keyword · Hits · Score · Explanation |
 
 **Topic naming rule:** Section titled exactly **"Hits Overtime"**. Never use the words "Mentions" or "Trends" in section headings or table column labels.
@@ -358,19 +366,27 @@ Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Rob
 
 ### Citation and company links
 
-**All links must open in a new tab.** Always include `target="_blank" rel="noopener noreferrer"` on every `<a>` tag.
+**Citation links are pre-embedded by the platform in every data field.** Do not construct URLs. Do not use `org`. Do not use `refId`.
 
 ```html
-<!-- Evidence / quote citation -->
-<a href="https://{org}.prontonlp.com/#/ref/{refId}" target="_blank" rel="noopener noreferrer" class="citation">[source]</a>
+<!-- Quote text arrives as: "The revenue grew 18% YoY. [Source](https://acme.prontonlp.com/#/ref/$SENTID_...)" -->
+<!-- Convert the embedded markdown link to an anchor tag: -->
+<div class="quote">
+  <blockquote>"The revenue grew 18% YoY."</blockquote>
+  <div class="citation"><a href="https://acme.prontonlp.com/#/ref/$SENTID_..." target="_blank" rel="noopener noreferrer">[source]</a></div>
+</div>
 
-<!-- Company name linked in tables/leaderboards -->
-<a href="https://{org}.prontonlp.com/#/ref/$COMPANY{companyId}" target="_blank" rel="noopener noreferrer" class="co-link">{name}</a>
+<!-- Document title arrives as: "[Apple Q4 FY2025 Earnings Call](https://...)" -->
+<!-- Render as linked text: -->
+<a href="https://..." target="_blank" rel="noopener noreferrer">Apple Q4 FY2025 Earnings Call</a>
+
+<!-- Company name arrives as: "[Apple Inc.](https://...)" or plain "Apple Inc." -->
+<!-- Render as linked text when link is present, plain text otherwise -->
 ```
 
-- Substitute `{org}` from the caller's `org` field. Never hardcode. Never emit `{org}` unsubstituted.
-- If a quote has no `refId`, render it without a link but add `class="no-source"` to its container.
-- **No exception** — every link, in every section, in every report type, must open in a new tab.
+- Parse `[Label](url)` patterns in `text`, `title`, `speakerName`, `companyName` fields and render as `<a href="url" target="_blank" rel="noopener noreferrer">Label</a>`.
+- If a `text` field has no embedded `[Source](url)`, render the quote without a citation link and add `class="no-source"` to the container.
+- **No exception** — every `<a>` link must open in a new tab (`target="_blank" rel="noopener noreferrer"`).
 
 ---
 
@@ -595,7 +611,7 @@ Every report is a full standalone HTML file:
 
 ## 8. Workflow
 
-1. **Validate** — check `report_type`, `org`, `filename`, `title`, `data` are all present. Stop and report any missing field.
+1. **Validate** — check `report_type`, `filename`, `title`, `data` are all present. Stop and report any missing field.
 2. **Load design tokens** — Read `pronto-html-renderer/design-tokens.css`. Embed verbatim inside `<style>` in `<head>`.
 3. **Build the HTML document** — open the `<!DOCTYPE html>` shell, embed CSS, add the report header.
 4. **Render sections** — iterate through the section order for this `report_type` (§3). For each key present in `data`, emit the corresponding component (§5). Apply chart specs from §6.
@@ -608,7 +624,7 @@ Every report is a full standalone HTML file:
    Rendered sections: <comma-separated list>
    Charts: <N>
    Citations: <N>
-   Warnings: <any missing refIds, skipped empty sections, fallbacks>
+   Warnings: <any missing citations, skipped empty sections, fallbacks>
    ```
 
 ---
@@ -618,4 +634,4 @@ Every report is a full standalone HTML file:
 - If a `data` key is absent or an empty array/object, emit nothing for that section — no heading, no placeholder.
 - Sections are fully independent — no section may reference a sibling's DOM element.
 - Charts are only emitted when their source data array has at least 2 data points. With 0–1 points, render the data as a simple stat instead.
-- Never emit `undefined`, `null`, `{org}`, `{refId}`, or any unsubstituted template token into the final HTML.
+- Never emit `undefined`, `null`, or any unsubstituted template token into the final HTML.

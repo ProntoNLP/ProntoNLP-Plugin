@@ -14,7 +14,7 @@ Produces a topic-focused research report. Centerpiece: **themes broker synthesis
 
 Data gathering and themes synthesis live here; final output is a regular standalone HTML report delegated to the `pronto-html-renderer` agent. This skill is not a live artifact.
 
-> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research`. These are user-triggered only.
+> ⛔ **TOOL RESTRICTION:** Never call `showDocumentMindMap` or `deepResearch`. These are user-triggered only.
 
 ---
 
@@ -39,36 +39,30 @@ Then ask: *"Ready to generate the topic research report. Reply **yes** to contin
 
 ---
 
-## Step 1: Initial Setup
-
-```
-getOrganization → save org (required by the renderer for citation links)
-```
-
----
-
 ## Step 2: Parallel Data Collection
 
-Execute all data collection in one parallel batch: the 5 trend tools + the search summarizer agent.
+Execute all data collection in one parallel batch: 5 tool calls + the search summarizer agent.
 
 **Required tools (only these):**
-1. `getTrendOvertime`
-2. `getTrendRelatedSectors`
-3. `getTrendWordsByCompany`
-4. `getTrendWordsByDocument`
-5. `getTrendNetwork`
+1. `getTopicOvertime` (replaces `getTrendAnalysis(view: 'overtime')`)
+2. `getSectors` (replaces `getTrendAnalysis(view: 'sectors')`)
+3. `getCompanies` with `companySearchMode: 'byDocuments'` (replaces `getTrendAnalysis(view: 'companies')`)
+4. `getDocuments` (replaces `getTrendAnalysis(view: 'documents')`)
+5. `getTopicNetwork` (replaces `getTrendAnalysis(view: 'network')`)
 6. `pronto-search-summarizer` (subagent)
 
-**Common params (pass to all 5 trend tools):**
+**Common params (pass to all 5 calls):**
 - `topicSearchQuery: <topicSearchQuery>`
 - `documentTypes: ["Earnings Calls"]`
 - `dateRange: { gte: <sinceDay>, lte: <untilDay> }`
 - `corpus: ["S&P Transcripts"]`
 
-**`getTrendOvertime`** additionally requires `timeframeInterval: "quarter"`.
+**Tool-specific additions:**
+- `getTopicOvertime`: additionally pass `timeframeInterval: "quarter"`
+- `getCompanies`: additionally pass `companySearchMode: 'byDocuments'`
 
 **Date defaults** (always pass `dateRange` explicitly):
-- `getTrendOvertime`: `gte` = 15 months ago, `lte` = today.
+- `getTopicOvertime`: `gte` = 15 months ago, `lte` = today.
 - All other tools: `gte` = 90 days ago, `lte` = today.
 - Honor any user-provided timeframe; still pass `gte` and `lte` to every tool.
 
@@ -76,12 +70,10 @@ Execute all data collection in one parallel batch: the 5 trend tools + the searc
 ```
 description: "Search best sentences from parameters"
 
-org: [org from getOrganization]
 topicSearchQuery: <topicSearchQuery>
-sinceDay: <range start>
-untilDay: <range end>
+dateRange: { gte: <range start>, lte: <range end> }
 documentTypes: ["Earnings Calls"]
-instruction: Return ONLY the best verbatim sentences — no JSON, no metadata. Prioritize the most important and interesting sentences; exclude weak/off-topic. Plain text, one sentence per line, no bullets or headers. Each line ends with one citation: [Link: https://{org}.prontonlp.com/#/ref/<FULL_ID>].
+instruction: Return ONLY the best verbatim sentences — no JSON, no metadata. Prioritize the most important and interesting sentences; exclude weak/off-topic. Plain text, one sentence per line, no bullets or headers. Output the text field verbatim — it already ends with [Source](url).
 ```
 
 Save the agent output as `searchResults`.
@@ -95,9 +87,7 @@ Delegate to **one** `pronto-themes-broker` agent (`subagent_type: prontonlp-plug
 ```
 description: "Themes broker synthesis from search results"
 
-org: [org from getOrganization]
-sinceDay: <range start>
-untilDay: <range end>
+dateRange: { gte: <range start>, lte: <range end> }
 documentTypes: ["Earnings Calls"]
 corpus: ["S&P Transcripts"]
 searchResults:
@@ -114,7 +104,6 @@ Delegate the HTML output to `pronto-html-renderer` (`subagent_type: prontonlp-pl
 
 ```
 report_type: topic
-org: <from getOrganization>
 filename: <topic-slug>-research-<YYYYMMDD>.html
 title: "Topic Research: <topicSearchQuery>"
 subtitle: "<dateRangeLabel> · Earnings Calls"
@@ -128,11 +117,13 @@ data:
   relatedSectors:  [ { name, hits, score } ]
   relatedCompanies: [ { name, ticker, companyId, score,
                         positive, negative, neutral, hits } ]
-  relatedDocuments: [ { name, date, company, refId,
+  relatedDocuments: [ { name, date, company,
                         positive, negative, neutral, hits } ]
+                      # name arrives as "[Document Title](url)" — pass verbatim
   relatedKeywords:  [ { name, hits, score, explanation } ]
   themes: [ { title, insight, marketImplications,
-              evidence: [ { text, company, refId } ] } ]
+              evidence: [ { text, company } ] } ]
+              # text already ends with "[Source](url)" — pass verbatim
 narrative:
   executiveSummary: "<verbatim from themes broker>"
   conclusion:       "<verbatim from themes broker>"
@@ -140,7 +131,7 @@ narrative:
 
 **Naming rules the renderer enforces:**
 - Section titled exactly "Hits Overtime" — the words "Mentions" and "Trends" never appear.
-- Citation IDs inside themes evidence become anchor tags to `https://{org}.prontonlp.com/#/ref/<FULL_ID>`.
+- Citation links are pre-embedded in data fields — renderer parses `[Label](url)` and renders as anchor tags.
 
 For related-keywords rows missing an explanation, supply a 1-sentence explanation in the payload — the renderer does not invent one.
 
@@ -163,9 +154,9 @@ If the user answers yes (or pre-asked), invoke `anthropic-skills:xlsx` **directl
 2. **Hits Overtime** — Quarter, Total Hits, Positive Hits, Negative Hits
 3. **Related Sectors** — Sector Name, Hits, Score
 4. **Related Companies** — Name, Ticker, Score, Positive, Negative, Neutral, Hits
-5. **Related Documents** — Name, Date, Company, Positive, Negative, Neutral, Hits, Source (hyperlink to refId)
+5. **Related Documents** — Name (linked — `name` field arrives as `[Title](url)`), Date, Company, Positive, Negative, Neutral, Hits
 6. **Related Keywords** — Keyword, Hits, Score, Explanation
-7. **Themes** — Theme Title, Insight, Market Implications, Evidence Text, Company, Source (hyperlink to refId); evidence rows indented below each theme entry
+7. **Themes** — Theme Title, Insight, Market Implications, Evidence Text (with embedded [Source](url) link), Company; evidence rows indented below each theme entry
 
 **Styling** (every sheet):
 - Row 1: fill `#205262`, white bold text, height 22pt, frozen so it stays visible when scrolling
@@ -185,11 +176,11 @@ If the user answers no, end the skill normally.
 ## Date Handling
 
 ```
-Past 90 days (default):     gte = 90 days ago,  lte = today
-getTrendOvertime default:   gte = 15 months ago
-Past year:                  gte = 1 year ago,   lte = today
-Past 6 months:              gte = 6 months ago, lte = today
-YTD:                        gte = Jan 1,        lte = today
+Past 90 days (default):          dateRange: { gte: "now-90d/d", lte: "now" }
+getTopicOvertime default:        dateRange: { gte: "now-15M/d", lte: "now" }
+Past year:                       dateRange: { gte: "now-1y/d",  lte: "now" }
+Past 6 months:                   dateRange: { gte: "now-6M/d",  lte: "now" }
+YTD:                             dateRange: { gte: "<YYYY>-01-01", lte: "now" }
 ```
 
 Always pass `dateRange` (both `gte` and `lte`) and `corpus: ["S&P Transcripts"]` on every tool request.

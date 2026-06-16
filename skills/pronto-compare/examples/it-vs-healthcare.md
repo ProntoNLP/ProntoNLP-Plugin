@@ -32,25 +32,25 @@ No API calls. Both entities confirmed as sectors with exact API strings saved.
 ```
 getAnalytics(sectors: ["Information Technology"], documentTypes: ["Earnings Calls"],
   analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment"],
-  sinceDay: "2025-04-06", untilDay: "2026-04-06")
+  dateRange: {gte: "now-1y/d", lte: "now"})
 
 getAnalytics(sectors: ["Health Care"], documentTypes: ["Earnings Calls"],
   analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment"],
-  sinceDay: "2025-04-06", untilDay: "2026-04-06")
+  dateRange: {gte: "now-1y/d", lte: "now"})
 
 getTrends(sectors: ["Information Technology"], documentTypes: ["Earnings Calls"],
-  sinceDay: "2025-04-06", untilDay: "2026-04-06", limit: 10)
+  dateRange: {gte: "now-1y/d", lte: "now"}, limit: 10)
 
 getTrends(sectors: ["Health Care"], documentTypes: ["Earnings Calls"],
-  sinceDay: "2025-04-06", untilDay: "2026-04-06", limit: 10)
+  dateRange: {gte: "now-1y/d", lte: "now"}, limit: 10)
 
 getTopMovers(sectors: ["Information Technology"], documentTypes: ["Earnings Calls"],
   sortBy: ["investmentScore", "sentimentScore", "stockChange", "investmentScoreChange", "sentimentScoreChange"],
-  limit: 10, sinceDay: "2025-04-06", untilDay: "2026-04-06")
+  limit: 10, dateRange: {gte: "now-1y/d", lte: "now"})
 
 getTopMovers(sectors: ["Health Care"], documentTypes: ["Earnings Calls"],
   sortBy: ["investmentScore", "sentimentScore", "stockChange", "investmentScoreChange", "sentimentScoreChange"],
-  limit: 10, sinceDay: "2025-04-06", untilDay: "2026-04-06")
+  limit: 10, dateRange: {gte: "now-1y/d", lte: "now"})
 ```
 
 **Saved from Batch 2:**
@@ -80,35 +80,35 @@ For sectors: use the top company from each sector's `getTopMovers` result.
 IT Sector top company = NVDA | Health Care top company = LLY
 
 ```
-searchTopCompanies(sectors: ["Information Technology"], eventTypes: ["GrowthDriver"],
-  limit: 5, sinceDay: "2025-04-06", untilDay: "2026-04-06")
+getCompanies(sectors: ["Information Technology"], eventTypes: ["GrowthDriver"],
+  companySearchMode: "byDocuments", dateRange: {gte: "now-1y/d", lte: "now"})
   → NVDA (#1, 0.71), MSFT (#2, 0.63), AVGO (#3, 0.58)
 
-searchTopCompanies(sectors: ["Information Technology"], eventTypes: ["RiskFactor"],
-  limit: 5, sinceDay: "2025-04-06", untilDay: "2026-04-06")
+getCompanies(sectors: ["Information Technology"], eventTypes: ["RiskFactor"],
+  companySearchMode: "byDocuments", dateRange: {gte: "now-1y/d", lte: "now"})
   → INTC (#1, −0.31), AMD (#2, −0.18), QCOM (#3, −0.14)
 
-searchTopCompanies(sectors: ["Health Care"], eventTypes: ["DrugApproval"],
-  limit: 5, sinceDay: "2025-04-06", untilDay: "2026-04-06")
+getCompanies(sectors: ["Health Care"], eventTypes: ["DrugApproval"],
+  companySearchMode: "byDocuments", dateRange: {gte: "now-1y/d", lte: "now"})
   → LLY (#1, 0.68), ABBV (#2, 0.54), REGN (#3, 0.49)
 
-searchTopCompanies(sectors: ["Health Care"], eventTypes: ["RegulatoryRisk"],
-  limit: 5, sinceDay: "2025-04-06", untilDay: "2026-04-06")
+getCompanies(sectors: ["Health Care"], eventTypes: ["RegulatoryRisk"],
+  companySearchMode: "byDocuments", dateRange: {gte: "now-1y/d", lte: "now"})
   → CVS (#1, −0.24), CI (#2, −0.19), HUM (#3, −0.14)
 
-getSpeakers("NVIDIA", speakerTypes: ["Executives"],
+getSpeakers(entityType: "speaker", companiesIds: ["<NVDA_ID>"], speakerTypes: ["Executives"],
   sortBy: "sentiment", sortOrder: "desc", limit: 10, documentTypes: ["Earnings Calls"])
   → Most bullish exec in IT sector leader: Jensen Huang, CEO, NVDA (0.81)
 
-getSpeakerCompanies("NVIDIA", speakerTypes: ["Analysts"],
+getSpeakers(entityType: "company", companiesIds: ["<NVDA_ID>"], speakerTypes: ["Analysts"],
   sortBy: "sentiment", sortOrder: "desc", limit: 10)
   → Most bullish analyst firm covering IT sector leader: Goldman Sachs (0.59)
 
-getSpeakers("Eli Lilly", speakerTypes: ["Executives"],
+getSpeakers(entityType: "speaker", companiesIds: ["<LLY_ID>"], speakerTypes: ["Executives"],
   sortBy: "sentiment", sortOrder: "desc", limit: 10, documentTypes: ["Earnings Calls"])
   → Most bullish exec in Healthcare sector leader: David Ricks, CEO, LLY (0.62)
 
-getSpeakerCompanies("Eli Lilly", speakerTypes: ["Analysts"],
+getSpeakers(entityType: "company", companiesIds: ["<LLY_ID>"], speakerTypes: ["Analysts"],
   sortBy: "sentiment", sortOrder: "desc", limit: 10)
   → Most bullish analyst firm covering HC sector leader: Morgan Stanley (0.54)
 ```
@@ -130,16 +130,16 @@ Using top company per sector as the representative voice:
 
 **`pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`), all 4 in parallel:
 ```
-"Find bullish executive quotes from NVIDIA about AI infrastructure growth and momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
+"Find bullish executive quotes from NVIDIA about AI infrastructure growth and momentum. companiesIds: [<NVDA_ID>]. speakerTypes: Executives. DLSentiment: ['positive']. documentTypes: Earnings Calls. size: 3"
 → "The infrastructure buildout for AI is just beginning..." — Jensen Huang, CEO, NVDA
 
-"Find bearish and risk quotes from NVIDIA about sector risks and headwinds. Sentiment: negative. Size: 3"
+"Find bearish and risk quotes from NVIDIA about sector risks and headwinds. companiesIds: [<NVDA_ID>]. DLSentiment: ['negative']. documentTypes: Earnings Calls. size: 3"
 → "Export restrictions create meaningful headwinds..." — Colette Kress, CFO, NVDA
 
-"Find bullish executive quotes from Eli Lilly about GLP-1 growth, obesity drugs, and pipeline momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
+"Find bullish executive quotes from Eli Lilly about GLP-1 growth, obesity drugs, and pipeline momentum. companiesIds: [<LLY_ID>]. speakerTypes: Executives. DLSentiment: ['positive']. documentTypes: Earnings Calls. size: 3"
 → "GLP-1 demand continues to outpace our manufacturing capacity..." — David Ricks, CEO, LLY
 
-"Find bearish and risk quotes from Eli Lilly about pricing regulation and challenges. Sentiment: negative. Size: 3"
+"Find bearish and risk quotes from Eli Lilly about pricing regulation and challenges. companiesIds: [<LLY_ID>]. DLSentiment: ['negative']. documentTypes: Earnings Calls. size: 3"
 → "Medicare pricing negotiations create long-term uncertainty for our portfolio..." — Anat Ashkenazi, CFO, LLY
 ```
 

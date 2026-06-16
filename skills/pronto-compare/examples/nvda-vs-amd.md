@@ -20,8 +20,8 @@
 ## Step 2: Batch 1 — Foundation (both companies simultaneously)
 
 ```
-getCompanyDescription(companyNameOrTicker: "NVDA")
-getCompanyDescription(companyNameOrTicker: "AMD")
+getCompanies(companyNameOrTicker: "NVDA")
+getCompanies(companyNameOrTicker: "AMD")
 ```
 
 **Saved:**
@@ -33,27 +33,16 @@ getCompanyDescription(companyNameOrTicker: "AMD")
 ## Step 3: Batch 2 — Core Data (all calls for both companies simultaneously)
 
 ```
-getCompanyDocuments("NVIDIA",  documentTypes: ["Earnings Calls"], limit: 4)
-getCompanyDocuments("AMD",     documentTypes: ["Earnings Calls"], limit: 4)
+getDocuments(companiesIds: ["1001", "1002"], documentTypes: ["Earnings Calls"], size: 4, excludeFutureDocuments: true)  → 1 call, both companies
 
-getStockChange(companyId: 1001, sinceDay: "2026-01-01", untilDay: "2026-04-06")  → NVDA YTD
-getStockChange(companyId: 1001, sinceDay: "2025-10-06", untilDay: "2026-04-06") → NVDA 6M
-getStockChange(companyId: 1001, sinceDay: "2025-04-06", untilDay: "2026-04-06") → NVDA 1Y
-getStockChange(companyId: 1002, sinceDay: "2026-01-01", untilDay: "2026-04-06")  → AMD YTD
-getStockChange(companyId: 1002, sinceDay: "2025-10-06", untilDay: "2026-04-06") → AMD 6M
-getStockChange(companyId: 1002, sinceDay: "2025-04-06", untilDay: "2026-04-06") → AMD 1Y
+getStockChange(companiesIds: ["1001", "1002"], dateRange: {gte: "2026-01-01", lte: "now"})  → YTD both
+getStockChange(companiesIds: ["1001", "1002"], dateRange: {gte: "now-6M/d",   lte: "now"})  → 6M both
+getStockChange(companiesIds: ["1001", "1002"], dateRange: {gte: "now-1y/d",   lte: "now"})  → 1Y both
 
-getPredictions(companyId: 1001, metric: "revenue")
-getPredictions(companyId: 1001, metric: "epsGaap")
-getPredictions(companyId: 1001, metric: "ebitda")
-getPredictions(companyId: 1001, metric: "freeCashFlow")
-getPredictions(companyId: 1002, metric: "revenue")
-getPredictions(companyId: 1002, metric: "epsGaap")
-getPredictions(companyId: 1002, metric: "ebitda")
-getPredictions(companyId: 1002, metric: "freeCashFlow")
+getCompanyConsensus(companiesIds: ["1001", "1002"], metrics: ["revenue", "epsGaap", "ebitda", "freeCashFlow"], timeframeInterval: "quarter")  → 1 call, both companies
 
-getTrends(companyName: "NVIDIA", documentTypes: ["Earnings Calls"], sinceDay: "2025-04-06", untilDay: "2026-04-06", limit: 10)
-getTrends(companyName: "AMD",    documentTypes: ["Earnings Calls"], sinceDay: "2025-04-06", untilDay: "2026-04-06", limit: 10)
+getTrends(companiesIds: ["1001"], documentTypes: ["Earnings Calls"], dateRange: {gte: "now-1y/d", lte: "now"}, limit: 10)
+getTrends(companiesIds: ["1002"], documentTypes: ["Earnings Calls"], dateRange: {gte: "now-1y/d", lte: "now"}, limit: 10)
 ```
 
 **Saved from Batch 2:**
@@ -76,34 +65,35 @@ getTrends(companyName: "AMD",    documentTypes: ["Earnings Calls"], sinceDay: "2
 ## Step 4: Batch 3 — Deep Analysis (all calls for both companies simultaneously)
 
 ```
-getAnalytics("NVIDIA", documentIDs: ["t_n1"], analyticsType: ["scores","eventTypes","aspects","patternSentiment"])
-getAnalytics("NVIDIA", documentIDs: ["t_n2"], ...)
-getAnalytics("NVIDIA", documentIDs: ["t_n3"], ...)
-getAnalytics("NVIDIA", documentIDs: ["t_n4"], ...)
-getAnalytics("AMD",    documentIDs: ["t_a1"], ...)
-getAnalytics("AMD",    documentIDs: ["t_a2"], ...)
-getAnalytics("AMD",    documentIDs: ["t_a3"], ...)
-getAnalytics("AMD",    documentIDs: ["t_a4"], ...)
+getAnalytics(companiesIds: ["1001"], transcriptsIds: ["t_n1"], analyticsType: ["scores","eventTypes","aspects","patternSentiment"])
+getAnalytics(companiesIds: ["1001"], transcriptsIds: ["t_n2"], ...)
+getAnalytics(companiesIds: ["1001"], transcriptsIds: ["t_n3"], ...)
+getAnalytics(companiesIds: ["1001"], transcriptsIds: ["t_n4"], ...)
+getAnalytics(companiesIds: ["1002"], transcriptsIds: ["t_a1"], ...)
+getAnalytics(companiesIds: ["1002"], transcriptsIds: ["t_a2"], ...)
+getAnalytics(companiesIds: ["1002"], transcriptsIds: ["t_a3"], ...)
+getAnalytics(companiesIds: ["1002"], transcriptsIds: ["t_a4"], ...)
 
-getStockPrices(companyId: 1001, fromDate: "2025-04-26", toDate: "2025-05-03", interval: "day") → NVDA Q1 reaction
-getStockPrices(companyId: 1001, fromDate: "2025-07-29", toDate: "2025-08-05", interval: "day") → NVDA Q2 reaction
-getStockPrices(companyId: 1001, fromDate: "2025-10-28", toDate: "2025-11-04", interval: "day") → NVDA Q3 reaction
-getStockPrices(companyId: 1001, fromDate: "2026-01-27", toDate: "2026-02-03", interval: "day") → NVDA Q4 reaction
-getStockPrices(companyId: 1002, fromDate: "2025-04-28", toDate: "2025-05-05", interval: "day") → AMD Q1 reaction
-getStockPrices(companyId: 1002, fromDate: "2025-07-28", toDate: "2025-08-04", interval: "day") → AMD Q2 reaction
-getStockPrices(companyId: 1002, fromDate: "2025-10-27", toDate: "2025-11-03", interval: "day") → AMD Q3 reaction
-getStockPrices(companyId: 1002, fromDate: "2026-01-26", toDate: "2026-02-02", interval: "day") → AMD Q4 reaction
+getStockPrices(companiesIds: ["1001"], dateRange: {gte: "2025-04-26", lte: "2025-05-03"}, interval: "day") → NVDA Q1 reaction
+getStockPrices(companiesIds: ["1001"], dateRange: {gte: "2025-07-29", lte: "2025-08-05"}, interval: "day") → NVDA Q2 reaction
+getStockPrices(companiesIds: ["1001"], dateRange: {gte: "2025-10-28", lte: "2025-11-04"}, interval: "day") → NVDA Q3 reaction
+getStockPrices(companiesIds: ["1001"], dateRange: {gte: "2026-01-27", lte: "2026-02-03"}, interval: "day") → NVDA Q4 reaction
+getStockPrices(companiesIds: ["1002"], dateRange: {gte: "2025-04-28", lte: "2025-05-05"}, interval: "day") → AMD Q1 reaction
+getStockPrices(companiesIds: ["1002"], dateRange: {gte: "2025-07-28", lte: "2025-08-04"}, interval: "day") → AMD Q2 reaction
+getStockPrices(companiesIds: ["1002"], dateRange: {gte: "2025-10-27", lte: "2025-11-03"}, interval: "day") → AMD Q3 reaction
+getStockPrices(companiesIds: ["1002"], dateRange: {gte: "2026-01-26", lte: "2026-02-02"}, interval: "day") → AMD Q4 reaction
 
-getSpeakers("NVIDIA", speakerTypes: ["Executives"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
-getSpeakers("NVIDIA", speakerTypes: ["Executives_CEO"], limit: 3, documentTypes: ["Earnings Calls"])
-getSpeakers("NVIDIA", speakerTypes: ["Executives_CFO"], limit: 3, documentTypes: ["Earnings Calls"])
-getSpeakers("NVIDIA", speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
-getSpeakerCompanies("NVIDIA", speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 10)
-getSpeakers("AMD", speakerTypes: ["Executives"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
-getSpeakers("AMD", speakerTypes: ["Executives_CEO"], limit: 3, documentTypes: ["Earnings Calls"])
-getSpeakers("AMD", speakerTypes: ["Executives_CFO"], limit: 3, documentTypes: ["Earnings Calls"])
-getSpeakers("AMD", speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
-getSpeakerCompanies("AMD", speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 10)
+getSpeakers(entityType: "speaker", companiesIds: ["1001"], speakerTypes: ["Executives"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "speaker", companiesIds: ["1001"], speakerTypes: ["Executives_CEO"], limit: 3, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "speaker", companiesIds: ["1001"], speakerTypes: ["Executives_CFO"], limit: 3, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "speaker", companiesIds: ["1001"], speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "company", companiesIds: ["1001"], speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 10)
+getSpeakers(entityType: "speaker", companiesIds: ["1002"], speakerTypes: ["Executives"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "speaker", companiesIds: ["1002"], speakerTypes: ["Executives_CEO"], limit: 3, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "speaker", companiesIds: ["1002"], speakerTypes: ["Executives_CFO"], limit: 3, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "speaker", companiesIds: ["1002"], speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "company", companiesIds: ["1002"], speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 10)
+getDocumentSummary(focus: "key risks and risk factors mentioned by management", transcriptsIds: ["t_n4", "t_a4"], corpus: ["S&P Transcripts"])  → 1 call, both latest transcripts
 ```
 
 **Saved from Batch 3:**
@@ -130,12 +120,12 @@ getSpeakerCompanies("AMD", speakerTypes: ["Analysts"], sortBy: "sentiment", sort
 
 **`pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`), all 6 in parallel:
 ```
-"Find bullish executive quotes for NVIDIA about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
-"Find bearish and risk quotes for NVIDIA about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
-"Find notable analyst questions for NVIDIA. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
-"Find bullish executive quotes for AMD about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
-"Find bearish and risk quotes for AMD about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
-"Find notable analyst questions for AMD. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
+"Find bullish executive quotes for NVIDIA about growth outlook and guidance. companiesIds: [1001]. speakerTypes: Executives. DLSentiment: ['positive']. documentTypes: Earnings Calls. size: 3"
+"Find bearish and risk quotes for NVIDIA about risks, challenges, and headwinds. companiesIds: [1001]. DLSentiment: ['negative']. documentTypes: Earnings Calls. size: 3"
+"Find notable analyst questions for NVIDIA. companiesIds: [1001]. sections: EarningsCalls_Question. documentTypes: Earnings Calls. size: 3"
+"Find bullish executive quotes for AMD about growth outlook and guidance. companiesIds: [1002]. speakerTypes: Executives. DLSentiment: ['positive']. documentTypes: Earnings Calls. size: 3"
+"Find bearish and risk quotes for AMD about risks, challenges, and headwinds. companiesIds: [1002]. DLSentiment: ['negative']. documentTypes: Earnings Calls. size: 3"
+"Find notable analyst questions for AMD. companiesIds: [1002]. sections: EarningsCalls_Question. documentTypes: Earnings Calls. size: 3"
 ```
 
 **Saved quotes:**

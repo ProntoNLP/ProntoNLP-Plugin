@@ -25,14 +25,13 @@ All callers pass these top-level fields:
 | Field | Required | Description |
 |-------|----------|-------------|
 | `artifact_type` | yes | Dispatch key: `live_marketpulse` or `live_feed` |
-| `org` | yes | Organization slug for ProntoNLP links |
 | `title` | yes | Artifact title |
 | `data` | yes | Structured payload (shape defined per type below) |
 | `refresh` | yes | Refresh recipe (onOpen, allowManualRefresh, tools, params) |
 | `subtitle` | no | Optional header subtitle |
 | `narrative` | no | Optional pre-written summary text |
 
-If `artifact_type`, `org`, `data`, or `refresh` is missing → return: `ERROR: missing required field <field>`
+If `artifact_type`, `data`, or `refresh` is missing → return: `ERROR: missing required field <field>`
 
 ## 3. What "Live" Means
 
@@ -74,7 +73,7 @@ Handle exactly as the previous dedicated `pronto-marketpulse-live-artifact` agen
 
 **Expansion note:** If `data.meta.expansions` is present and non-empty, render a compact inline note below the relevant leaderboard card: "Date range widened to [widenedSinceDay] for sparse data." Do not render it as a prominent warning — keep it subtle.
 
-**Company links:** Use `org` from the payload for all company links: `https://{org}.prontonlp.com/#/ref/$COMPANY{companyId}`. All links `target="_blank" rel="noopener noreferrer"`. Never hardcode `{org}`.
+**Company links:** The `companyName` field arrives from the API as `[Company Name](url)` — parse and render as `<a href="url" target="_blank" rel="noopener noreferrer">Company Name</a>`. If it arrives as plain text (no embedded link), render as plain text. Never construct URLs from `org` or `companyId`.
 
 ### Data shape
 
@@ -215,7 +214,7 @@ data:
 - Timeframe label: "Last 90 days · Earnings Calls"
 - Table: Name | Hits | Score | Change
 - Change column: `+12.4%` / `-3.1%` colored by sign
-- Rows linkable to ProntoNLP (use `org` slug)
+- Trend `name` field arrives as `[Name](url)` if it has an embedded link — parse and render as `<a>` tag. If plain text, render as plain text. Never construct URLs.
 - Scrollable, up to 20 rows
 
 **Documents section:**
@@ -240,7 +239,7 @@ data:
 
 All `<a>` tags: `target="_blank" rel="noopener noreferrer"`
 
-Never hardcode `{org}` — substitute from payload field.
+Never construct URLs — citation links and company links are pre-embedded in the data fields as `[Label](url)`.
 
 ### Output
 

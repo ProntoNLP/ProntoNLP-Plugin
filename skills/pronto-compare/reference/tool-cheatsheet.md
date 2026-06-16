@@ -6,9 +6,9 @@ This file documents the exact MCP tools, parameters, and metrics for each entity
 
 ## Entity Types
 
-| Type | Identified by | Batch 1 | Color |
+| Type | Identifies as | Batch 1 | Color |
 |------|--------------|---------|-------|
-| **Company** | Name or ticker | `getCompanyDescription` (API call) | A=`#3B82F6`, B=`#8B5CF6`, C=`#F59E0B`, D=`#14B8A6`, E=`#EC4899` |
+| **Company** | Name or ticker | `getCompanies(companyNameOrTicker: ...)` | A=`#3B82F6`, B=`#8B5CF6`, C=`#F59E0B`, D=`#14B8A6`, E=`#EC4899` |
 | **Sector** | Sector name normalized to exact API string | No API call — normalize only | Same color scheme |
 
 ---
@@ -36,14 +36,27 @@ Use `sectors: ["<Exact API string>"]` in all sector-level tool calls. Always an 
 
 ---
 
+## Date Format
+
+All tools use `dateRange: { gte, lte }` — never `sinceDay`/`untilDay`.
+
+| Scope | gte | lte |
+|-------|-----|-----|
+| Default (past year) | `now-1y/d` | `now` |
+| "past quarter" | `now-90d/d` | `now` |
+| "past 6 months" | `now-6M/d` | `now` |
+| YTD | `<YYYY>-01-01` | `now` |
+
+---
+
 ## Batch Execution Plan
 
 | Batch | When | Company actions | Sector actions |
 |-------|------|----------------|----------------|
-| 1 | First | `getCompanyDescription` ×N companies | Normalize sector string — no API call |
-| 2 | After Batch 1 | `getCompanyDocuments` + `getStockChange` ×3 + `getPredictions` ×4 + `getTrends` | `getAnalytics` + `getTrends` + `getTopMovers` |
-| 3 | After Batch 2 | `getAnalytics` ×4 + `getStockPrices` ×4 + `getSpeakers` ×4 + `getSpeakerCompanies` | `searchTopCompanies` ×2 + `getSpeakers` (top co.) + `getSpeakerCompanies` (top co.) |
-| 4 | After Batch 3 | `search` ×3 | `search` ×2 (via top company in sector) |
+| 1 | First | `getCompanies(companyNameOrTicker: ...)` ×N companies | Normalize sector string — no API call |
+| 2 | After Batch 1 | `getDocuments` + `getStockChange` ×3 + `getCompanyConsensus` + `getTrends` | `getAnalytics` + `getTrends` + `getTopMovers` |
+| 3 | After Batch 2 | `getAnalytics` ×4 + `getStockPrices` ×4 + `getSpeakers(entityType: 'speaker')` ×4 + `getSpeakers(entityType: 'company')` + `getDocumentSummary(focus: 'key risks')` | `getCompanies(companySearchMode:'byDocuments')` ×2 + `getSpeakers` (top co.) |
+| 4 | After Batch 3 | `searchSentences` ×3 (via pronto-search-summarizer) | `searchSentences` ×2 (via top company in sector) |
 
 **Fire all calls within a batch simultaneously — never sequence within a batch.**
 
@@ -51,11 +64,11 @@ Use `sectors: ["<Exact API string>"]` in all sector-level tool calls. Always an 
 
 ## Batch 1 — Foundation
 
-### Companies: `getCompanyDescription`
+### Companies: `getCompanies`
 ```
-getCompanyDescription(companyNameOrTicker: "[name or ticker]")
+getCompanies(companyNameOrTicker: "[name or ticker]")
 ```
-**Save:** `companyId` (required for all stock calls), `sector`, `subSector`, `risks[]`
+**Save:** `companyId`, `sector`, `name`, `description_text`
 
 ### Sectors: No API call
 Save the normalized exact API string. Mark entity type as `sector`.
@@ -68,52 +81,53 @@ All Batch 2 calls fire simultaneously across all entities.
 
 ### Companies
 
-**`getCompanyDocuments`**
+**`getDocuments`** — 1 call for ALL companies simultaneously:
 ```
-getCompanyDocuments(
-  companyName: "[Full name]",
+getDocuments(
+  companiesIds: ["[co1]", "[co2]", "[co3]", ...],
   documentTypes: ["Earnings Calls"],
-  limit: 4
+  size: 4,
+  excludeFutureDocuments: true
 )
 ```
-Save: `transcriptId[]`, call dates — used as `documentIDs` in Batch 3 `getAnalytics`
+Save: `transcriptId` per call date per company — used as `transcriptsIds` in Batch 3 `getAnalytics`
 
 ---
 
-**`getStockChange`** — 3 calls per company:
+**`getStockChange`** — 3 calls total (one per period), each with ALL company IDs:
 ```
-getStockChange(companyId: [id], sinceDay: "[YYYY-01-01]", untilDay: "[today]")    → YTD
-getStockChange(companyId: [id], sinceDay: "[today minus 6M]", untilDay: "[today]") → 6M
-getStockChange(companyId: [id], sinceDay: "[today minus 1Y]", untilDay: "[today]") → 1Y
+getStockChange(companiesIds: ["[co1]", "[co2]", ...], dateRange: {gte: "[YYYY]-01-01", lte: "now"})    → YTD all
+getStockChange(companiesIds: ["[co1]", "[co2]", ...], dateRange: {gte: "now-6M/d", lte: "now"})       → 6M all
+getStockChange(companiesIds: ["[co1]", "[co2]", ...], dateRange: {gte: "now-1y/d", lte: "now"})       → 1Y all
 ```
-Save: `stockChangeYTD`, `stockChange6M`, `stockChange1Y`
+Save per company: `stockChangeYTD`, `stockChange6M`, `stockChange1Y`
 
 ---
 
-**`getPredictions`** — 4 calls per company:
+**`getCompanyConsensus`** — 1 call for ALL companies simultaneously:
 ```
-getPredictions(companyId: [id], metric: "revenue")
-getPredictions(companyId: [id], metric: "epsGaap")
-getPredictions(companyId: [id], metric: "ebitda")
-getPredictions(companyId: [id], metric: "freeCashFlow")
+getCompanyConsensus(
+  companiesIds: ["[co1]", "[co2]", ...],
+  metrics: ["revenue", "epsGaap", "ebitda", "freeCashFlow"],
+  timeframeInterval: "quarter"
+)
 ```
-Save: `revenueGrowthFwd`, `epsGaapFwd`, `ebitdaFwd`, `fcfFwd`
+Save per company: `revenueGrowthFwd`, `epsGaapFwd`, `ebitdaFwd`, `fcfFwd`
 
 ---
 
 **`getTrends`** — 1 call per company:
 ```
 getTrends(
-  companyName: "[Full name]",
+  companiesIds: ["[companyId]"],
   documentTypes: ["Earnings Calls"],
-  sinceDay: "[today minus 1Y]",
-  untilDay: "[today]",
+  dateRange: { gte: "now-1y/d", lte: "now" },
   limit: 10
 )
 ```
 Save: Top 3 topics by score, fastest-rising topic (highest `change %`), fastest-declining
 
-⚠️ Do NOT pass `query` or `topicSearchQuery` to `getTrends`.
+⚠️ Do NOT pass `query` to `getTrends`. `topicSearchQuery` is accepted if you want to scope by subject area.
 
 ---
 
@@ -125,14 +139,13 @@ getAnalytics(
   sectors: ["<Exact Sector String>"],
   documentTypes: ["Earnings Calls"],
   analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment"],
-  sinceDay: "[today minus 1Y]",
-  untilDay: "[today]"
+  dateRange: { gte: "now-1y/d", lte: "now" }
 )
 ```
 Save:
 - `sentimentScore` (aggregate)
 - `investmentScore` (aggregate raw value)
-- `sentimentDirection`: RISING/FALLING/FLAT (compare to prior year if available)
+- `sentimentDirection`: RISING/FALLING/FLAT
 - `investmentDirection`: RISING/FALLING/FLAT
 - `topPositiveEvents[]` — name + hit count
 - `topNegativeEvents[]` — name + hit count
@@ -145,8 +158,7 @@ Save:
 getTrends(
   sectors: ["<Exact Sector String>"],
   documentTypes: ["Earnings Calls"],
-  sinceDay: "[today minus 1Y]",
-  untilDay: "[today]",
+  dateRange: { gte: "now-1y/d", lte: "now" },
   limit: 10
 )
 ```
@@ -161,16 +173,15 @@ getTopMovers(
   documentTypes: ["Earnings Calls"],
   sortBy: ["investmentScore", "sentimentScore", "stockChange", "investmentScoreChange", "sentimentScoreChange"],
   limit: 10,
-  sinceDay: "[today minus 1Y]",
-  untilDay: "[today]"
+  dateRange: { gte: "now-1y/d", lte: "now" }
 )
 ```
 Save:
-- `topByInvestment[]` — company name + raw score
-- `topBySentiment[]` — company name + score
+- `topByInvestment[]` — company name + raw score + `id`
+- `topBySentiment[]` — company name + score + `id`
 - `topByStockChange[]` — company name + % change
-- `underperformers[]` — companies with high investment score + weak stock (divergence signal)
-- `topCompanyName` — #1 by investment score (used as representative in Batch 3 and 4)
+- `underperformers[]`
+- `topCompanyId` — `id` of #1 by investment score (used in Batch 3 and 4)
 
 ---
 
@@ -180,15 +191,15 @@ All Batch 3 calls fire simultaneously across all entities.
 
 ### Companies
 
-**`getAnalytics`** — 1 call **per quarter** (do NOT combine quarters into one call):
+**`getAnalytics`** — 1 call **per quarter**:
 ```
 getAnalytics(
-  companyName: "[name]",
-  documentIDs: ["[transcriptId_Q1]"],
+  companiesIds: ["[companyId]"],
+  transcriptsIds: ["[transcriptId_Q1]"],
   analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment"]
 )
 ```
-Repeat for Q2, Q3, Q4 using transcript IDs from Batch 2.
+Repeat for Q2, Q3, Q4 using transcriptIds from Batch 2.
 
 Save per quarter: `sentimentScore_Qn`, `investmentScore_Qn`
 
@@ -201,9 +212,8 @@ Compute:
 **`getStockPrices`** — 1 call per quarter per company (7-day window around call date):
 ```
 getStockPrices(
-  companyId: [id],
-  fromDate: "[call date minus 2 days]",
-  toDate:   "[call date plus 5 days]",
+  companiesIds: ["[companyId]"],
+  dateRange: { gte: "[call date minus 2 days]", lte: "[call date plus 5 days]" },
   interval: "day"
 )
 ```
@@ -213,79 +223,82 @@ Compute: `positiveCallCount` = count of quarters where `stockReaction > 0`
 
 ---
 
-**`getSpeakers`** — 4 calls per company:
+**`getDocumentSummary`** — 1 call for ALL companies (latest transcript per company, max 5):
 ```
-getSpeakers(companyName, speakerTypes: ["Executives"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
-getSpeakers(companyName, speakerTypes: ["Executives_CEO"], limit: 3, documentTypes: ["Earnings Calls"])
-getSpeakers(companyName, speakerTypes: ["Executives_CFO"], limit: 3, documentTypes: ["Earnings Calls"])
-getSpeakers(companyName, speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
+getDocumentSummary(
+  focus: "key risks and risk factors mentioned by management",
+  transcriptsIds: ["[latestTx_co1]", "[latestTx_co2]", "[latestTx_co3]", ...],
+  corpus: ["S&P Transcripts"]
+)
 ```
-Save: `execAvgSentiment`, `ceoSentiment`, `cfoSentiment`, `analystAvgSentiment`
+⚠️ Max 5 transcripts per call. Results are keyed by transcript — attribute risks back to the correct company.
 
-Compute: `execAnalystGap` = execAvg − analystAvg
+Save per company: `risks[]` — array of {text, sources} risk factors
 
 ---
 
-**`getSpeakerCompanies`** — 1 call per company:
+**`getSpeakers(entityType: 'speaker')`** — 4 calls per company:
 ```
-getSpeakerCompanies(companyName, speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 10)
+getSpeakers(entityType: "speaker", companiesIds: ["[companyId]"], speakerTypes: ["Executives"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "speaker", companiesIds: ["[companyId]"], speakerTypes: ["Executives_CEO"], limit: 3, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "speaker", companiesIds: ["[companyId]"], speakerTypes: ["Executives_CFO"], limit: 3, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "speaker", companiesIds: ["[companyId]"], speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
 ```
-Save: `mostBullishAnalystFirm`, `mostBearishAnalystFirm` (name + avg score)
+Save: `execAvgSentiment`, `ceoSentiment`, `cfoSentiment`, `analystAvgSentiment`
+
+---
+
+**`getSpeakers(entityType: 'company')`** — 1 call per company:
+```
+getSpeakers(
+  entityType: "company",
+  companiesIds: ["[companyId]"],
+  speakerTypes: ["Analysts"],
+  sortBy: "sentiment",
+  sortOrder: "desc",
+  limit: 10
+)
+```
+Save: `mostBullishAnalystFirm`, `mostBearishAnalystFirm`
 
 ---
 
 ### Sectors
 
-Use `topCompanyName` (from Batch 2 `getTopMovers` #1 by investment score) for all Batch 3 sector calls.
+Use `topCompanyId` (from Batch 2 `getTopMovers` #1 by investment score) for all Batch 3 sector calls.
 
-**`searchTopCompanies`** — 2 calls per sector (one per event type):
+**`getCompanies(companySearchMode: 'byDocuments')`** — 2 calls per sector (one per event type):
 ```
-searchTopCompanies(
+getCompanies(
   sectors: ["<Exact Sector String>"],
   eventTypes: ["GrowthDriver"],
-  limit: 5,
-  sinceDay: "[today minus 1Y]",
-  untilDay: "[today]"
+  companySearchMode: 'byDocuments',
+  dateRange: { gte: "now-1y/d", lte: "now" }
 )
-```
-```
-searchTopCompanies(
+getCompanies(
   sectors: ["<Exact Sector String>"],
   eventTypes: ["RiskFactor"],
-  limit: 5,
-  sinceDay: "[today minus 1Y]",
-  untilDay: "[today]"
+  companySearchMode: 'byDocuments',
+  dateRange: { gte: "now-1y/d", lte: "now" }
 )
 ```
 Save: `topGrowthCompanies[]`, `topRiskCompanies[]`
 
-One `eventType` per `searchTopCompanies` call — never combine multiple event types into one call.
+One `eventType` per call — never combine multiple event types into one call.
 
 ---
 
-**`getSpeakers`** — 1 call per sector (for top company):
+**`getSpeakers(entityType: 'speaker')`** — 1 call per sector (for top company):
 ```
 getSpeakers(
-  companyName: "[topCompanyName]",
+  entityType: "speaker",
+  companiesIds: ["[topCompanyId]"],
   speakerTypes: ["Executives"],
   sortBy: "sentiment", sortOrder: "desc",
   limit: 10, documentTypes: ["Earnings Calls"]
 )
 ```
-Save: `sectorBullishExec` = most bullish exec in the sector's top company
-
----
-
-**`getSpeakerCompanies`** — 1 call per sector (for top company):
-```
-getSpeakerCompanies(
-  companyName: "[topCompanyName]",
-  speakerTypes: ["Analysts"],
-  sortBy: "sentiment", sortOrder: "desc",
-  limit: 10
-)
-```
-Save: `sectorBullishAnalystFirm`
+Save: `sectorBullishExec`
 
 ---
 
@@ -295,15 +308,15 @@ Save: `sectorBullishAnalystFirm`
 
 **Companies — 3 tasks per company:**
 ```
-"Find bullish executive quotes for [company] about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
-"Find bearish and risk quotes for [company] about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
-"Find notable analyst questions for [company]. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
+"Find bullish executive quotes for [company]. companiesIds: [companyId]. speakerTypes: Executives. DLSentiment: ['positive']. documentTypes: Earnings Calls. size: 3"
+"Find bearish and risk quotes for [company]. companiesIds: [companyId]. DLSentiment: ['negative']. documentTypes: Earnings Calls. size: 3"
+"Find notable analyst questions for [company]. companiesIds: [companyId]. sections: EarningsCalls_Question. documentTypes: Earnings Calls. size: 3"
 ```
 
 **Sectors — 2 tasks per sector (via top company):**
 ```
-"Find bullish executive quotes from [topCompanyName] about sector growth and momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
-"Find bearish and risk quotes from [topCompanyName] about sector risks and headwinds. Sentiment: negative. Size: 3"
+"Find bullish executive quotes. companiesIds: [topCompanyId]. speakerTypes: Executives. DLSentiment: ['positive']. size: 3"
+"Find bearish and risk quotes. companiesIds: [topCompanyId]. DLSentiment: ['negative']. size: 3"
 ```
 
 Save: 1 bullish exec quote, 1 risk quote, 1 notable analyst question per company; 1 bullish + 1 risk quote per sector
@@ -321,8 +334,8 @@ Save: 1 bullish exec quote, 1 risk quote, 1 notable analyst question per company
 | Stock YTD | `stockChangeYTD` | Highest % |
 | Earnings Reaction | `positiveCallCount` / quarters | Most positive |
 | Analyst Consensus | `analystAvgSentiment` | Highest |
-| Revenue (fwd) | `revenueGrowthFwd` | Highest |
-| EPS (fwd) | `epsGaapFwd` | Highest |
+| Revenue (fwd) | `revenueGrowthFwd` from getCompanyConsensus | Highest |
+| EPS (fwd) | `epsGaapFwd` from getCompanyConsensus | Highest |
 | Exec Confidence | `execAvgSentiment` | Highest |
 | Risk Profile | risk count + severity | Fewest/least severe |
 
@@ -334,7 +347,7 @@ Save: 1 bullish exec quote, 1 risk quote, 1 notable analyst question per company
 | Investment Score | Aggregate `investmentScore` raw | Highest |
 | Sentiment Direction | RISING/FALLING/FLAT | RISING beats FLAT beats FALLING |
 | Investment Direction | RISING/FALLING/FLAT | RISING beats FLAT beats FALLING |
-| Stock Performance | Top mover `stockChangeYTD` | Highest % (note: proxy for sector) |
+| Stock Performance | Top mover `stockChangeYTD` | Highest % |
 | Theme Momentum | Fastest-rising topic `change %` | Highest % |
 | Risk Profile | `topNegativeEvents` hit count | Fewer hits = lower risk |
 
@@ -346,9 +359,26 @@ Score all entities on the 7 universal dimensions. For company-only rows (Earning
 
 ## Divergence Signal Rule
 
-Flag when: `investmentScore` is RISING (or above sector average) **AND** stock performance is weak (negative or significantly below peers).
+Flag when: `investmentScore` is RISING (or above sector average) **AND** stock performance is weak.
 
 Format: "⚠️ Potential re-rating signal: [Entity] — investment score RISING despite stock [+X% / down X%]."
+
+---
+
+## Multi-ID Batching Rules
+
+| Tool | Batching behavior |
+|------|------------------|
+| `getDocuments` | **1 call** with all company IDs |
+| `getStockChange` | **1 call per period** with all company IDs |
+| `getCompanyConsensus` | **1 call** with all company IDs |
+| `getDocumentSummary` | **1 call** with all latest transcript IDs — **max 5 transcripts** |
+| `searchSentences` | Pass all `transcriptsIds` in one call |
+| `getTrends` (per company) | **Keep separate** — needs per-company topic breakdown |
+| `getSpeakers` (per company) | **Keep separate** — needs per-company attribution |
+| `getAnalytics` (per quarter) | **Keep separate** — needs per-quarter attribution |
+| `getStockPrices` (earnings reaction) | **Keep separate** — each call needs a different date window |
+| `showDocumentMindMap` | ⚠️ Takes a **single string** `transcriptId`, NOT an array |
 
 ---
 
@@ -358,10 +388,12 @@ Format: "⚠️ Potential re-rating signal: [Entity] — investment score RISING
 
 **Document Types**: `Earnings Calls` | `10-K` | `10-Q`
 
-**Prediction Metrics**: `revenue` | `epsGaap` | `ebitda` | `netIncomeGaap` | `freeCashFlow` | `capitalExpenditure`
+**getCompanyConsensus Metrics**: `revenue` | `epsGaap` | `ebitda` | `netIncomeGaap` | `freeCashFlow` | `capitalExpenditure`
+
+**getDocumentSummary `focus`**: free-form string describing what to summarize. Examples: `"key risks and risk factors"` · `"forward guidance and predictions"` · `"analyst questions and management responses"` · `"revenue growth commentary"`
 
 **Analytics Types**: `scores` | `eventTypes` | `aspects` | `patternSentiment` | `importance`
 
 **Sentiment Score Range**: −1.0 (very negative) → +1.0 (very positive). Above +0.10 = notably positive. Below −0.10 = notably negative.
 
-**Investment Score**: Raw value from API. Higher = more attractive. Compare entities relative to each other — do not apply fixed thresholds. `investmentScore` and `investmentScoreChange` are two distinct fields — never conflate.
+**Investment Score**: Raw value from API. Higher = more attractive. Compare entities relative to each other.

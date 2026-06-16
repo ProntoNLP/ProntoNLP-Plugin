@@ -40,12 +40,12 @@ This file defines what a correct, high-quality response from `pronto-sector-inte
 | Criterion | Pass condition |
 |-----------|---------------|
 | Batch 1 fires simultaneously | `getTopMovers`, `getTrends`, `getAnalytics` all invoked in parallel |
-| Batch 2 fires simultaneously | All `searchTopCompanies` calls and `searchSectors` fire in parallel |
-| Batch 3 fires simultaneously | All `getSpeakers` and `getSpeakerCompanies` calls fire in parallel |
-| Batch 4 fires simultaneously | All `search` calls fire in parallel |
+| Batch 2 fires simultaneously | All `getCompanies(companySearchMode:'byDocuments')` calls and `getSectors` calls fire in parallel |
+| Batch 3 fires simultaneously | All `getSpeakers(entityType: 'speaker')` and `getSpeakers(entityType: 'company')` calls fire in parallel |
+| Batch 4 fires simultaneously | All `searchSentences` calls fire in parallel |
 | Batches run in sequence | Batch 2 starts only after Batch 1 completes; Batch 3 after Batch 1; etc. |
-| `getTrends` has no `query` param | `getTrends` is never called with a `query` or `topicSearchQuery` field |
-| `searchTopCompanies` one event per call | Never merges multiple event types into one `searchTopCompanies` call |
+| `getTrends` has no `query` param | `getTrends` is never called with a bare `query` field (use `topicSearchQuery` for subject-area scoping) |
+| `getCompanies(companySearchMode:'byDocuments')` one event per call | Never merges multiple event types into one call |
 | `sectors` always an array | `sectors: ["Information Technology"]` — never `sectors: "Information Technology"` |
 
 ---
@@ -92,7 +92,7 @@ This file defines what a correct, high-quality response from `pronto-sector-inte
 | CSS design tokens used | `var(--text-primary)`, `var(--bg-page)` etc. — not hardcoded colors for layout |
 | Signal colors correct | Green `#6AA64A`, red `#ED4545` for RISING/FALLING and positive/negative signals |
 | RISING badge green, FALLING badge red | Direction badges use correct background colors |
-| Company links formatted correctly | Links use `https://{org}.prontonlp.com/#/ref/$COMPANY{id}` format |
+| Company links formatted correctly | `companyName` field arrives as `[Name](url)` — renderer renders as anchor tag |
 | Leaderboard cards in responsive grid | `grid-template-columns: repeat(auto-fit, minmax(...))` or equivalent |
 | Potential Buy Signals card present | Shows high-score companies with falling stock |
 
@@ -119,10 +119,10 @@ This file defines what a correct, high-quality response from `pronto-sector-inte
 | Sector name not recognized | Tries top-level sector if sub-sector fails; notes mapping used |
 | Fewer than 5 companies in `getTopMovers` | Widens date range and retries; notes the expansion |
 | `getAnalytics` returns no event types | Tries without `documentTypes` filter; notes it |
-| `searchTopCompanies` empty for event type | Skips that event; notes it; proceeds with remaining |
+| `getCompanies(companySearchMode:'byDocuments')` empty for event type | Skips that event; notes it; proceeds with remaining |
 | `getTrends` fewer than 10 results | Widens date range; removes `documentTypes` filter |
 | `getSpeakers` returns no results | Tries without date filter; if still empty, states "No speaker data available" |
-| No quotes from `search` | States "No matching quotes found" — never fabricates |
+| No quotes from `searchSentences` | States "No matching quotes found" — never fabricates |
 
 ---
 

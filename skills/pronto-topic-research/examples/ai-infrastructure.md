@@ -13,16 +13,7 @@ topicSearchQuery: "AI infrastructure"
 dateRangeLabel:  "Past 90 Days"
 sinceDay:        2026-01-19   (90 days before today)
 untilDay:        2026-04-19
-sinceDay (overtime): 2025-01-19  (15 months back for getTrendOvertime)
-```
-
----
-
-## Step 1: Setup
-
-```
-getOrganization
-→ org: "acme"    ← SAVED — used in every citation link and subagent call
+sinceDay (overtime): 2025-01-19  (15 months back for getTopicOvertime)
 ```
 
 ---
@@ -32,7 +23,7 @@ getOrganization
 ### Trend tools (all with topicSearchQuery: "AI infrastructure", documentTypes: ["Earnings Calls"], corpus: ["S&P Transcripts"])
 
 ```
-getTrendOvertime
+getTopicOvertime
 Params: {
   topicSearchQuery: "AI infrastructure",
   documentTypes: ["Earnings Calls"],
@@ -48,8 +39,8 @@ Params: {
     { quarter: "Q1 2026", totalHits: 1043, positiveHits: 714, negativeHits: 103 }
   → direction: RISING — hits more than tripled in 5 quarters
 
-getTrendRelatedSectors
-Params: { topicSearchQuery: "AI infrastructure", dateRange: { gte: "2026-01-19", lte: "2026-04-19" }, ... }
+getSectors
+Params: { topicSearchQuery: "AI infrastructure", documentTypes: ["Earnings Calls"], dateRange: { gte: "2026-01-19", lte: "2026-04-19" }, corpus: ["S&P Transcripts"] }
 → relatedSectors:
     { name: "Information Technology", hits: 4821, score: 0.94 }
     { name: "Communication Services", hits: 1203, score: 0.72 }
@@ -57,8 +48,8 @@ Params: { topicSearchQuery: "AI infrastructure", dateRange: { gte: "2026-01-19",
     { name: "Financials", hits: 498, score: 0.44 }
     { name: "Energy", hits: 312, score: 0.38 }   ← power demand for data centers
 
-getTrendWordsByCompany
-Params: { topicSearchQuery: "AI infrastructure", dateRange: { gte: "2026-01-19", lte: "2026-04-19" }, ... }
+getCompanies (companySearchMode: "byDocuments")
+Params: { topicSearchQuery: "AI infrastructure", documentTypes: ["Earnings Calls"], dateRange: { gte: "2026-01-19", lte: "2026-04-19" }, companySearchMode: "byDocuments", corpus: ["S&P Transcripts"] }
 → relatedCompanies:
     { name: "NVIDIA",          ticker: "NVDA", companyId: "7892", score: 0.98, positive: 187, negative: 12, neutral: 43, hits: 242 }
     { name: "Microsoft",       ticker: "MSFT", companyId: "1234", score: 0.91, positive: 143, negative: 18, neutral: 51, hits: 212 }
@@ -68,17 +59,17 @@ Params: { topicSearchQuery: "AI infrastructure", dateRange: { gte: "2026-01-19",
     { name: "Eaton",           ticker: "ETN",  companyId: "5678", score: 0.71, positive: 78,  negative: 8,  neutral: 22, hits: 108 }
     { name: "Vertiv",          ticker: "VRT",  companyId: "6789", score: 0.68, positive: 67,  negative: 11, neutral: 19, hits: 97  }
 
-getTrendWordsByDocument
-Params: { topicSearchQuery: "AI infrastructure", dateRange: { gte: "2026-01-19", lte: "2026-04-19" }, ... }
+getDocuments
+Params: { topicSearchQuery: "AI infrastructure", documentTypes: ["Earnings Calls"], dateRange: { gte: "2026-01-19", lte: "2026-04-19" }, corpus: ["S&P Transcripts"] }
 → relatedDocuments:
-    { name: "NVIDIA Q4 FY2026 Earnings", date: "2026-02-26", company: "NVIDIA",    refId: "ref_001", positive: 54, negative: 3,  neutral: 9,  hits: 66 }
-    { name: "Microsoft Q2 FY2026 Earnings", date: "2026-01-29", company: "Microsoft", refId: "ref_002", positive: 41, negative: 6,  neutral: 14, hits: 61 }
-    { name: "Amazon Q4 2025 Earnings",   date: "2026-02-06", company: "Amazon",    refId: "ref_003", positive: 38, negative: 7,  neutral: 11, hits: 56 }
-    { name: "Meta Q4 2025 Earnings",     date: "2026-01-29", company: "Meta",      refId: "ref_004", positive: 29, negative: 5,  neutral: 8,  hits: 42 }
-    { name: "Alphabet Q4 2025 Earnings", date: "2026-02-04", company: "Alphabet",  refId: "ref_005", positive: 31, negative: 9,  neutral: 12, hits: 52 }
+    { name: "[NVIDIA Q4 FY2026 Earnings](https://acme.prontonlp.com/#/ref/$DOCID_ref_001)", date: "2026-02-26", company: "NVIDIA",    positive: 54, negative: 3,  neutral: 9,  hits: 66 }
+    { name: "[Microsoft Q2 FY2026 Earnings](https://acme.prontonlp.com/#/ref/$DOCID_ref_002)", date: "2026-01-29", company: "Microsoft", positive: 41, negative: 6,  neutral: 14, hits: 61 }
+    { name: "[Amazon Q4 2025 Earnings](https://acme.prontonlp.com/#/ref/$DOCID_ref_003)",   date: "2026-02-06", company: "Amazon",    positive: 38, negative: 7,  neutral: 11, hits: 56 }
+    { name: "[Meta Q4 2025 Earnings](https://acme.prontonlp.com/#/ref/$DOCID_ref_004)",     date: "2026-01-29", company: "Meta",      positive: 29, negative: 5,  neutral: 8,  hits: 42 }
+    { name: "[Alphabet Q4 2025 Earnings](https://acme.prontonlp.com/#/ref/$DOCID_ref_005)", date: "2026-02-04", company: "Alphabet",  positive: 31, negative: 9,  neutral: 12, hits: 52 }
 
-getTrendNetwork
-Params: { topicSearchQuery: "AI infrastructure", dateRange: { gte: "2026-01-19", lte: "2026-04-19" }, ... }
+getTopicNetwork
+Params: { topicSearchQuery: "AI infrastructure", documentTypes: ["Earnings Calls"], dateRange: { gte: "2026-01-19", lte: "2026-04-19" }, corpus: ["S&P Transcripts"] }
 → relatedKeywords:
     { name: "data center", hits: 2134, score: 0.96, explanation: "Physical facilities housing AI compute — the most co-mentioned term." }
     { name: "GPU",         hits: 1876, score: 0.93, explanation: "Graphics processing units used as primary AI training and inference hardware." }
@@ -94,26 +85,24 @@ Params: { topicSearchQuery: "AI infrastructure", dateRange: { gte: "2026-01-19",
 ```
 pronto-search-summarizer (subagent_type: prontonlp-plugin:pronto-search-summarizer)
 
-org: "acme"
 topicSearchQuery: "AI infrastructure"
-sinceDay: 2026-01-19
-untilDay: 2026-04-19
+dateRange: { gte: "2026-01-19", lte: "2026-04-19" }
 documentTypes: ["Earnings Calls"]
 instruction: Return ONLY the best verbatim sentences — no JSON, no metadata.
              Prioritize the most important and interesting; exclude weak/off-topic.
              Plain text, one sentence per line, no bullets or headers.
-             Each line ends with: [Link: https://acme.prontonlp.com/#/ref/<FULL_ID>]
+             Output the text field verbatim — it already ends with [Source](url).
 
 → searchResults (saved to ai-infrastructure-search-results.txt):
 
-"We are on track to spend over $60 billion in capital expenditure this year, with the majority going toward AI infrastructure including data centers, networking, and custom silicon." [Link: https://acme.prontonlp.com/#/ref/MSFT_Q2_2026_001]
-"Demand for our H100 and B200 GPUs continues to exceed our ability to supply — we are working with partners to expand manufacturing capacity as fast as physically possible." [Link: https://acme.prontonlp.com/#/ref/NVDA_Q4_2026_044]
-"We see AI infrastructure as a multi-decade build-out, not a cyclical spend — the transition from CPU-centric to accelerated computing is just beginning." [Link: https://acme.prontonlp.com/#/ref/NVDA_Q4_2026_051]
-"Power availability is now the primary constraint on data center expansion in the United States — we are actively working with utilities and exploring nuclear options." [Link: https://acme.prontonlp.com/#/ref/AMZN_Q4_2025_088]
-"Every Fortune 500 company is asking us the same question: how do we build the AI infrastructure to remain competitive over the next ten years?" [Link: https://acme.prontonlp.com/#/ref/MSFT_Q2_2026_019]
-"We are seeing sovereign AI demand accelerating — governments in Europe, the Middle East, and Southeast Asia are commissioning national AI infrastructure projects." [Link: https://acme.prontonlp.com/#/ref/NVDA_Q4_2026_067]
-"Our capital allocation has permanently shifted — AI infrastructure now competes for budget alongside core business investment, and in most planning scenarios it wins." [Link: https://acme.prontonlp.com/#/ref/META_Q4_2025_033]
-"We're worried about concentration risk — if three hyperscalers control the majority of AI compute, smaller companies may find it economically impossible to compete." [Link: https://acme.prontonlp.com/#/ref/GOOGL_Q4_2025_112]
+"We are on track to spend over $60 billion in capital expenditure this year, with the majority going toward AI infrastructure including data centers, networking, and custom silicon." [Source](https://acme.prontonlp.com/#/ref/$SENTID_MSFT_Q2_2026_001)
+"Demand for our H100 and B200 GPUs continues to exceed our ability to supply — we are working with partners to expand manufacturing capacity as fast as physically possible." [Source](https://acme.prontonlp.com/#/ref/$SENTID_NVDA_Q4_2026_044)
+"We see AI infrastructure as a multi-decade build-out, not a cyclical spend — the transition from CPU-centric to accelerated computing is just beginning." [Source](https://acme.prontonlp.com/#/ref/$SENTID_NVDA_Q4_2026_051)
+"Power availability is now the primary constraint on data center expansion in the United States — we are actively working with utilities and exploring nuclear options." [Source](https://acme.prontonlp.com/#/ref/$SENTID_AMZN_Q4_2025_088)
+"Every Fortune 500 company is asking us the same question: how do we build the AI infrastructure to remain competitive over the next ten years?" [Source](https://acme.prontonlp.com/#/ref/$SENTID_MSFT_Q2_2026_019)
+"We are seeing sovereign AI demand accelerating — governments in Europe, the Middle East, and Southeast Asia are commissioning national AI infrastructure projects." [Source](https://acme.prontonlp.com/#/ref/$SENTID_NVDA_Q4_2026_067)
+"Our capital allocation has permanently shifted — AI infrastructure now competes for budget alongside core business investment, and in most planning scenarios it wins." [Source](https://acme.prontonlp.com/#/ref/$SENTID_META_Q4_2025_033)
+"We're worried about concentration risk — if three hyperscalers control the majority of AI compute, smaller companies may find it economically impossible to compete." [Source](https://acme.prontonlp.com/#/ref/$SENTID_GOOGL_Q4_2025_112)
 ```
 
 ---
@@ -123,9 +112,7 @@ instruction: Return ONLY the best verbatim sentences — no JSON, no metadata.
 ```
 pronto-themes-broker (subagent_type: prontonlp-plugin:pronto-themes-broker)
 
-org: "acme"
-sinceDay: 2026-01-19
-untilDay: 2026-04-19
+dateRange: { gte: "2026-01-19", lte: "2026-04-19" }
 documentTypes: ["Earnings Calls"]
 corpus: ["S&P Transcripts"]
 searchResults:
@@ -158,7 +145,6 @@ Conclusion:
 
 ```
 report_type: topic
-org: acme
 filename: ai-infrastructure-research-20260419.html
 title: "Topic Research: AI Infrastructure"
 subtitle: "Past 90 Days (Jan 19 – Apr 19, 2026) · Earnings Calls"
@@ -176,13 +162,13 @@ data:
     ...
   ]
   relatedCompanies: [ { name: "NVIDIA", ticker: "NVDA", companyId: "7892", score: 0.98, positive: 187, negative: 12, neutral: 43, hits: 242 }, ... ]
-  relatedDocuments: [ { name: "NVIDIA Q4 FY2026 Earnings", date: "2026-02-26", company: "NVIDIA", refId: "ref_001", positive: 54, negative: 3, neutral: 9, hits: 66 }, ... ]
+  relatedDocuments: [ { name: "[NVIDIA Q4 FY2026 Earnings](https://acme.prontonlp.com/#/ref/$DOCID_ref_001)", date: "2026-02-26", company: "NVIDIA", positive: 54, negative: 3, neutral: 9, hits: 66 }, ... ]
   relatedKeywords:  [ { name: "data center", hits: 2134, score: 0.96, explanation: "Physical facilities housing AI compute..." }, ... ]
   themes: [
     { title: "Capex acceleration is unprecedented",
       insight: "Hyperscalers are committing multi-year capital programs...",
       marketImplications: "Equipment, power, and cooling suppliers are structural beneficiaries.",
-      evidence: [ { text: "We are on track to spend over $60 billion...", company: "Microsoft", refId: "MSFT_Q2_2026_001" } ] },
+      evidence: [ { text: "We are on track to spend over $60 billion... [Source](https://acme.prontonlp.com/#/ref/$SENTID_MSFT_Q2_2026_001)", company: "Microsoft" } ] },
     ...
   ]
 narrative:
@@ -194,9 +180,9 @@ narrative:
 
 ## Key Patterns to Note
 
-- **`getTrendOvertime` uses 15-month window** — all other tools use 90-day default. Never mix up.
+- **`getTopicOvertime` uses 15-month window** — all other topic tools use 90-day default. Never mix up.
 - **`corpus: ["S&P Transcripts"]` is required** on every tool call — omitting it returns no results.
-- **`timeframeInterval: "quarter"`** is required for `getTrendOvertime` — without it the time series is unusable.
+- **`timeframeInterval: "quarter"`** is required for `getTopicOvertime` — without it the time series is unusable.
 - **All 6 Step 2 calls fire simultaneously** — never wait for one before starting another.
 - **Search results written to `.txt`** alongside the HTML so raw evidence is reviewable.
 - **Renderer enforces "Hits Overtime"** as the exact chart title — never "Mentions" or "Trends".

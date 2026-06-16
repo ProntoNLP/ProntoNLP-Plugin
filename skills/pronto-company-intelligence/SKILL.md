@@ -14,7 +14,7 @@ Produces a single-company intelligence report. Centerpiece: **quarter-over-quart
 
 Data gathering and per-quarter analysis live here; final output is a regular standalone HTML report delegated to the `pronto-html-renderer` agent. This skill is not a live artifact.
 
-> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research`. These are user-triggered only.
+> ⛔ **TOOL RESTRICTION:** Never call `showDocumentMindMap` or `deepResearch`. These are user-triggered only.
 
 ---
 
@@ -52,25 +52,26 @@ Then ask: *"Ready to generate the report. Reply **yes** to continue, or clarify 
 
 | # | Tool | Purpose | Company param |
 |---|------|---------|---------------|
-| 1 | `getCompanyDescription` | Overview, risks, predictions | `companyNameOrTicker` |
-| 2 | `getCompanyCompetitors` | Competitor list | `companyNameOrTicker` |
-| 3 | `getCompanyDocuments` | Earnings calls, 10-K, 10-Q | `companyName` |
-| 4 | `getStockPrices` | Historical price series | `companyId` |
-| 5 | `getStockChange` | Price % change over period | `companyId` |
-| 6 | `getPredictions` | Analyst consensus estimates | `companyId` |
-| 7 | `getAnalytics` | Sentiment scores, events, aspects | `companyName` |
-| 8 | `getTrends` | Trending topics | `companyName` |
-| 9 | `getSpeakers` | Per-executive/analyst sentiment | `companyName` |
-| 10 | `getSpeakerCompanies` | Analyst firm sentiment | `companyName` |
-| 11 | `search` | Key quotes from filings (via search-summarizer) | — |
+| 1 | `getCompanies` | Company profile — companyId, sector, description | `companyNameOrTicker` |
+| 2 | `getCompanyPeers` | Competitor/peer list | `companiesIds` |
+| 3 | `getDocuments` | Earnings calls, 10-K, 10-Q — transcriptIds | `companiesIds` |
+| 4 | `getStockPrices` | Historical OHLC price series | `companiesIds` |
+| 5 | `getStockChange` | Price % change over a period | `companiesIds` |
+| 6 | `getCompanyConsensus` | Analyst consensus estimates — all metrics in one call | `companiesIds` |
+| 7 | `getDocumentSummary` (focus: 'key risks') | Risk factors from latest earnings call | `transcriptsIds` |
+| 8 | `getAnalytics` | Sentiment scores, events, aspects | `companiesIds` |
+| 9 | `getTrends` | Trending topics | `companiesIds` |
+| 10 | `getSpeakers` (entityType: 'speaker') | Per-executive/analyst individual sentiment | `companiesIds` |
+| 11 | `getSpeakers` (entityType: 'company') | Analyst firm aggregate sentiment | `companiesIds` |
+| 12 | `searchSentences` | Key quotes from filings (via search-summarizer) | — |
 
 ### ID Flow
 
-- `getCompanyDescription` → `companyId` → pass to `getStockPrices`, `getStockChange`, `getPredictions`
-- `getCompanyCompetitors` → competitor `companyId`s → pass to `getStockChange` (per competitor)
-- `getCompanyDocuments` → `transcriptId` per doc → pass to `getAnalytics` and `search` per quarter
+- `getCompanies(companyNameOrTicker: ...)` → `companyId` → pass to `getStockPrices`, `getStockChange`, `getCompanyConsensus`, `getCompanyPeers`
+- `getCompanyPeers(companiesIds: [companyId])` → peer `companyId`s → pass to `getStockChange` per competitor
+- `getDocuments(companiesIds: [companyId], ...)` → `transcriptId` per doc → pass to `getAnalytics`, `getDocumentSummary`, and `searchSentences` per quarter
 
-Prefer `companyId` over `companyName` when a tool accepts both.
+Always use `companiesIds` arrays (not `companyName`) when a tool accepts them.
 
 ---
 
@@ -80,44 +81,50 @@ Batches run sequentially; within a batch, fire all calls simultaneously.
 
 **Batch 1** — foundation:
 ```
-getCompanyDescription    → save companyId, sector, risks
-getCompanyCompetitors    → save competitor companyIds[]
-getOrganization          → save org (required by renderer for citation links)
+getCompanies(companyNameOrTicker: ...)    → save companyId, sector, description
+getCompanyPeers(companiesIds: [companyId])  → save peer companyIds[]
 ```
 
 **Batch 2** — data collection (needs companyId):
 ```
-getCompanyDocuments      → save transcriptId per earnings call
-getStockPrices           (1-year weekly)
-getStockChange ×3        (YTD, 6M, 1Y)
-getPredictions ×6        (revenue, epsGaap, ebitda, netIncomeGaap, freeCashFlow, capitalExpenditure)
-getTrends
+getDocuments(companiesIds: [companyId], documentTypes: ['Earnings Calls'], excludeFutureDocuments: true)
+                         → save transcriptId per earnings call
+getStockPrices(companiesIds: [companyId], dateRange: {gte: 'now-1y/d', lte: 'now'}, interval: 'week')
+getStockChange(companiesIds: [companyId]) ×3  (set dateRange per period: YTD / 6M / 1Y)
+getCompanyConsensus(companiesIds: [companyId], metrics: ['revenue', 'epsGaap', 'ebitda', 'netIncomeGaap', 'freeCashFlow', 'capitalExpenditure'], timeframeInterval: 'quarter')
+getTrends(companiesIds: [companyId], dateRange: {gte, lte})
 ```
 
 **Batch 3** — deep analysis (needs transcriptIds):
 ```
-getAnalytics ×4          (one per earnings call, pass documentID)
-getStockPrices ×4        (1 week before/after each call, interval: "day")
-getSpeakers              (Executives, sortBy: count)
-getSpeakers              (Executives_CEO)
-getSpeakers              (Executives_CFO)
-getSpeakers              (Analysts, sortBy: sentiment desc)
-getSpeakerCompanies      (Analysts)
-getStockChange per competitor
+getAnalytics ×4          (one per earnings call, pass transcriptsIds: [transcriptId])
+getStockPrices(companiesIds: [companyId]) ×4  (1 week window around each call date, interval: 'day')
+getDocumentSummary(focus: 'key risks and risk factors mentioned by management', transcriptsIds: [doc_q1, doc_q2, doc_q3, doc_q4], corpus: ['S&P Transcripts'])
+  → pass all available transcripts (max 5) for comprehensive multi-quarter risk view
+getSpeakers(entityType: 'speaker', speakerTypes: ['Executives'], sortBy: 'count', companiesIds: [companyId])
+getSpeakers(entityType: 'speaker', speakerTypes: ['Executives_CEO'], companiesIds: [companyId])
+getSpeakers(entityType: 'speaker', speakerTypes: ['Executives_CFO'], companiesIds: [companyId])
+getSpeakers(entityType: 'speaker', speakerTypes: ['Analysts'], sortBy: 'sentiment', sortOrder: 'desc', companiesIds: [companyId])
+getSpeakers(entityType: 'company', speakerTypes: ['Analysts'], companiesIds: [companyId])
+getStockChange(companiesIds: [peer1, peer2, peer3, ...], dateRange: {gte: 'now-1y/d', lte: 'now'})
+  → ONE call with all peer IDs — not one call per peer
 ```
 
 **Batch 4** — quotes and forecasts (**REQUIRED — do not render before this completes**):
 
 Delegate to ONE `pronto-search-summarizer` (`subagent_type: prontonlp-plugin:pronto-search-summarizer`):
 ```
-org: [org from getOrganization]
-
 Fetch all quotes needed for the [company] intelligence report. Run these searches:
-1–4. Forecast/guidance quotes per quarter — documentIDs: [doc_qN], topicSearchQuery: 'forecast guidance outlook', sentiment: positive, size: 3
-5.   Most bullish executive quotes — companyName, speakerTypes: Executives, sentiment: positive, documentTypes: ["Earnings Calls"], size: 3
-6.   Top risk/bearish quotes — topicSearchQuery: 'risk challenge headwind', sentiment: negative, documentTypes: ["Earnings Calls"], size: 3
-7.   Notable analyst questions — sections: EarningsCalls_Question, documentTypes: ["Earnings Calls"], size: 3
-Return with speaker name, role, date, and refId.
+1. Forecast/guidance quotes across all quarters — transcriptsIds: [doc_q1, doc_q2, doc_q3, doc_q4],
+   topicSearchQuery: 'forecast guidance outlook', DLSentiment: ['positive'], size: 8
+   → ONE call spanning all quarters (not 4 separate calls)
+2. Most bullish executive quotes — companiesIds: [companyId], speakerTypes: Executives,
+   DLSentiment: ['positive'], documentTypes: ["Earnings Calls"], size: 5
+3. Top risk/bearish quotes — companiesIds: [companyId], topicSearchQuery: 'risk challenge headwind',
+   DLSentiment: ['negative'], documentTypes: ["Earnings Calls"], size: 5
+4. Notable analyst questions — companiesIds: [companyId], sections: EarningsCalls_Question,
+   documentTypes: ["Earnings Calls"], size: 5
+Return with speaker name, role, date. Citation link is already embedded in the text field.
 ```
 
 Save the top 1–2 quotes per task, tagging each by section (`bull`, `bear`, `forecast`, `risk`).
@@ -134,17 +141,16 @@ For each earnings call:
 
 ```
 getAnalytics:
-  companyName: "<name>"
-  documentIDs: ["<transcriptId>"]
+  companiesIds: ["<companyId>"]
+  transcriptsIds: ["<transcriptId>"]
   documentTypes: ["Earnings Calls"]
-  sinceDay / untilDay: bracket the quarter
+  dateRange: { gte: "<quarter start>", lte: "<quarter end>" }
   analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment", "importance"]
   → extract: sentimentScore, investmentScore, patternSentiment, top events, top aspects
 
 getStockPrices (1 week window around call):
-  companyId: "<id>"
-  fromDate: 7 days before call date
-  toDate:   7 days after call date
+  companiesIds: ["<companyId>"]
+  dateRange: { gte: "<7 days before call date>", lte: "<7 days after call date>" }
   interval: "day"
   → compute: % change before vs after = stock reaction
 ```
@@ -180,7 +186,6 @@ Delegate the HTML output to `pronto-html-renderer` (`subagent_type: prontonlp-pl
 
 ```
 report_type: company
-org: <from getOrganization>
 filename: <TICKER>-report-<YYYYMMDD>.html
 title: "<Company Name> (<Ticker>) — Intelligence Report"
 subtitle: "Generated: <date> · Sector: <sector> · Market Cap: <cap>"
@@ -204,10 +209,10 @@ data:
     executives: [ { name, role, sentiment, sentenceCount } ]       # incl. CEO, CFO, execAvg rows
     analysts:   [ { name, firm, sentiment, sentenceCount } ]
     gap:        { execAvg, analystAvg, interpretation }
-  quotes: [ { text, speakerName, role, company, date, refId, section } ]  # section ∈ {bull, bear, forecast, risk}
+  quotes: [ { text, speakerName, role, company, date, section } ]  # section ∈ {bull, bear, forecast, risk}; text ends with "[Source](url)"
   predictions: { revenue: [...], epsGaap: [...], ebitda: [...],
                  netIncomeGaap: [...], freeCashFlow: [...], capitalExpenditure: [...] }
-  risks: [ { title, evidence, refId } ]
+  risks: [ { title, evidence } ]  # evidence contains "[Source](url)" if present
 narrative:
   executiveSummary: "<2–3 paragraphs that explicitly state all RISING/FALLING verdicts, the exec-vs-analyst gap, and the thesis>"
   verdict: "<bullish / bearish / neutral + 3 supporting points>"
@@ -250,8 +255,8 @@ If the user answers yes (or pre-asked), invoke `anthropic-skills:xlsx` **directl
 7. **Quarters Chart Data** — Quarter, Sentiment, Investment, Stock Reaction, Positive Events, Negative Events
 8. **Trends** — Topic, Score, Change, Hits, Explanation
 9. **Speakers** — Type (Executive / Analyst), Name, Role / Firm, Sentiment, Sentences; gap footer rows below
-10. **Quotes** — Section, Quote, Speaker, Role, Company, Date, Source (hyperlink to refId)
-11. **Risks** *(tab red `#ED4545`)* — Risk, Evidence, Source (hyperlink to refId)
+10. **Quotes** — Section, Quote (with embedded [Source](url) link), Speaker, Role, Company, Date
+11. **Risks** *(tab red `#ED4545`)* — Risk, Evidence (with embedded [Source](url) link)
 
 **Styling** (every sheet):
 - Row 1: fill `#205262`, white bold text, height 22pt, frozen so it stays visible when scrolling
@@ -271,11 +276,13 @@ If the user answers no, end the skill normally.
 ## Date Handling
 
 ```
-Past year:     sinceDay = 1 year ago,   untilDay = today
-Past quarter:  sinceDay = 90 days ago,  untilDay = today
-YTD:           sinceDay = Jan 1,        untilDay = today
-Past 6 months: sinceDay = 6 months ago, untilDay = today
+Past year:     dateRange: { gte: "now-1y/d",  lte: "now" }
+Past quarter:  dateRange: { gte: "now-90d/d", lte: "now" }
+YTD:           dateRange: { gte: "<YYYY>-01-01", lte: "now" }
+Past 6 months: dateRange: { gte: "now-6M/d",  lte: "now" }
 ```
+
+Always pass `dateRange` with explicit `gte` and `lte` to every tool call that accepts it.
 
 `getAnalytics` max range: 1 year — split longer requests into multiple yearly calls.
 
@@ -286,10 +293,10 @@ Past 6 months: sinceDay = 6 months ago, untilDay = today
 | Problem | What to do |
 |---------|-----------|
 | Company not found | Try ticker instead of name (or vice versa); check spelling |
-| `getCompanyDescription` returns nothing | Ask user to verify; do not proceed without companyId |
+| `getCompanies` returns no match | Ask user to verify; do not proceed without companyId |
 | Fewer than 4 earnings calls | Work with available quarters; note the gap in the payload |
 | No predictions for a metric | Omit from payload; renderer skips absent rows |
-| Analytics returns empty | Verify date range ≤ 1 year; try without `documentIDs` filter |
+| Analytics returns empty | Verify date range ≤ 1 year; try without `transcriptsIds` filter |
 | No competitors returned | Omit `competitors` from payload |
 | No quotes returned | Omit `quotes` — never fabricate |
 | Private/unlisted company | ProntoNLP covers public companies only — tell the user |
@@ -299,9 +306,9 @@ Past 6 months: sinceDay = 6 months ago, untilDay = today
 
 ## Best Practices
 
-1. Save `companyId` the moment you get it from `getCompanyDescription`.
+1. Save `companyId` the moment you get it from `getCompanies`.
 2. Maximize parallelism — batch all independent calls per the strategy above.
 3. Never fabricate data — if a tool returns nothing, omit the corresponding payload key.
 4. Never reformat raw scores — pass `0.71`, not `7.1` or `7.1/10` (renderer enforces).
-5. Prefer `companyId` over `companyName` when a tool accepts both.
+5. Always pass `companiesIds: [companyId]` (array) — never pass a bare `companyId` string to tools.
 6. Do not mention tool names in responses — describe the action ("I analyzed 4 earnings calls", not "I called getAnalytics 4 times").

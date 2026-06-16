@@ -14,7 +14,7 @@ Produces sector intelligence reports. Centerpiece: **cross-company view of a sec
 
 Data gathering and cross-company analysis live here; final output is a regular standalone HTML report delegated to the `pronto-html-renderer` agent. This skill is not a live artifact.
 
-> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research`. These are user-triggered only.
+> ⛔ **TOOL RESTRICTION:** Never call `showDocumentMindMap` or `deepResearch`. These are user-triggered only.
 
 ---
 
@@ -100,19 +100,20 @@ Then ask: *"Ready to generate the report. Reply **yes** to continue, or clarify 
 | 1 | `getTopMovers` | Company rankings by stock/sentiment/investment | `sectors` array |
 | 2 | `getTrends` | Trending topics within sector | `sectors` array |
 | 3 | `getAnalytics` | Sentiment scores, event types, aspects | `sectors` array |
-| 4 | `searchSectors` | Cross-sector topic distribution | n/a |
-| 5 | `searchTopCompanies` | Companies ranked by topic/event/sentiment | `sectors` array |
-| 6 | `getSpeakers` | Executive/analyst sentiment per company | `companyName` (per top company) |
-| 7 | `getSpeakerCompanies` | Analyst firm sentiment per company | `companyName` (per top company) |
-| 8 | `search` | Key quotes (via search-summarizer) | — |
+| 4 | `getSectors` | Cross-sector topic distribution | `topicSearchQuery` (required) |
+| 5 | `getCompanies` (companySearchMode: 'byDocuments') | Companies ranked by topic/event within sector | `sectors` array |
+| 6 | `getSpeakers` (entityType: 'speaker') | Executive/analyst individual sentiment per company | `companiesIds` (per top company) |
+| 7 | `getSpeakers` (entityType: 'company') | Analyst firm aggregate sentiment per company | `companiesIds` (per top company) |
+| 8 | `searchSentences` | Key quotes (via search-summarizer) | — |
 
 ### Critical parameter notes
 
 - `sectors` is always an **array of strings** (e.g. `["Information Technology"]`), never a plain string.
 - `getAnalytics` max date range: **1 year** — split longer requests into yearly calls.
 - `getTrends` has **no `query` parameter** — scope with `sectors`.
-- `searchTopCompanies` with `eventTypes`: **one event type per call**.
-- `getSpeakers` / `getSpeakerCompanies` require `companyName` — call per top company from Batch 1.
+- `getCompanies(companySearchMode: 'byDocuments', eventTypes: [...])`: **one event type per call**.
+- `getSpeakers(entityType: 'speaker')` and `getSpeakers(entityType: 'company')` require `companiesIds` — resolve top company IDs from Batch 1 `getTopMovers`.
+- `getSectors` requires `topicSearchQuery` — one topic per call (replace the old `searchSectors` multi-query pattern).
 
 ---
 
@@ -120,27 +121,28 @@ Then ask: *"Ready to generate the report. Reply **yes** to continue, or clarify 
 
 **Batch 1** — foundation:
 ```
-getOrganization          → save org (required by renderer)
 getTopMovers(
   sectors: ["<sector>"],
   documentTypes: ["Earnings Calls"],
   sortBy: ["investmentScore", "sentimentScore", "stockChange",
            "investmentScoreChange", "sentimentScoreChange"],
-  limit: 10, sinceDay, untilDay)
+  limit: 10,
+  dateRange: { gte: <sinceDay>, lte: <untilDay> })
   → save top company names and IDs for Batches 3–4
 
 getTrends(
   sectors: ["<sector>"],
   documentTypes: ["Earnings Calls"],
   sortBy: "score", sortOrder: "desc",
-  limit: 20, sinceDay, untilDay)
+  limit: 20,
+  dateRange: { gte: <sinceDay>, lte: <untilDay> })
   → save top trend names for Batch 2
 
 getAnalytics(
   sectors: ["<sector>"],
   documentTypes: ["Earnings Calls"],
   analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment", "importance"],
-  sinceDay, untilDay)
+  dateRange: { gte: <sinceDay>, lte: <untilDay> })
   → save sentimentScore, investmentScore, eventTypes list
 ```
 
@@ -155,33 +157,32 @@ This is a cross-filter of data already in memory — compute before starting Bat
 
 **Batch 2** — topic and event breakdown (needs eventTypes and trend names):
 ```
-searchTopCompanies(sectors, eventTypes: ["<top event 1>"], limit: 10)
-searchTopCompanies(sectors, eventTypes: ["<top event 2>"], limit: 10)
-searchTopCompanies(sectors, eventTypes: ["<top event 3>"], limit: 10)
-searchTopCompanies(sectors, topicSearchQuery: "<top trend topic>", limit: 10)
-searchSectors(searchQueries: ["<top trend 1>", "<top trend 2>"], documentTypes: ["Earnings Calls"])
+getCompanies(sectors: ["<sector>"], eventTypes: ["<top event 1>"], companySearchMode: 'byDocuments', dateRange: {gte, lte})
+getCompanies(sectors: ["<sector>"], eventTypes: ["<top event 2>"], companySearchMode: 'byDocuments', dateRange: {gte, lte})
+getCompanies(sectors: ["<sector>"], eventTypes: ["<top event 3>"], companySearchMode: 'byDocuments', dateRange: {gte, lte})
+getCompanies(sectors: ["<sector>"], topicSearchQuery: "<top trend topic>", companySearchMode: 'byDocuments', dateRange: {gte, lte})
+getSectors(topicSearchQuery: "<top trend 1>", documentTypes: ["Earnings Calls"], dateRange: {gte, lte})
+getSectors(topicSearchQuery: "<top trend 2>", documentTypes: ["Earnings Calls"], dateRange: {gte, lte})
 ```
 
 **Batch 3** — speaker intelligence (top 2–3 companies by investment score, all parallel):
 ```
-getSpeakers(companyName: "<topCo N>", speakerTypes: ["Executives"], sortBy: "sentiment", desc, limit: 10)
-getSpeakers(companyName: "<topCo N>", speakerTypes: ["Analysts"],   sortBy: "sentiment", desc, limit: 20)
-getSpeakerCompanies(companyName: "<topCo N>", speakerTypes: ["Analysts"], sortBy: "sentiment", desc, limit: 20)
+getSpeakers(entityType: 'speaker', companiesIds: [topCoId_N], speakerTypes: ["Executives"], sortBy: "sentiment", sortOrder: "desc", limit: 10)
+getSpeakers(entityType: 'speaker', companiesIds: [topCoId_N], speakerTypes: ["Analysts"],   sortBy: "sentiment", sortOrder: "desc", limit: 20)
+getSpeakers(entityType: 'company', companiesIds: [topCoId_N], speakerTypes: ["Analysts"],   sortBy: "sentiment", sortOrder: "desc", limit: 20)
 ```
-Aggregate across companies.
+Resolve top company IDs from `getTopMovers[investmentScore].topMovers[0..2].id`. Aggregate across companies.
 
 **Batch 4** — supporting quotes (**REQUIRED — do not render until this completes**):
 
 Delegate to ONE `pronto-search-summarizer` (`subagent_type: prontonlp-plugin:pronto-search-summarizer`):
 ```
-org: [org]
-
 Fetch quotes for the [sector] sector intelligence report. Run these searches:
-1. Bullish quotes about [top trend] for [top company 1] — sentiment: positive, documentTypes: ["Earnings Calls"], size: 3
-2. Bearish/risk quotes for [top company 1] — sentiment: negative, documentTypes: ["Earnings Calls"], size: 3
-3. Bullish quotes about [top trend] for [top company 2] — sentiment: positive, size: 3
-4. Notable analyst questions for [top company 2] — sections: EarningsCalls_Question, size: 3
-Return with speaker name, role, date, refId.
+1. Bullish quotes about [top trend] for [top company 1] — companiesIds: [topCoId1], DLSentiment: ['positive'], documentTypes: ["Earnings Calls"], size: 3
+2. Bearish/risk quotes for [top company 1] — companiesIds: [topCoId1], DLSentiment: ['negative'], documentTypes: ["Earnings Calls"], size: 3
+3. Bullish quotes about [top trend] for [top company 2] — companiesIds: [topCoId2], DLSentiment: ['positive'], size: 3
+4. Notable analyst questions for [top company 2] — companiesIds: [topCoId2], sections: EarningsCalls_Question, size: 3
+Return with speaker name, role, date. Citation link is already embedded in the text field.
 ```
 
 Tag each quote by role (`bullish`, `bearish`, `analyst-question`).
@@ -210,7 +211,6 @@ Delegate HTML output to `pronto-html-renderer` (`subagent_type: prontonlp-plugin
 
 ```
 report_type: sector
-org: <from getOrganization>
 filename: <sector-slug>-report-<YYYYMMDD>.html
 title: "<Sector Name> — Sector Intelligence Report"
 subtitle: "<sinceDay> to <untilDay> · <N> companies · Earnings Calls"
@@ -235,10 +235,10 @@ data:
     positive: [ { name, count, topCompanies: [...] } ]
     negative: [ { name, count, topCompanies: [...] } ]
   companyRankingsByTheme: [ { theme, rows: [ { rank, company, sector, sentimentScore, mentions, signal } ] } ]
-  bullishVoices: [ { name, role, company, sentiment, quote, refId } ]
-  bearishVoices: [ { name, firm, sentiment, quote, refId } ]
-  themes: [ { title, insight, evidence: [ { text, company, refId } ] } ]
-  risks:  [ { title, evidence, refId } ]
+  bullishVoices: [ { name, role, company, sentiment, quote } ]  # quote ends with "[Source](url)"
+  bearishVoices: [ { name, firm, sentiment, quote } ]
+  themes: [ { title, insight, evidence: [ { text, company } ] } ]  # text ends with "[Source](url)"
+  risks:  [ { title, evidence } ]  # evidence contains "[Source](url)"
 narrative:
   executiveSummary: "<overall direction + top 3 / bottom 3 + dominant theme + divergences + 3-point thesis>"
 ```
@@ -272,10 +272,10 @@ If the user answers yes (or pre-asked), invoke `anthropic-skills:xlsx` **directl
 10. **Events** — Type (Positive/Negative), Event Name, Count, Top Companies
 11. **Trends** — Topic, Score, Change, Hits, Direction
 12. **Theme Rankings** — Theme, Rank, Company, Sector, Sentiment Score, Mentions, Signal (flattened from `companyRankingsByTheme`)
-13. **Bullish Voices** *(tab green `#6AA64A`)* — Name, Role, Company, Sentiment, Quote, Source (hyperlink to refId)
-14. **Bearish Voices** *(tab red `#ED4545`)* — Firm, Sentiment, Quote, Source (hyperlink to refId)
-15. **Themes** — Theme Title, Insight, Evidence Text, Company, Source (hyperlink to refId); evidence rows indented below each theme
-16. **Risks** *(tab red `#ED4545`)* — Risk, Evidence, Source (hyperlink to refId)
+13. **Bullish Voices** *(tab green `#6AA64A`)* — Name, Role, Company, Sentiment, Quote (with embedded [Source](url) link)
+14. **Bearish Voices** *(tab red `#ED4545`)* — Firm, Sentiment, Quote (with embedded [Source](url) link)
+15. **Themes** — Theme Title, Insight, Evidence Text (with embedded [Source](url) link), Company; evidence rows indented below each theme
+16. **Risks** *(tab red `#ED4545`)* — Risk, Evidence (with embedded [Source](url) link)
 
 **Styling** (every sheet):
 - Row 1: fill `#205262`, white bold text, height 22pt, frozen so it stays visible when scrolling
@@ -294,11 +294,13 @@ If the user answers no, end the skill normally.
 
 ## Date Handling
 
+All tool calls use `dateRange: {gte, lte}` format.
+
 ```
-Past year (default): sinceDay = 1 year ago,   untilDay = today
-Past quarter:        sinceDay = 90 days ago,  untilDay = today
-Past 6 months:       sinceDay = 6 months ago, untilDay = today
-YTD:                 sinceDay = Jan 1,        untilDay = today
+Past year (default): dateRange: { gte: "now-1y/d",  lte: "now" }
+Past quarter:        dateRange: { gte: "now-90d/d", lte: "now" }
+Past 6 months:       dateRange: { gte: "now-6M/d",  lte: "now" }
+YTD:                 dateRange: { gte: "<YYYY>-01-01", lte: "now" }
 ```
 
 Default to past year for Full Report, 90 days for Movers and Theme reports. `getAnalytics` max 1 year — split longer requests.
@@ -312,7 +314,7 @@ Default to past year for Full Report, 90 days for Movers and Theme reports. `get
 | Sector name not recognized | Check against valid list; fall back to top-level sector |
 | `getTopMovers` returns fewer than 5 companies | Widen date range; remove `documentTypes` filter |
 | `getAnalytics` returns no event types | Confirm range ≤ 1 year; try without `documentTypes` |
-| `searchTopCompanies` empty for event type | Skip that event type; note it; proceed |
+| `getCompanies` returns empty for event type | Skip that event type; note it; proceed |
 | `getTrends` returns fewer than 10 | Widen date range; remove `documentTypes` |
 | `getSpeakers` returns nothing for a company | Try without date filter; widen window |
 | No quotes returned | Omit `themes`/`bullishVoices`/`bearishVoices` keys — never fabricate |
@@ -323,12 +325,13 @@ Default to past year for Full Report, 90 days for Movers and Theme reports. `get
 ## Best Practices
 
 1. Always pass `sectors` as an array — `["Information Technology"]`, not `"Information Technology"`.
-2. Call `searchTopCompanies` once per event type — never merge event types.
+2. Call `getCompanies(companySearchMode: 'byDocuments')` once per event type — never merge event types.
 3. Never pass `query` to `getTrends` — it does not exist.
 4. Maximize parallelism.
 5. Always state divergences — `underperforming` with high investment score is the most actionable signal.
 6. Never fabricate — missing data → omit the key.
 7. Do not mention tool names — describe the action.
+8. Resolve top company IDs from `getTopMovers` before calling `getSpeakers`.
 
 ---
 

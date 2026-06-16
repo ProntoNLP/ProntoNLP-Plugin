@@ -6,45 +6,37 @@ Abbreviated workflow — Sections 1-3 only, minimal tool calls, fast turnaround.
 
 ## Batch 1: Foundation
 ```
-Tool: Pronto:getCompanyDescription
+Tool: getCompanies
 Params: { companyNameOrTicker: "TSLA" }
 → Response:
-    companyId: "7890"          ← SAVED
+    id: "7890"   (save as companyId)   ← SAVED
     name: "Tesla, Inc."
     sector: "Consumer Discretionary"
-    subSector: "Automobiles"
-    description: "..."
-    risks: [...]
+    description_text: "..."
 ```
 
-## Batch 2: Stock + Financials + Quick Sentiment (all parallel, using companyId "7890")
+## Batch 2: Stock + Financials + Quick Sentiment (all parallel, using companiesIds: ["7890"])
 ```
-Tool: Pronto:getStockPrices
-Params: { companyId: "7890", fromDate: "2025-03-03", toDate: "2026-03-03", interval: "week" }
+Tool: getStockPrices
+Params: { companiesIds: ["7890"], dateRange: { gte: "now-1y/d", lte: "now" }, interval: "week" }
 
-Tool: Pronto:getStockChange (YTD)
-Params: { companyId: "7890", fromDate: "2026-01-01", toDate: "2026-03-03" }
+Tool: getStockChange (YTD)
+Params: { companiesIds: ["7890"], dateRange: { gte: "2026-01-01", lte: "now" } }
 
-Tool: Pronto:getStockChange (6M)
-Params: { companyId: "7890", fromDate: "2025-09-03", toDate: "2026-03-03" }
+Tool: getStockChange (6M)
+Params: { companiesIds: ["7890"], dateRange: { gte: "now-6M/d", lte: "now" } }
 
-Tool: Pronto:getStockChange (1Y)
-Params: { companyId: "7890", fromDate: "2025-03-03", toDate: "2026-03-03" }
+Tool: getStockChange (1Y)
+Params: { companiesIds: ["7890"], dateRange: { gte: "now-1y/d", lte: "now" } }
 
-Tool: Pronto:getPredictions x6 (all parallel, using companyId "7890")
-  { companyId: "7890", metric: "revenue", untilDate: "2026-03-03" }
-  { companyId: "7890", metric: "epsGaap", untilDate: "2026-03-03" }
-  { companyId: "7890", metric: "ebitda", untilDate: "2026-03-03" }
-  { companyId: "7890", metric: "netIncomeGaap", untilDate: "2026-03-03" }
-  { companyId: "7890", metric: "freeCashFlow", untilDate: "2026-03-03" }
-  { companyId: "7890", metric: "capitalExpenditure", untilDate: "2026-03-03" }
+Tool: getCompanyConsensus (1 call — all metrics at once)
+Params: { companiesIds: ["7890"], metrics: ["revenue", "epsGaap", "ebitda", "netIncomeGaap", "freeCashFlow", "capitalExpenditure"], timeframeInterval: "quarter" }
 
-Tool: Pronto:getAnalytics (scores only — quick headline)
+Tool: getAnalytics (scores only — quick headline)
 Params: {
-  companyName: "Tesla",
+  companiesIds: ["7890"],
   documentTypes: ["Earnings Calls"],
-  sinceDay: "2025-03-03",
-  untilDay: "2026-03-03",
+  dateRange: { gte: "now-1y/d", lte: "now" },
   analyticsType: ["scores", "patternSentiment"]
 }
 → { sentimentScore: 0.28, investmentScore: [X.X — raw value from API], patternSentiment: "Positive" }
@@ -96,6 +88,6 @@ Params: {
 
 | Batch | Calls | What |
 |-------|-------|------|
-| 1 | 1 | getCompanyDescription → companyId |
-| 2 | 11 | stock prices + 3 stock changes + 6 predictions + analytics (scores only) |
-| **Total** | **~12** | **2 sequential batches** |
+| 1 | 1 | getCompanies(companyNameOrTicker) → companyId |
+| 2 | 6 | getStockPrices + getStockChange×3 + getCompanyConsensus(all metrics) + getAnalytics(scores) |
+| **Total** | **~7** | **2 sequential batches** |

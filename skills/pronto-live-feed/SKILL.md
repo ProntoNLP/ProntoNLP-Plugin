@@ -12,7 +12,7 @@ metadata:
 
 Generates a live Claude artifact showing the ProntoNLP home feed (or company-scoped feed): Top Movers by sentiment score change, Trending Topics, and recent/upcoming Earnings Call documents. Data is always fetched fresh when the artifact opens.
 
-> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research` from this skill. Use only the tools listed in the steps below.
+> ⛔ **TOOL RESTRICTION:** Never call `showDocumentMindMap` or `deepResearch` from this skill. Use only the tools listed in the steps below.
 
 ---
 
@@ -56,15 +56,15 @@ Ask: *"Ready to open the Live Feed. Reply yes to continue, or adjust anything ab
 
 Skip this step if context is Home.
 
-Call `getCompanyDescription` with the company name or ticker to resolve the canonical entity:
+Call `getCompanies` with the company name or ticker to resolve the canonical entity:
 
 ```
-getCompanyDescription(query: <name or ticker>)
+getCompanies(companyNameOrTicker: <name or ticker>)
 ```
 
 Save:
 - `companyId` — used for `getTopMovers` and `getStockPrices`
-- `companyName` — used for `getTrends`, `getCompanyDocuments`, artifact title, and header
+- `companyName` — used for `getTrends`, document fetches, artifact title, and header
 
 If the company cannot be resolved, ask the user to clarify before continuing.
 
@@ -72,20 +72,15 @@ If the company cannot be resolved, ask the user to clarify before continuing.
 
 ## Step 2a: Parallel Batch 1
 
-Fire all of the following simultaneously. Always include `getOrganization`.
-
-**Organization:**
-```
-getOrganization    → save org (required for artifact links and delegation)
-```
+Fire all of the following simultaneously.
 
 **Top Movers:**
 ```
 getTopMovers(
-  sinceDay:   <today − 30 days, YYYY-MM-DD>
+  dateRange:  { gte: "<today − 30 days, YYYY-MM-DD>", lte: "now" }
   sortBy:     ["sentimentScoreChange"]
   limit:      10
-  companyIDs: [<companyId>]   # include only for company context
+  companiesIds: [<companyId>]   # include only for company context
 )
 ```
 
@@ -94,7 +89,7 @@ getTopMovers(
 **Trends:**
 ```
 getTrends(
-  timeframeDays: 90
+  dateRange:     { gte: "now-90d/d", lte: "now" }
   documentTypes: ["Earnings Calls"]
   limit:         20
   sortBy:        "score"
@@ -102,45 +97,45 @@ getTrends(
 )
 ```
 
-> **Note:** `getTrends` does not accept `companyId` or `marketCaps`. Use `companyName` for company context.
+> **Note:** `getTrends` does not accept `companyId`. Use `companyName` for company context.
 
 **Documents:**
 
 *Home context — 2 calls in parallel:*
 ```
 # Recent (last 30 days, market-wide)
-search(
-  sinceDay:      <today − 30 days, YYYY-MM-DD>
-  documentTypes: ["Earnings Calls"]
-  sortBy:        "day"
-  sortOrder:     "desc"
-  size:          50
+getDocuments(
+  dateRange:              { gte: "<today − 30 days, YYYY-MM-DD>", lte: "now" }
+  documentTypes:          ["Earnings Calls"]
+  sortOrder:              "desc"
+  excludeFutureDocuments: true
+  size:                   50
 )
 
 # Upcoming (future, market-wide)
-search(
-  sinceDay:      <today + 1 day, YYYY-MM-DD>
-  documentTypes: ["Earnings Calls"]
-  sortBy:        "day"
-  sortOrder:     "asc"
-  size:          30
+getDocuments(
+  dateRange:              { gte: "<today + 1 day, YYYY-MM-DD>" }
+  documentTypes:          ["Earnings Calls"]
+  sortOrder:              "asc"
+  excludeFutureDocuments: false
+  size:                   30
 )
 ```
 
-After receiving `search` results, deduplicate by `(companyName, documentDate)` — keep one entry per document. Extract: `companyName`, `date`, document title (from result metadata). Limit to 30 recent and 20 upcoming.
+After receiving `getDocuments` results, deduplicate by `(companyName, documentDate)` — keep one entry per document. Extract: `companyName`, `date`, document title. Limit to 30 recent and 20 upcoming.
 
 *Company context — 2 calls in parallel:*
 ```
 # Recent (current year/quarter)
-getCompanyDocuments(
-  companyName:            <companyName>
+getDocuments(
+  companiesIds:           [companyId]
   documentTypes:          ["Earnings Calls"]
   excludeFutureDocuments: true
 )
 
 # Upcoming
-getCompanyDocuments(
-  companyName:            <companyName>
+getDocuments(
+  companiesIds:           [companyId]
   documentTypes:          ["Earnings Calls"]
   excludeFutureDocuments: false
 )
@@ -160,9 +155,8 @@ Fire one `getStockPrices` call per mover, all simultaneously:
 ```
 # Repeat for each mover (up to 10):
 getStockPrices(
-  companyId: <mover.id>
-  sinceDay:  <mover.latestDocDate − 8 days, YYYY-MM-DD>
-  untilDay:  <mover.latestDocDate + 8 days, YYYY-MM-DD>
+  companiesIds: [<mover.id>]
+  dateRange: { gte: "<mover.latestDocDate − 8 days>", lte: "<mover.latestDocDate + 8 days>" }
 )
 ```
 
@@ -186,7 +180,6 @@ Pass the following structured payload:
 
 ```
 artifact_type: live_feed
-org: <from getOrganization>
 title: "ProntoNLP Live Feed"      # home context
       | "<companyName> Live Feed"  # company context
 
@@ -228,7 +221,7 @@ data:
 refresh:
   onOpen: true
   allowManualRefresh: true
-  tools: [getOrganization, getTopMovers, getTrends, search, getCompanyDocuments, getStockPrices]
+  tools: [getTopMovers, getTrends, getDocuments, getCompanies, getStockPrices]
   params:
     context: "home" | "company"
     companyId?: <string>
@@ -255,9 +248,8 @@ Do not mention tool names in the summary — describe results, not mechanics.
 
 ## Best Practices
 
-1. Always fire `getOrganization` — `org` is required by the artifact agent for all links.
-2. Never pass `marketCaps` or `companyId` to `getTrends` — use `companyName` for company context.
-3. `getTopMovers` company filter uses `companyIDs` (array), not `companyId`. Do not pass a separate prior-period call — the tool computes `sentimentScoreChange` internally.
-4. Never fabricate — empty document buckets → pass empty arrays. Do not invent documents.
-5. Stock prices are optional — if `getStockPrices` fails for a mover, omit `stockPrices`; the artifact skips the sparkline silently.
-6. Do not mention tool names in user-facing messages — describe results, not API calls.
+1. Never pass `marketCaps` or `companyId` to `getTrends` — use `companiesIds` for company context.
+2. `getTopMovers` company filter uses `companiesIds` (array). Do not pass a separate prior-period call — the tool computes `sentimentScoreChange` internally.
+3. Never fabricate — empty document buckets → pass empty arrays. Do not invent documents.
+4. Stock prices are optional — if `getStockPrices` fails for a mover, omit `stockPrices`; the artifact skips the sparkline silently.
+5. Do not mention tool names in user-facing messages — describe results, not API calls.

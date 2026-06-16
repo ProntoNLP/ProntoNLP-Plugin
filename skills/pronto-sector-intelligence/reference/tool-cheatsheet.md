@@ -44,8 +44,7 @@ Always use **exact strings** — tools will not match approximate names.
   "documentTypes": ["Earnings Calls"],
   "sortBy": ["investmentScore", "sentimentScore", "stockChange", "investmentScoreChange", "sentimentScoreChange"],
   "limit": 10,
-  "sinceDay": "YYYY-MM-DD",
-  "untilDay": "YYYY-MM-DD"
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
 
@@ -66,30 +65,23 @@ Always use **exact strings** — tools will not match approximate names.
 **Fields per company entry:**
 | Field | Description |
 |-------|-------------|
-| `id` | Numeric company ID |
+| `id` | Company ID |
 | `name` | Company name |
 | `ticker` | Ticker symbol |
 | `sector` | Sector string |
 | `subSector` | Sub-sector string |
-| `sentimentScore` | Current sentiment score (−1.0 to +1.0) |
+| `sentimentScore` | Current sentiment score |
 | `sentimentScoreChange` | Change vs prior period |
-| `investmentScore` | Investment attractiveness score (raw value from API) |
+| `investmentScore` | Investment attractiveness score |
 | `investmentScoreChange` | Change vs prior period |
 | `stockChange` | % stock change over period |
 | `marketCap` | Market cap label |
-
-**Report usage:**
-- `topMovers[investmentScore]` → Section 2: Top by Investment Score leaderboard
-- `topMovers[sentimentScoreChange]` → Section 2: Biggest Sentiment Shift — Most Bullish
-- `underperforming[sentimentScoreChange]` → Section 2: Biggest Sentiment Shift — Most Bearish
-- `underperforming[investmentScore]` → Section 2: Potential Buy Signals (high score + falling stock)
-- `topMovers[stockChange]` → Section 2: Top Stock Performers
 
 ---
 
 ### 2. `getTrends`
 
-**Purpose:** Trending topics within the sector — which themes are rising or falling in earnings calls.
+**Purpose:** Trending topics within the sector.
 
 **Parameters:**
 ```json
@@ -99,32 +91,17 @@ Always use **exact strings** — tools will not match approximate names.
   "sortBy": "score",
   "sortOrder": "desc",
   "limit": 20,
-  "sinceDay": "YYYY-MM-DD",
-  "untilDay": "YYYY-MM-DD"
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
 
-**⚠️ Critical:** `getTrends` does NOT accept a `query` or `topicSearchQuery` parameter. Scope with `sectors` only.
-
-**Fields per trend entry:**
-| Field | Description |
-|-------|-------------|
-| `topic` | Topic name string |
-| `score` | Relevance score |
-| `hits` | Number of mentions |
-| `change` | % change vs prior period (positive = RISING, negative = FALLING) |
-
-**Report usage:**
-- All entries → Section 4: Trending Topics table
-- Top 3 by `change` (positive) → "Fastest-rising themes"
-- Bottom 2 by `change` (most negative) → "Fastest-declining themes"
-- Top topic names → input for Batch 2 `searchTopCompanies`
+**⚠️ Critical:** `getTrends` does NOT accept a `query` parameter. Scope with `sectors` only.
 
 ---
 
 ### 3. `getAnalytics`
 
-**Purpose:** Aggregate sentiment and investment scores, event type breakdown, and aspect analysis for the sector.
+**Purpose:** Aggregate sentiment and investment scores, event type breakdown, and aspect analysis.
 
 **Parameters:**
 ```json
@@ -132,84 +109,56 @@ Always use **exact strings** — tools will not match approximate names.
   "sectors": ["<sector>"],
   "documentTypes": ["Earnings Calls"],
   "analyticsType": ["scores", "eventTypes", "aspects", "patternSentiment", "importance"],
-  "sinceDay": "YYYY-MM-DD",
-  "untilDay": "YYYY-MM-DD"
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
 
-**⚠️ Max date range: 1 year.** Split requests longer than 1 year into multiple yearly calls.
-
-**Key response fields:**
-| Field | Description |
-|-------|-------------|
-| `scores.sentimentScore` | Aggregate sector sentiment (−1.0 to +1.0) |
-| `scores.investmentScore` | Aggregate sector investment score (raw value from API) |
-| `scores.sentimentScoreChange` | Direction indicator vs prior period |
-| `eventTypes[]` | Array of event types with name, count, sentiment |
-| `aspects[]` | Named aspects (products, strategy, guidance) with sentiment |
-| `patternSentiment.positive` | Avg positive pattern score |
-| `patternSentiment.negative` | Avg negative pattern score |
-
-**Report usage:**
-- `scores` → Section 3: Sentiment & Investment scores table
-- `eventTypes` (positive) → Section 5: Top positive events
-- `eventTypes` (negative) → Section 5: Top negative events
-- Top event type names → input for Batch 2 `searchTopCompanies`
-- `aspects` → Section 3: Top aspects and their polarity
+**⚠️ Max date range: 1 year.**
 
 ---
 
-### 4. `searchTopCompanies`
+### 4. `getCompanies` (replaces `searchTopCompanies`)
 
 **Purpose:** Companies most associated with a specific topic or event type within the sector.
 
-**Parameters:**
+**Parameters — by event type:**
 ```json
 {
   "sectors": ["<sector>"],
   "eventTypes": ["<single event type>"],
-  "limit": 10,
-  "sinceDay": "YYYY-MM-DD",
-  "untilDay": "YYYY-MM-DD"
+  "companySearchMode": "byDocuments",
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
 
-OR with topic:
+**Parameters — by topic:**
 ```json
 {
   "sectors": ["<sector>"],
   "topicSearchQuery": "<topic string>",
-  "limit": 10,
-  "sinceDay": "YYYY-MM-DD",
-  "untilDay": "YYYY-MM-DD"
+  "companySearchMode": "byDocuments",
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
 
-**⚠️ Critical:** Pass **one event type per call** — never merge multiple event types into a single call.
-
-**Report usage:**
-- Per top positive event → Section 5: which companies are most exposed
-- Per top negative event → Section 5 / Section 8: risk exposure leaders
-- Per top trend topic → Section 6: company rankings by theme
+**⚠️ Critical:** Pass **one event type per call** — never merge multiple event types.
 
 ---
 
-### 5. `searchSectors`
+### 5. `getSectors` (replaces `searchSectors`)
 
 **Purpose:** Cross-sector topic distribution — which sectors are discussing a theme most.
 
 **Parameters:**
 ```json
 {
-  "searchQueries": ["<topic 1>", "<topic 2>"],
+  "topicSearchQuery": "<topic>",
   "documentTypes": ["Earnings Calls"],
-  "sinceDay": "YYYY-MM-DD",
-  "untilDay": "YYYY-MM-DD"
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
 
-**Report usage:**
-- Section 4 or Section 6: how the target sector compares to others on the same theme
+**⚠️ Note:** `getSectors` takes ONE `topicSearchQuery` — not an array. Run separate calls for each topic.
 
 ---
 
@@ -217,91 +166,70 @@ OR with topic:
 
 **Purpose:** Executive or analyst sentiment scores for a specific company.
 
-**Parameters:**
+**Parameters (individuals):**
 ```json
 {
-  "companyName": "<company name>",
+  "entityType": "speaker",
+  "companiesIds": ["<companyId>"],
   "speakerTypes": ["Executives"],
   "sortBy": "sentiment",
   "sortOrder": "desc",
   "limit": 10,
   "documentTypes": ["Earnings Calls"],
-  "sinceDay": "YYYY-MM-DD",
-  "untilDay": "YYYY-MM-DD"
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
 
 Use `sortOrder: "asc"` for most bearish. Use `speakerTypes: ["Analysts"]` for analyst view.
 
-**Fields per speaker:**
-| Field | Description |
-|-------|-------------|
-| `name` | Speaker name |
-| `role` | Title / role |
-| `company` | Company name |
-| `sentiment` | Sentiment score |
-| `mentions` | Number of mentions |
-
-**Report usage:** Called per top 2–3 companies from Batch 1. Section 7: most bullish exec, most bearish analyst across sector.
+⚠️ Resolve company IDs from `getTopMovers.topMovers[*].id` before calling `getSpeakers`.
 
 ---
 
-### 7. `getSpeakerCompanies`
+### 7. `getSpeakers` (entityType: 'company')
 
-**Purpose:** Analyst firm sentiment breakdown — which firms are most bullish/bearish on a company.
+**Purpose:** Analyst firm sentiment breakdown.
 
 **Parameters:**
 ```json
 {
-  "companyName": "<company name>",
+  "entityType": "company",
+  "companiesIds": ["<companyId>"],
   "speakerTypes": ["Analysts"],
   "sortBy": "sentiment",
   "sortOrder": "desc",
   "limit": 20,
-  "sinceDay": "YYYY-MM-DD",
-  "untilDay": "YYYY-MM-DD"
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
-
-**Report usage:** Section 7: analyst firm sentiment ranking.
 
 ---
 
 ### 8. Quote Retrieval
 
-**Purpose:** Key quotes from earnings calls — supporting evidence for themes and risks.
-
-**`pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`):
+**Purpose:** Key quotes from earnings calls via `pronto-search-summarizer`.
 
 Task format:
 ```
-"Find [positive/negative/analyst] quotes for [company] about [topic].
-  Sentiment: [positive/negative], SpeakerTypes: [optional], Sections: [optional],
-  Size: 3, SinceDay: [YYYY-MM-DD], UntilDay: [YYYY-MM-DD]"
+"Find [positive/negative/analyst] quotes about [topic] for [company].
+  companiesIds: [companyId], DLSentiment: ['positive'/'negative'],
+  sections: [optional], documentTypes: ['Earnings Calls'],
+  size: 3, dateRange: { gte: YYYY-MM-DD, lte: YYYY-MM-DD }"
 ```
-
-Examples:
-```
-"Find bullish quotes about AI Agents for NVIDIA. Sentiment: positive. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
-"Find risk quotes about Export Controls for NVIDIA. Sentiment: negative. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
-"Find notable analyst questions for Microsoft. Sections: EarningsCalls_Question. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
-```
-
-→ Agent returns a clean summary with top quotes, speaker names, roles, and dates.
-
-**Report usage:** Section 5 / Section 8: supporting quotes per event or risk topic.
 
 ---
 
 ## Date Handling
 
-| Request | sinceDay | untilDay |
-|---------|----------|----------|
-| Default (Full Report) | 1 year ago | today |
-| "past quarter" | 90 days ago | today |
-| "past 6 months" | 6 months ago | today |
-| "YTD" | Jan 1 current year | today |
-| "this week" | 7 days ago | today |
+All tools use `dateRange: { gte, lte }` format. Elasticsearch relative syntax accepted.
+
+| Request | gte | lte |
+|---------|-----|-----|
+| Default (Full Report) | `now-1y/d` | `now` |
+| "past quarter" | `now-90d/d` | `now` |
+| "past 6 months" | `now-6M/d` | `now` |
+| "YTD" | `<YYYY>-01-01` | `now` |
+| "this week" | `now-7d/d` | `now` |
 
 ---
 
@@ -315,35 +243,31 @@ Examples:
 → Save: top company names/IDs, top trend names, top event type names
 
 ### Batch 2 (needs event types and trend names from Batch 1 — fire simultaneously):
-- `searchTopCompanies` per top event type (one call each)
-- `searchTopCompanies` per top trend topic
-- `searchSectors` for top trends
+- `getCompanies(companySearchMode: 'byDocuments')` per top event type (one call each)
+- `getCompanies(companySearchMode: 'byDocuments')` per top trend topic
+- `getSectors` per top trend (one call per topic)
 
-### Batch 3 (needs company names from Batch 1 — fire simultaneously):
-- `getSpeakers` (Executives, desc) per top company
-- `getSpeakers` (Analysts, desc) per top company
-- `getSpeakerCompanies` per top company
+### Batch 3 (needs company IDs from Batch 1 — fire simultaneously):
+- `getSpeakers(entityType: 'speaker')` (Executives, desc) per top company
+- `getSpeakers(entityType: 'speaker')` (Analysts, desc) per top company
+- `getSpeakers(entityType: 'company')` (Analysts, desc) per top company
 Run for top 2–3 companies by investment score.
 
-### Batch 4 (needs company names and topics from Batches 1–2 — fire simultaneously):
-- `search` (positive quotes, top trend) per top company
-- `search` (negative quotes, top risk event) per top company
-- `search` (EarningsCalls_Question section) per top company
+### Batch 4 (needs company IDs and topics from Batches 1–2 — fire simultaneously):
+- `searchSentences` via pronto-search-summarizer (positive quotes, top trend) per top company
+- `searchSentences` via pronto-search-summarizer (negative quotes, top risk event) per top company
+- `searchSentences` via pronto-search-summarizer (EarningsCalls_Question section) per top company
 
 ### Batch 5:
-- Write full HTML report with all charts to `[sector]-report.html`
+- Render HTML report
 
 ---
 
-## Key Computed Signals
+## Key Tool Name Changes (vs old API)
 
-| Signal | How to compute |
-|--------|---------------|
-| Sector direction | `sentimentScoreChange` from getAnalytics: positive = RISING, negative = FALLING |
-| Investment leaders | Top 3 from `topMovers[investmentScore]` |
-| Undervalued signal | Companies in `underperforming[investmentScore]` — high investment score, negative stockChange |
-| Overvalued signal | Companies in `overperforming[investmentScore]` — low investment score, strong positive stockChange |
-| Fastest rising theme | Top 3 `getTrends` entries by `change` (most positive) |
-| Fastest declining theme | Bottom 2 `getTrends` entries by `change` (most negative) |
-| Dominant positive event | Top `getAnalytics.eventTypes` entry with positive sentiment |
-| Dominant negative event | Top `getAnalytics.eventTypes` entry with negative sentiment |
+| Old | New |
+|-----|-----|
+| `searchTopCompanies` | `getCompanies(companySearchMode: 'byDocuments')` |
+| `searchSectors` | `getSectors` (one query per call) |
+| `search` | `searchSentences` |
+| `companyName` param in getSpeakers | `companiesIds: [id]` |

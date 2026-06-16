@@ -23,7 +23,7 @@
 
 **Company (NVDA):** API call needed
 ```
-getCompanyDescription(companyNameOrTicker: "NVDA")
+getCompanies(companyNameOrTicker: "NVDA")
 ```
 → Saved: companyId = 1001, sector = Information Technology, subSector = Semiconductors
 
@@ -36,20 +36,18 @@ getCompanyDescription(companyNameOrTicker: "NVDA")
 
 ### NVDA (company):
 ```
-getCompanyDocuments("NVIDIA", documentTypes: ["Earnings Calls"], limit: 4)
-  → [t_n1: Apr 28, t_n2: Jul 31, t_n3: Oct 30, t_n4: Jan 29]
+getDocuments(companiesIds: ["1001"], documentTypes: ["Earnings Calls"], size: 4, excludeFutureDocuments: true)
+  → [transcriptId: t_n1 (Apr 28), t_n2 (Jul 31), t_n3 (Oct 30), t_n4 (Jan 29)]
 
-getStockChange(companyId: 1001, sinceDay: "2026-01-01", untilDay: "2026-04-06")  → +38.4% YTD
-getStockChange(companyId: 1001, sinceDay: "2025-10-06", untilDay: "2026-04-06") → +22.1% 6M
-getStockChange(companyId: 1001, sinceDay: "2025-04-06", untilDay: "2026-04-06") → +61.8% 1Y
+getStockChange(companiesIds: ["1001"], dateRange: {gte: "2026-01-01", lte: "now"})  → +38.4% YTD
+getStockChange(companiesIds: ["1001"], dateRange: {gte: "now-6M/d",  lte: "now"})  → +22.1% 6M
+getStockChange(companiesIds: ["1001"], dateRange: {gte: "now-1y/d",  lte: "now"})  → +61.8% 1Y
 
-getPredictions(companyId: 1001, metric: "revenue")       → $48.2B fwd
-getPredictions(companyId: 1001, metric: "epsGaap")        → $2.94 fwd
-getPredictions(companyId: 1001, metric: "ebitda")         → $29.7B fwd
-getPredictions(companyId: 1001, metric: "freeCashFlow")   → $26.1B fwd
+getCompanyConsensus(companiesIds: ["1001"], metrics: ["revenue", "epsGaap", "ebitda", "freeCashFlow"], timeframeInterval: "quarter")
+  → revenue: $48.2B fwd, epsGaap: $2.94 fwd, ebitda: $29.7B fwd, freeCashFlow: $26.1B fwd
 
-getTrends(companyName: "NVIDIA", documentTypes: ["Earnings Calls"],
-  sinceDay: "2025-04-06", untilDay: "2026-04-06", limit: 10)
+getTrends(companiesIds: ["1001"], documentTypes: ["Earnings Calls"],
+  dateRange: {gte: "now-1y/d", lte: "now"}, limit: 10)
   → AI Accelerators (+91%), Data Center (+68%), Sovereign AI (+44%), Export Controls (−12%)
 ```
 
@@ -57,23 +55,24 @@ getTrends(companyName: "NVIDIA", documentTypes: ["Earnings Calls"],
 ```
 getAnalytics(sectors: ["Information Technology"], documentTypes: ["Earnings Calls"],
   analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment"],
-  sinceDay: "2025-04-06", untilDay: "2026-04-06")
+  dateRange: {gte: "now-1y/d", lte: "now"})
   → sentimentScore: 0.48, investmentScore: [raw from API], direction: RISING
   → top positive events: GrowthDriver (312 hits), CapexExpansion (187 hits)
   → top negative events: RiskFactor (98 hits), MarginPressure (76 hits)
   → top aspects: AI Infrastructure, Cloud Services, Semiconductor Supply Chain
 
 getTrends(sectors: ["Information Technology"], documentTypes: ["Earnings Calls"],
-  sinceDay: "2025-04-06", untilDay: "2026-04-06", limit: 10)
+  dateRange: {gte: "now-1y/d", lte: "now"}, limit: 10)
   → AI Agents (+84%), Data Center Infrastructure (+61%), Cloud Margins (+38%), PC Market (−18%)
 
 getTopMovers(sectors: ["Information Technology"], documentTypes: ["Earnings Calls"],
   sortBy: ["investmentScore", "sentimentScore", "stockChange", "investmentScoreChange", "sentimentScoreChange"],
-  limit: 10, sinceDay: "2025-04-06", untilDay: "2026-04-06")
+  limit: 10, dateRange: {gte: "now-1y/d", lte: "now"})
   → Top by investment score: NVDA, MSFT, AAPL, AVGO, ORCL [raw scores from API]
   → Top by stock change: NVDA (+61.8%), AVGO (+38.2%), MSFT (+22.4%)
   → Top by sentiment: NVDA (0.67), MSFT (0.58), AVGO (0.54)
   → Underperformers (high score + weak stock): INTC (−28.4%), AMD (−12.3%)
+  → topCompanyId: NVDA id = 1001
 ```
 
 **Saved from Batch 2:**
@@ -96,38 +95,39 @@ getTopMovers(sectors: ["Information Technology"], documentTypes: ["Earnings Call
 
 ### NVDA (company) — per-quarter analytics:
 ```
-getAnalytics("NVIDIA", documentIDs: ["t_n1"], analyticsType: ["scores","eventTypes","aspects","patternSentiment"])
-getAnalytics("NVIDIA", documentIDs: ["t_n2"], ...)
-getAnalytics("NVIDIA", documentIDs: ["t_n3"], ...)
-getAnalytics("NVIDIA", documentIDs: ["t_n4"], ...)
+getAnalytics(companiesIds: ["1001"], transcriptsIds: ["t_n1"], analyticsType: ["scores","eventTypes","aspects","patternSentiment"])
+getAnalytics(companiesIds: ["1001"], transcriptsIds: ["t_n2"], ...)
+getAnalytics(companiesIds: ["1001"], transcriptsIds: ["t_n3"], ...)
+getAnalytics(companiesIds: ["1001"], transcriptsIds: ["t_n4"], ...)
 
-getStockPrices(companyId: 1001, fromDate: "2025-04-26", toDate: "2025-05-03", interval: "day") → Q1 reaction
-getStockPrices(companyId: 1001, fromDate: "2025-07-29", toDate: "2025-08-05", interval: "day") → Q2 reaction
-getStockPrices(companyId: 1001, fromDate: "2025-10-28", toDate: "2025-11-04", interval: "day") → Q3 reaction
-getStockPrices(companyId: 1001, fromDate: "2026-01-27", toDate: "2026-02-03", interval: "day") → Q4 reaction
+getStockPrices(companiesIds: ["1001"], dateRange: {gte: "2025-04-26", lte: "2025-05-03"}, interval: "day") → Q1 reaction
+getStockPrices(companiesIds: ["1001"], dateRange: {gte: "2025-07-29", lte: "2025-08-05"}, interval: "day") → Q2 reaction
+getStockPrices(companiesIds: ["1001"], dateRange: {gte: "2025-10-28", lte: "2025-11-04"}, interval: "day") → Q3 reaction
+getStockPrices(companiesIds: ["1001"], dateRange: {gte: "2026-01-27", lte: "2026-02-03"}, interval: "day") → Q4 reaction
 
-getSpeakers("NVIDIA", speakerTypes: ["Executives"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
-getSpeakers("NVIDIA", speakerTypes: ["Executives_CEO"], limit: 3, documentTypes: ["Earnings Calls"])
-getSpeakers("NVIDIA", speakerTypes: ["Executives_CFO"], limit: 3, documentTypes: ["Earnings Calls"])
-getSpeakers("NVIDIA", speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
-getSpeakerCompanies("NVIDIA", speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 10)
+getSpeakers(entityType: "speaker", companiesIds: ["1001"], speakerTypes: ["Executives"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "speaker", companiesIds: ["1001"], speakerTypes: ["Executives_CEO"], limit: 3, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "speaker", companiesIds: ["1001"], speakerTypes: ["Executives_CFO"], limit: 3, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "speaker", companiesIds: ["1001"], speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"])
+getSpeakers(entityType: "company", companiesIds: ["1001"], speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 10)
+getDocumentSummary(focus: "key risks and risk factors mentioned by management", transcriptsIds: ["t_n4"], corpus: ["S&P Transcripts"])
 ```
 
-### Information Technology (sector) — use top company (NVDA from getTopMovers):
+### Information Technology (sector) — use top company (NVDA, id: 1001 from getTopMovers):
 ```
-searchTopCompanies(sectors: ["Information Technology"], eventTypes: ["GrowthDriver"],
-  limit: 5, sinceDay: "2025-04-06", untilDay: "2026-04-06")
+getCompanies(sectors: ["Information Technology"], eventTypes: ["GrowthDriver"],
+  companySearchMode: "byDocuments", dateRange: {gte: "now-1y/d", lte: "now"})
   → NVDA (#1, 0.71), MSFT (#2, 0.63), AVGO (#3, 0.58)
 
-searchTopCompanies(sectors: ["Information Technology"], eventTypes: ["RiskFactor"],
-  limit: 5, sinceDay: "2025-04-06", untilDay: "2026-04-06")
+getCompanies(sectors: ["Information Technology"], eventTypes: ["RiskFactor"],
+  companySearchMode: "byDocuments", dateRange: {gte: "now-1y/d", lte: "now"})
   → INTC (#1, −0.31), AMD (#2, −0.18), QCOM (#3, −0.14)
 
-getSpeakers("NVIDIA", speakerTypes: ["Executives"],
+getSpeakers(entityType: "speaker", companiesIds: ["1001"], speakerTypes: ["Executives"],
   sortBy: "sentiment", sortOrder: "desc", limit: 10, documentTypes: ["Earnings Calls"])
   → Most bullish exec in sector leader: Jensen Huang, CEO, NVDA (0.81)
 
-getSpeakerCompanies("NVIDIA", speakerTypes: ["Analysts"],
+getSpeakers(entityType: "company", companiesIds: ["1001"], speakerTypes: ["Analysts"],
   sortBy: "sentiment", sortOrder: "desc", limit: 10)
   → Most bullish analyst firm covering sector leader: Goldman Sachs (0.59)
 ```
@@ -154,11 +154,11 @@ getSpeakerCompanies("NVIDIA", speakerTypes: ["Analysts"],
 
 **`pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`), all 5 in parallel:
 ```
-"Find bullish executive quotes for NVIDIA about growth outlook and guidance. SpeakerTypes: Executives. Sentiment: positive. DocumentTypes: Earnings Calls. Size: 3"
-"Find bearish and risk quotes for NVIDIA about risks, challenges, and headwinds. Sentiment: negative. DocumentTypes: Earnings Calls. Size: 3"
-"Find notable analyst questions for NVIDIA. Sections: EarningsCalls_Question. DocumentTypes: Earnings Calls. Size: 3"
-"Find bullish executive quotes from Microsoft about sector growth, cloud, and AI momentum. SpeakerTypes: Executives. Sentiment: positive. Size: 3"
-"Find bearish and risk quotes from Microsoft about sector risks and headwinds. Sentiment: negative. Size: 3"
+"Find bullish executive quotes for NVIDIA about growth outlook and guidance. companiesIds: [1001]. speakerTypes: Executives. DLSentiment: ['positive']. documentTypes: Earnings Calls. size: 3"
+"Find bearish and risk quotes for NVIDIA about risks, challenges, and headwinds. companiesIds: [1001]. DLSentiment: ['negative']. documentTypes: Earnings Calls. size: 3"
+"Find notable analyst questions for NVIDIA. companiesIds: [1001]. sections: EarningsCalls_Question. documentTypes: Earnings Calls. size: 3"
+"Find bullish executive quotes from Microsoft about sector growth, cloud, and AI momentum. companiesIds: [<MSFT_ID>]. speakerTypes: Executives. DLSentiment: ['positive']. size: 3"
+"Find bearish and risk quotes from Microsoft about sector risks and headwinds. companiesIds: [<MSFT_ID>]. DLSentiment: ['negative']. size: 3"
 ```
 
 **Saved quotes:**

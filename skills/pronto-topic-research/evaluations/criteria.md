@@ -23,15 +23,15 @@ This file defines what a correct, high-quality response from `pronto-topic-resea
 
 | Criterion | Pass condition |
 |-----------|---------------|
-| All 5 trend tools called in parallel | `getTrendOvertime`, `getTrendRelatedSectors`, `getTrendWordsByCompany`, `getTrendWordsByDocument`, `getTrendNetwork` all fired simultaneously |
-| `pronto-search-summarizer` called in same parallel batch | Fired alongside the 5 trend tools — not after |
-| `getTrendOvertime` uses 15-month window | `gte` = 15 months ago when user provides no timeframe |
-| All other trend tools use 90-day window | `gte` = 90 days ago for the 4 remaining trend tools |
-| `getTrendOvertime` passes `timeframeInterval: "quarter"` | Never omitted |
-| All trend tools pass `dateRange` explicitly | Both `gte` and `lte` present on every call |
-| All trend tools pass `documentTypes: ["Earnings Calls"]` | Exact string — no variation |
-| All trend tools pass `corpus: ["S&P Transcripts"]` | Exact string — never omitted |
-| No `searchSectors` called | Only the 5 listed native trend tools + search-summarizer subagent used |
+| All 5 topic tools fired in parallel | `getTopicOvertime`, `getSectors`, `getCompanies(companySearchMode:'byDocuments')`, `getDocuments`, `getTopicNetwork` all fired simultaneously |
+| `pronto-search-summarizer` called in same parallel batch | Fired alongside the 5 topic tool calls — not after |
+| `getTopicOvertime` uses 15-month window | `gte` = 15 months ago when user provides no timeframe |
+| All other topic tools use 90-day window | `gte` = 90 days ago for `getSectors`, `getCompanies`, `getDocuments`, `getTopicNetwork` |
+| `getTopicOvertime` passes `timeframeInterval: "quarter"` | Never omitted |
+| All topic tools pass `dateRange` explicitly | Both `gte` and `lte` present on every call |
+| All topic tools pass `documentTypes: ["Earnings Calls"]` | Exact string — no variation |
+| All topic tools pass `corpus: ["S&P Transcripts"]` | Exact string — never omitted |
+| No `getTrendAnalysis` or `searchSectors` called | Only the 5 listed native topic tools + search-summarizer subagent used |
 
 ---
 
@@ -40,7 +40,7 @@ This file defines what a correct, high-quality response from `pronto-topic-resea
 | Criterion | Pass condition |
 |-----------|---------------|
 | Agent prompt requests verbatim sentences only | No JSON, no metadata, no bullets, no headers |
-| One citation per line | Each sentence ends with `[Link: https://{org}.prontonlp.com/#/ref/<FULL_ID>]` |
+| One citation per line | Each sentence ends with embedded `[Source](url)` — output verbatim from `text` field |
 | Weak/off-topic results excluded | Agent instruction explicitly says to exclude low-quality sentences |
 | Output saved as `searchResults` | Agent output stored for passing to themes broker |
 
@@ -71,7 +71,7 @@ This file defines what a correct, high-quality response from `pronto-topic-resea
 | Related Documents table present | Name, date, company, sentiment breakdown, hits |
 | Related Keywords table present | Name, hits, score, explanation for each row |
 | Themes section present | At least 3 themes; each with title, insight, market implications, evidence |
-| Evidence quotes linked | Each quote links to `https://{org}.prontonlp.com/#/ref/<FULL_ID>` |
+| Evidence quotes cited | Each quote `text` field carries embedded `[Source](url)` — output verbatim |
 | Executive Summary present | Verbatim from themes broker — not rewritten |
 | Conclusion present | Verbatim from themes broker — not rewritten |
 
@@ -84,7 +84,7 @@ This file defines what a correct, high-quality response from `pronto-topic-resea
 | Platform color tokens used | `var(--text-primary)`, `var(--bg-card)`, `var(--signal-positive)` etc. |
 | Signal colors correct | Positive: `#6AA64A`, Negative: `#ED4545` |
 | Chart tooltips show positive/negative breakdown | Hovering a data point reveals the split |
-| Company/document links formatted correctly | Links use `https://{org}.prontonlp.com/#/ref/<FULL_ID>` |
+| Citations formatted correctly | Quote/document `text` and `name` fields carry embedded `[Label](url)` — rendered as anchor tags |
 
 ---
 

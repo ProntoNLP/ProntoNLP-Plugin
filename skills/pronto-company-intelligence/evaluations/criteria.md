@@ -23,13 +23,13 @@ This file defines what a correct, high-quality response from `pronto-company-int
 
 | Criterion | Pass condition |
 |-----------|---------------|
-| `getCompanyDescription` called first | Fired before any batch requiring `companyId` |
-| `companyId` passed to all stock/prediction tools | Never hardcoded — always from `getCompanyDescription` |
+| `getCompanies(companyNameOrTicker)` called first | Fired before any batch requiring `companyId` |
+| `companiesIds` array passed to all stock/prediction tools | Never hardcoded — always from `getCompanies` resolution |
 | `getAnalytics` called per quarter | One call per transcript (Q1, Q2, Q3, Q4 separately) — not one aggregate call |
-| `getCompanyDocuments` `documentIDs` used | Per-quarter `getAnalytics` uses document IDs from `getCompanyDocuments` |
-| Competitor `companyId`s retrieved | `getCompanyCompetitors` called; competitor IDs used in `getStockChange` |
+| `getDocuments` `transcriptsIds` used | Per-quarter `getAnalytics` uses `transcriptsIds` from `getDocuments` call |
+| Competitor `companyId`s retrieved | `getCompanyPeers` called; competitor IDs used in `getStockChange` |
 | `getSpeakers` called for CEO and CFO separately | Two calls: `Executives_CEO` and `Executives_CFO` |
-| Forecast search per earnings call | `search` called with `documentID` filter per quarter |
+| Forecast search batched across quarters | One `searchSentences` call with all quarter `transcriptsIds` — not one call per quarter |
 | Date ranges within 1-year analytics limit | No single `getAnalytics` call spans more than 12 months |
 | All independent tools fired in parallel | No sequential calls where parallel execution was possible |
 
@@ -56,8 +56,8 @@ This file defines what a correct, high-quality response from `pronto-company-int
 | Criterion | Pass condition |
 |-----------|---------------|
 | Independent tools called in parallel | No sequential waits where parallel was possible |
-| `getTrends` called with `companyName` | Never called without scoping to the company |
-| Competitor calls made per competitor | One `getStockChange` per competitor — not batched into one call |
+| `getTrends` called with `companiesIds` | Never called without scoping to the company |
+| Competitor stock change batched | One `getStockChange` call with all competitor IDs — `companiesIds: [peer1, peer2, ...]` |
 | No external skills invoked | Only native MCP tools called — no skill-calling-skill |
 
 ---
@@ -72,7 +72,7 @@ This file defines what a correct, high-quality response from `pronto-company-int
 | All 9 sections present | Header, KPI grid, quarter cards, stock chart, competitors, trends, events, speakers, risk/verdict |
 | Signal colors correct | Positive: `#6AA64A`, Negative: `#ED4545` — no other green or red values used for signals |
 | Charts present and correct | Each chart matches the spec in the renderer (type, data fields, colors) |
-| Citation links well-formed | Every quote link uses `https://{org}.prontonlp.com/#/ref/<FULL_ID>` |
+| Citation links well-formed | Quote `text` fields contain embedded `[Source](url)` — renderer renders these as anchor tags |
 | Quotes attributed correctly | Speaker name, role, company, and date present for every quote |
 
 ---

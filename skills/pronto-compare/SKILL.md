@@ -14,7 +14,7 @@ Side-by-side intelligence comparison of 2–5 entities (companies, sectors, or m
 
 Data gathering + scoring live here; final output is a regular standalone HTML report delegated to the `pronto-html-renderer` agent. This skill is not a live artifact.
 
-> ⛔ **TOOL RESTRICTION:** Never call `getMindMap`, `getTermHeatmap`, or `deep-research`. These are user-triggered only.
+> ⛔ **TOOL RESTRICTION:** Never call `showDocumentMindMap` or `deepResearch`. These are user-triggered only.
 
 ---
 
@@ -73,14 +73,11 @@ Then ask: *"Ready to generate the comparison report. Reply **yes** to continue, 
 
 ## Step 2: Batch 1 — Foundation (parallel across all entities)
 
-```
-getOrganization    → save org
-```
-
 **For each COMPANY:**
 ```
-getCompanyDescription(companyNameOrTicker: "<company>")
-  → save: companyId, sector, subSector, description, risks[]
+getCompanies(companyNameOrTicker: "<company>")
+  → save: companyId, sector, name, description_text
+  (risks deferred to Batch 3 — fetched via getDocumentSummary after transcriptIds are available)
 ```
 
 **For each SECTOR:** no API call — use the normalized exact sector string.
@@ -92,28 +89,40 @@ After Batch 1: every company has `companyId`; every entity has a confirmed type 
 ## Step 3: Batch 2 — Core Data (parallel across all entities)
 
 ### Per COMPANY:
+
+**Batchable across all companies (one call for all company IDs):**
 ```
-getCompanyDocuments(companyName, documentTypes: ["Earnings Calls"], limit: 4)
-  → save transcriptId[] and call dates Q1–Q4
-getStockChange ×3   (YTD, 6M, 1Y)
-getPredictions ×4   (revenue, epsGaap, ebitda, freeCashFlow)
-getTrends(companyName, documentTypes: ["Earnings Calls"], sinceDay: 1Y ago, limit: 10)
+getDocuments(companiesIds: [co1, co2, ...], documentTypes: ["Earnings Calls"], size: 4, excludeFutureDocuments: true)
+  → save transcriptId per call per company, call dates Q1–Q4
+getStockChange(companiesIds: [co1, co2, ...], dateRange: YTD) — ONE call for all companies
+getStockChange(companiesIds: [co1, co2, ...], dateRange: 6M)  — ONE call for all companies
+getStockChange(companiesIds: [co1, co2, ...], dateRange: 1Y)  — ONE call for all companies
+getCompanyConsensus(companiesIds: [co1, co2, ...], metrics: ['revenue', 'epsGaap', 'ebitda', 'freeCashFlow'], timeframeInterval: 'quarter')
+  — ONE call for all companies
+```
+
+**Separate per company (results aggregate across companies — need per-company breakdown):**
+```
+getTrends(companiesIds: [companyId], documentTypes: ["Earnings Calls"], dateRange: {gte: 'now-1y/d', lte: 'now'}, limit: 10)
+  → one call per company
 ```
 
 ### Per SECTOR:
 ```
-getAnalytics(sectors, documentTypes: ["Earnings Calls"],
+getAnalytics(sectors: [...], documentTypes: ["Earnings Calls"],
   analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment"],
-  sinceDay: 1Y ago, untilDay: today)
+  dateRange: { gte: 'now-1y/d', lte: 'now' })
   → sentimentScore, investmentScore, directions, top positive/negative events, top aspects
 
-getTrends(sectors, documentTypes: ["Earnings Calls"], sinceDay: 1Y ago, limit: 10)
-  (NEVER pass `query` or `topicSearchQuery` to getTrends)
+getTrends(sectors: [...], documentTypes: ["Earnings Calls"],
+  dateRange: { gte: 'now-1y/d', lte: 'now' }, limit: 10)
+  (NEVER pass `query` to getTrends — `topicSearchQuery` is accepted for subject-area scoping)
 
-getTopMovers(sectors, documentTypes: ["Earnings Calls"],
+getTopMovers(sectors: [...], documentTypes: ["Earnings Calls"],
   sortBy: ["investmentScore", "sentimentScore", "stockChange",
            "investmentScoreChange", "sentimentScoreChange"],
-  limit: 10, sinceDay: 1Y ago)
+  limit: 10,
+  dateRange: { gte: 'now-1y/d', lte: 'now' })
   → top by investment, top by sentiment, top by stock, underperformers
 ```
 
@@ -122,22 +131,33 @@ getTopMovers(sectors, documentTypes: ["Earnings Calls"],
 ## Step 4: Batch 3 — Deep Analysis (parallel across all entities)
 
 ### Per COMPANY (uses transcriptIds from Batch 2):
+
+**Separate per quarter (need per-quarter scores for RISING/FALLING computation):**
 ```
-getAnalytics ×4   (per quarter, pass documentIDs, analyticsType: scores/events/aspects/patternSentiment)
-getStockPrices ×4 (call date ±5 days, interval: "day" → stock reaction per quarter)
-getSpeakers       (Executives, sortBy: sentiment, limit: 20)
-getSpeakers       (Executives_CEO, limit: 3)
-getSpeakers       (Executives_CFO, limit: 3)
-getSpeakers       (Analysts, sortBy: sentiment, limit: 20)
-getSpeakerCompanies (Analysts, sortBy: sentiment, limit: 10)
+getAnalytics ×4   (per quarter per company, pass transcriptsIds: [transcriptId_qN], analyticsType: scores/events/aspects/patternSentiment)
+getStockPrices(companiesIds: [companyId]) ×4  (dateRange: call date ±5 days, interval: 'day' → stock reaction per quarter)
+```
+
+**Separate per company (need per-company attribution):**
+```
+getSpeakers(entityType: 'speaker', speakerTypes: ['Executives'], sortBy: 'sentiment', sortOrder: 'desc', limit: 20, companiesIds: [companyId])
+getSpeakers(entityType: 'speaker', speakerTypes: ['Executives_CEO'], limit: 3, companiesIds: [companyId])
+getSpeakers(entityType: 'speaker', speakerTypes: ['Executives_CFO'], limit: 3, companiesIds: [companyId])
+getSpeakers(entityType: 'speaker', speakerTypes: ['Analysts'], sortBy: 'sentiment', sortOrder: 'desc', limit: 20, companiesIds: [companyId])
+getSpeakers(entityType: 'company', speakerTypes: ['Analysts'], sortBy: 'sentiment', sortOrder: 'desc', limit: 10, companiesIds: [companyId])
+```
+
+**Batchable across all companies (ONE call — max 5 transcripts):**
+```
+getDocumentSummary(focus: 'key risks and risk factors mentioned by management', transcriptsIds: [latestTx_co1, latestTx_co2, ...], corpus: ['S&P Transcripts'])
 ```
 
 ### Per SECTOR (uses top companies from getTopMovers):
 ```
-searchTopCompanies(sectors, eventTypes: ["GrowthDriver"], limit: 5)
-searchTopCompanies(sectors, eventTypes: ["RiskFactor"],   limit: 5)
-getSpeakers(companyName: "<sector's top company>", speakerTypes: ["Executives"], limit: 10)
-getSpeakerCompanies(companyName: "<sector's top company>", speakerTypes: ["Analysts"], limit: 10)
+getCompanies(sectors: [...], eventTypes: ["GrowthDriver"], companySearchMode: 'byDocuments')
+getCompanies(sectors: [...], eventTypes: ["RiskFactor"], companySearchMode: 'byDocuments')
+getSpeakers(entityType: 'speaker', companiesIds: [topCompanyId], speakerTypes: ["Executives"], limit: 10)
+getSpeakers(entityType: 'company', companiesIds: [topCompanyId], speakerTypes: ["Analysts"], limit: 10)
 ```
 
 Compute per company:
@@ -153,26 +173,24 @@ Compute per company:
 Delegate to ONE `pronto-search-summarizer` (`subagent_type: prontonlp-plugin:pronto-search-summarizer`):
 
 ```
-org: [org]
-sinceDay: 1Y ago
-untilDay: today
+dateRange: { gte: 'now-1y/d', lte: 'now' }
 
 Fetch quotes for the comparison report.
 
 Per COMPANY entity:
-- Bullish executive quotes — speakerTypes: Executives, sentiment: positive,
-  topicSearchQuery: 'growth outlook guidance', documentTypes: ["Earnings Calls"], size: 3
-- Bearish/risk quotes — sentiment: negative,
-  topicSearchQuery: 'risk challenge headwind', size: 3
-- Notable analyst questions — sections: EarningsCalls_Question, size: 3
+- Bullish executive quotes — speakerTypes: Executives, DLSentiment: ['positive'],
+  topicSearchQuery: 'growth outlook guidance', documentTypes: ["Earnings Calls"], companiesIds: [companyId], size: 3
+- Bearish/risk quotes — DLSentiment: ['negative'],
+  topicSearchQuery: 'risk challenge headwind', companiesIds: [companyId], size: 3
+- Notable analyst questions — sections: EarningsCalls_Question, companiesIds: [companyId], size: 3
 
 Per SECTOR entity (use the sector's top company as representative):
-- Bullish quotes — companyName: [top company], speakerTypes: Executives, sentiment: positive,
+- Bullish quotes — companiesIds: [topCompanyId], speakerTypes: Executives, DLSentiment: ['positive'],
   topicSearchQuery: 'sector growth momentum', size: 3
-- Bearish/risk quotes — sentiment: negative,
-  topicSearchQuery: 'sector risk headwind', size: 3
+- Bearish/risk quotes — DLSentiment: ['negative'],
+  topicSearchQuery: 'sector risk headwind', companiesIds: [topCompanyId], size: 3
 
-Return with speaker name, role, date, refId.
+Return with speaker name, role, date. Citation link is already embedded in the text field.
 ```
 
 Tag each quote by section (`bull`, `bear`, `analyst-question`) and by entity.
@@ -234,7 +252,6 @@ File naming:
 
 ```
 report_type: compare
-org: <org>
 filename: <as above>
 title: "<Entity A> vs <Entity B> [vs ...] — Comparison Report"
 subtitle: "<N> Entities (<type breakdown>) · Period: Past Year"
@@ -250,8 +267,8 @@ data:
       speakers: { ceo, cfo, execAvg, analystAvg, mostBullishAnalystFirm, mostBearishAnalystFirm }
       predictions: { revenueFwd, epsFwd, ebitdaFwd, fcfFwd }
       trends: [ { name, score, change } ]
-      risks:  [ { title, evidence, refId } ]
-      quotes: [ { text, speakerName, role, date, refId, section } ]
+      risks:  [ { title, evidence } ]  # evidence contains "[Source](url)"
+      quotes: [ { text, speakerName, role, date, section } ]  # text ends with "[Source](url)"
   sectors:   # keyed by sector string, sector entities only
     <sector>:
       scores: { sentiment: { value, direction }, investment: { value, direction } }
@@ -260,7 +277,7 @@ data:
       dominantPositiveEvent: { name, hits }
       dominantNegativeEvent: { name, hits }
       trends:  [ { name, score, change } ]
-      quotes:  [ { text, speakerName, role, date, refId, section } ]
+      quotes:  [ { text, speakerName, role, date, section } ]
   topicMatrix: [ [ { entity, topic, change } ] ]         # per-entity top-10 topic lists
   overlap: { sharedAll: [...], sharedBy2: [...], uniqueTo: { <entity>: [...] } }
   riskMatrix: [ { risk, byEntity: { <entity>: bool }, type: "Systemic"|"Idiosyncratic" } ]
@@ -274,7 +291,7 @@ narrative:
     # Select 1–2 quotes per entity from their quotes array that best support the verdict claims.
     # Pick bull quotes for the winner, bear/risk quotes for the loser or the highest-risk entity.
     # Each entry must include entityName so the renderer groups them by entity.
-    [ { text, speakerName, role, company, date, refId, entityName } ]
+    [ { text, speakerName, role, company, date, entityName } ]  # text ends with "[Source](url)"
 ```
 
 **Populating `verdictEvidence`:** After writing the verdict paragraphs, look at each entity's `quotes` array (in `data.companies.<name>.quotes` or `data.sectors.<name>.quotes`). Select the 1–2 quotes that most directly back up the claim made in the corresponding verdict paragraph — e.g. if the `overallLeader` paragraph cites NVDA's investment score rising, pick a bullish executive quote from NVDA's `bull` section. Include the `entityName` field on every entry so the renderer can group by entity.
@@ -304,7 +321,7 @@ If the user answers yes (or pre-asked), invoke `anthropic-skills:xlsx` **directl
 6. **Topic Matrix** — Entity, Topic, Change (flattened from per-entity top-10 topic lists)
 7. **Topic Overlap** — Category (Shared All / Shared by 2 / Unique To), Entity, Topic
 8. **Risk Matrix** — Risk, Type (Systemic/Idiosyncratic), one column per entity (✓ or blank)
-9. **Verdict Evidence** *(tab green `#6AA64A`)* — Entity, Quote, Speaker, Role, Company, Date, Source (hyperlink to refId)
+9. **Verdict Evidence** *(tab green `#6AA64A`)* — Entity, Quote (with embedded [Source](url) link), Speaker, Role, Company, Date
 
 **Styling** (every sheet):
 - Row 1: fill `#205262`, white bold text, height 22pt, frozen so it stays visible when scrolling
@@ -323,12 +340,14 @@ If the user answers no, end the skill normally.
 
 ## Date Handling
 
-| Scope | sinceDay | untilDay |
-|-------|----------|----------|
-| Default (past year) | 1 year ago | today |
-| "past quarter" | 90 days ago | today |
-| "past 6 months" | 6 months ago | today |
-| YTD | Jan 1 current year | today |
+All tool calls use `dateRange: {gte, lte}` format.
+
+| Scope | gte | lte |
+|-------|-----|-----|
+| Default (past year) | `now-1y/d` | `now` |
+| "past quarter" | `now-90d/d` | `now` |
+| "past 6 months" | `now-6M/d` | `now` |
+| YTD | `<YYYY>-01-01` | `now` |
 
 ---
 
@@ -349,13 +368,14 @@ If the user answers no, end the skill normally.
 
 ## Best Practices
 
-1. Save `companyId` immediately for every company entity.
+1. Save `companyId` immediately for every company entity (from `getCompanies`).
 2. Fire all entities simultaneously within each batch — never process one at a time.
 3. Scorecard adapts to entity mix — use null / companyOnly flag for sector entities on company-only rows.
 4. Label entity types in every section header (renderer does this from the `type` field).
 5. Divergence signal (rising investment + weak stock) is the most actionable insight.
 6. Never fabricate — missing data → null.
 7. Consistent entity colors across charts (passed in `data.entities[*].color`).
+8. Always pass `companiesIds: [companyId]` (array) to all tools that accept company filtering.
 
 ---
 

@@ -6,49 +6,44 @@ Complete workflow showing companyId flow and the per-quarter earnings comparison
 
 ## Batch 1: Foundation (parallel)
 ```
-Tool: Pronto:getCompanyDescription
+Tool: getCompanies
 Params: { companyNameOrTicker: "AAPL" }
-→ companyId: "4567"          ← SAVED
+→ id: "4567"   (save as companyId)   ← SAVED
 → name: "Apple Inc.", sector: "Information Technology"
 
-Tool: Pronto:getCompanyCompetitors
-Params: { companyNameOrTicker: "AAPL" }
-→ competitors:
+Tool: getCompanyPeers
+Params: { companiesIds: ["4567"] }
+→ peers:
     { companyId: "8901", name: "Samsung" }
     { companyId: "1234", name: "Microsoft" }
     { companyId: "5678", name: "Alphabet" }
     { companyId: "2345", name: "Dell Technologies" }
 ```
 
-## Batch 2: Documents + Stock + Predictions (all parallel, using companyId "4567")
+## Batch 2: Documents + Stock + Predictions (all parallel, using companiesIds: ["4567"])
 ```
-Tool: Pronto:getCompanyDocuments
-Params: { companyName: "Apple", documentTypes: ["Earnings Calls", "10-K", "10-Q"] }
+Tool: getDocuments
+Params: { companiesIds: ["4567"], documentTypes: ["Earnings Calls", "10-K", "10-Q"], excludeFutureDocuments: true }
 → documents:
-    { transcriptId: "doc_q1", title: "Apple Q1 FY2025 Earnings", day: "2025-04-28" }   ← SAVED
-    { transcriptId: "doc_q2", title: "Apple Q2 FY2025 Earnings", day: "2025-07-31" }   ← SAVED
-    { transcriptId: "doc_q3", title: "Apple Q3 FY2025 Earnings", day: "2025-10-30" }   ← SAVED
-    { transcriptId: "doc_q4", title: "Apple Q4 FY2025 Earnings", day: "2026-01-30" }   ← SAVED
-    { transcriptId: "doc_10k", title: "Apple 10-K FY2025", day: "2025-11-15" }
+    { transcriptId: "doc_q1", title: "Apple Q1 FY2025 Earnings", date: "2025-04-28" }   ← SAVED
+    { transcriptId: "doc_q2", title: "Apple Q2 FY2025 Earnings", date: "2025-07-31" }   ← SAVED
+    { transcriptId: "doc_q3", title: "Apple Q3 FY2025 Earnings", date: "2025-10-30" }   ← SAVED
+    { transcriptId: "doc_q4", title: "Apple Q4 FY2025 Earnings", date: "2026-01-30" }   ← SAVED
+    { transcriptId: "doc_10k", title: "Apple 10-K FY2025", date: "2025-11-15" }
 
-Tool: Pronto:getStockPrices
-Params: { companyId: "4567", fromDate: "2025-03-03", toDate: "2026-03-03", interval: "week" }
+Tool: getStockPrices (1-year weekly)
+Params: { companiesIds: ["4567"], dateRange: { gte: "now-1y/d", lte: "now" }, interval: "week" }
 
-Tool: Pronto:getStockChange x3
-Params (YTD):    { companyId: "4567", fromDate: "2026-01-01", toDate: "2026-03-03" }
-Params (6M):     { companyId: "4567", fromDate: "2025-09-03", toDate: "2026-03-03" }
-Params (1Y):     { companyId: "4567", fromDate: "2025-03-03", toDate: "2026-03-03" }
+Tool: getStockChange x3
+Params (YTD): { companiesIds: ["4567"], dateRange: { gte: "2026-01-01", lte: "now" } }
+Params (6M):  { companiesIds: ["4567"], dateRange: { gte: "now-6M/d",  lte: "now" } }
+Params (1Y):  { companiesIds: ["4567"], dateRange: { gte: "now-1y/d",  lte: "now" } }
 
-Tool: Pronto:getPredictions x6 (all parallel, companyId: "4567")
-  metric: "revenue"
-  metric: "epsGaap"
-  metric: "ebitda"
-  metric: "netIncomeGaap"
-  metric: "freeCashFlow"
-  metric: "capitalExpenditure"
+Tool: getCompanyConsensus (1 call — all metrics at once)
+Params: { companiesIds: ["4567"], metrics: ["revenue", "epsGaap", "ebitda", "netIncomeGaap", "freeCashFlow", "capitalExpenditure"], timeframeInterval: "quarter" }
 
-Tool: Pronto:getTrends
-Params: { companyName: "Apple", sinceDay: "2025-12-03", untilDay: "2026-03-03", sortBy: "score", limit: 20 }
+Tool: getTrends
+Params: { companiesIds: ["4567"], dateRange: { gte: "now-90d/d", lte: "now" }, sortBy: "score", limit: 20 }
 → trends:
     { name: "Apple Intelligence", score: 95, hits: 312, change: 45% }
     { name: "Vision Pro", score: 82, hits: 187, change: -12% }
@@ -62,62 +57,58 @@ Params: { companyName: "Apple", sinceDay: "2025-12-03", untilDay: "2026-03-03", 
     { name: "Wearables Growth", score: 47, hits: 76, change: -5% }
 ```
 
-## Batch 3: Per-Quarter Sentiment + Stock Around Calls + Speakers + Competitors (all parallel)
+## Batch 3: Per-Quarter Sentiment + Stock Around Calls + Speakers + Peers (all parallel)
 
 ### Per-quarter analytics (4 calls, one per earnings call)
 ```
-Tool: Pronto:getAnalytics (Q1)
+Tool: getAnalytics (Q1)
 Params: {
-  companyName: "Apple",
-  documentIDs: ["doc_q1"],
-  documentTypes: ["Earnings Calls"],
-  sinceDay: "2025-04-01", untilDay: "2025-04-30",
+  companiesIds: ["4567"],
+  transcriptsIds: ["doc_q1"],
   analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment", "importance"]
 }
 → sentimentScore: 0.32, investmentScore: [X.X — raw value from API]
 
-Tool: Pronto:getAnalytics (Q2)
+Tool: getAnalytics (Q2)
 Params: {
-  companyName: "Apple",
-  documentIDs: ["doc_q2"],
-  documentTypes: ["Earnings Calls"],
-  sinceDay: "2025-07-01", untilDay: "2025-07-31",
+  companiesIds: ["4567"],
+  transcriptsIds: ["doc_q2"],
   analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment", "importance"]
 }
 → sentimentScore: 0.38, investmentScore: [X.X — raw value from API]
 
-Tool: Pronto:getAnalytics (Q3)
-Params: { ... documentIDs: ["doc_q3"], sinceDay: "2025-10-01", untilDay: "2025-10-31" ... }
+Tool: getAnalytics (Q3)
+Params: { companiesIds: ["4567"], transcriptsIds: ["doc_q3"], analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment", "importance"] }
 → sentimentScore: 0.35, investmentScore: [X.X — raw value from API]
 
-Tool: Pronto:getAnalytics (Q4)
-Params: { ... documentIDs: ["doc_q4"], sinceDay: "2026-01-01", untilDay: "2026-01-31" ... }
+Tool: getAnalytics (Q4)
+Params: { companiesIds: ["4567"], transcriptsIds: ["doc_q4"], analyticsType: ["scores", "eventTypes", "aspects", "patternSentiment", "importance"] }
 → sentimentScore: 0.41, investmentScore: [X.X — raw value from API]
 ```
 
-### Stock price around each earnings call (4 calls, using companyId "4567")
+### Stock price around each earnings call (4 calls, using companiesIds: ["4567"])
 ```
-Tool: Pronto:getStockPrices (around Q1 call)
-Params: { companyId: "4567", fromDate: "2025-04-21", toDate: "2025-05-05", interval: "day" }
+Tool: getStockPrices (around Q1 call)
+Params: { companiesIds: ["4567"], dateRange: { gte: "2025-04-21", lte: "2025-05-05" }, interval: "day" }
 → Price before call: $198, price after: $202 → +2.0%
 
-Tool: Pronto:getStockPrices (around Q2 call)
-Params: { companyId: "4567", fromDate: "2025-07-24", toDate: "2025-08-07", interval: "day" }
+Tool: getStockPrices (around Q2 call)
+Params: { companiesIds: ["4567"], dateRange: { gte: "2025-07-24", lte: "2025-08-07" }, interval: "day" }
 → Price before: $210, price after: $219 → +4.3%
 
-Tool: Pronto:getStockPrices (around Q3 call)
-Params: { companyId: "4567", fromDate: "2025-10-23", toDate: "2025-11-06", interval: "day" }
+Tool: getStockPrices (around Q3 call)
+Params: { companiesIds: ["4567"], dateRange: { gte: "2025-10-23", lte: "2025-11-06" }, interval: "day" }
 → Price before: $225, price after: $222 → -1.3%
 
-Tool: Pronto:getStockPrices (around Q4 call)
-Params: { companyId: "4567", fromDate: "2026-01-23", toDate: "2026-02-06", interval: "day" }
+Tool: getStockPrices (around Q4 call)
+Params: { companiesIds: ["4567"], dateRange: { gte: "2026-01-23", lte: "2026-02-06" }, interval: "day" }
 → Price before: $230, price after: $238 → +3.5%
 ```
 
-### Speakers + Competitors (parallel with above)
+### Speakers + Peers + Risks (parallel with above)
 ```
-Tool: Pronto:getSpeakers (all executives)
-Params: { companyName: "Apple", speakerTypes: ["Executives"], sortBy: "count", sortOrder: "desc", limit: 20, ... }
+Tool: getSpeakers (entityType: "speaker", all executives)
+Params: { entityType: "speaker", companiesIds: ["4567"], speakerTypes: ["Executives"], sortBy: "count", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"] }
 → speakers:
     { name: "Tim Cook", sentimentScore: 0.42, numOfSentences: 187 }
     { name: "Luca Maestri", sentimentScore: 0.35, numOfSentences: 156 }
@@ -125,16 +116,16 @@ Params: { companyName: "Apple", speakerTypes: ["Executives"], sortBy: "count", s
     { name: "Deirdre O'Brien", sentimentScore: 0.31, numOfSentences: 28 }
 → Average executive sentiment: 0.37
 
-Tool: Pronto:getSpeakers (CEO)
-Params: { companyName: "Apple", speakerTypes: ["Executives_CEO"], sortBy: "count", limit: 5, ... }
+Tool: getSpeakers (entityType: "speaker", CEO)
+Params: { entityType: "speaker", companiesIds: ["4567"], speakerTypes: ["Executives_CEO"], limit: 5, documentTypes: ["Earnings Calls"] }
 → { name: "Tim Cook", sentimentScore: 0.42, numOfSentences: 187 }
 
-Tool: Pronto:getSpeakers (CFO)
-Params: { companyName: "Apple", speakerTypes: ["Executives_CFO"], sortBy: "count", limit: 5, ... }
+Tool: getSpeakers (entityType: "speaker", CFO)
+Params: { entityType: "speaker", companiesIds: ["4567"], speakerTypes: ["Executives_CFO"], limit: 5, documentTypes: ["Earnings Calls"] }
 → { name: "Luca Maestri", sentimentScore: 0.35, numOfSentences: 156 }
 
-Tool: Pronto:getSpeakers (analysts — bullish first)
-Params: { companyName: "Apple", speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 20, ... }
+Tool: getSpeakers (entityType: "speaker", analysts — bullish first)
+Params: { entityType: "speaker", companiesIds: ["4567"], speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 20, documentTypes: ["Earnings Calls"] }
 → speakers:
     { name: "Erik Woodring", company: "Morgan Stanley", sentimentScore: 0.58, numOfSentences: 32 }
     { name: "Samik Chatterjee", company: "JPMorgan", sentimentScore: 0.51, numOfSentences: 28 }
@@ -144,8 +135,8 @@ Params: { companyName: "Apple", speakerTypes: ["Analysts"], sortBy: "sentiment",
     { name: "Rod Hall", company: "Goldman Sachs", sentimentScore: -0.18, numOfSentences: 22 }
 → Average analyst sentiment: 0.29
 
-Tool: Pronto:getSpeakerCompanies
-Params: { companyName: "Apple", speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 20, ... }
+Tool: getSpeakers (entityType: "company" — analyst firms)
+Params: { entityType: "company", companiesIds: ["4567"], speakerTypes: ["Analysts"], sortBy: "sentiment", sortOrder: "desc", limit: 20 }
 → firms:
     { name: "Morgan Stanley", sentimentScore: 0.55, numOfSentences: 64 }
     { name: "JPMorgan", sentimentScore: 0.48, numOfSentences: 52 }
@@ -153,33 +144,28 @@ Params: { companyName: "Apple", speakerTypes: ["Analysts"], sortBy: "sentiment",
     { name: "Goldman Sachs", sentimentScore: -0.15, numOfSentences: 41 }
     { name: "Bernstein", sentimentScore: -0.22, numOfSentences: 38 }
 
-Tool: Pronto:getStockChange (per competitor, parallel)
-Params: { companyId: "8901", fromDate: "2025-03-03", toDate: "2026-03-03" }  // Samsung
-Params: { companyId: "1234", fromDate: "2025-03-03", toDate: "2026-03-03" }  // Microsoft
-Params: { companyId: "5678", fromDate: "2025-03-03", toDate: "2026-03-03" }  // Alphabet
-Params: { companyId: "2345", fromDate: "2025-03-03", toDate: "2026-03-03" }  // Dell
+Tool: getDocumentSummary (risks, all 4 quarters — max 5)
+Params: { focus: "key risks and risk factors mentioned by management", transcriptsIds: ["doc_q1", "doc_q2", "doc_q3", "doc_q4"], corpus: ["S&P Transcripts"] }
+→ risks: [{ text: "China Revenue Concentration...", sources: [...] }, ...]
+
+Tool: getStockChange (all peers — 1 call)
+Params: { companiesIds: ["8901", "1234", "5678", "2345"], dateRange: { gte: "now-1y/d", lte: "now" } }  // Samsung, Microsoft, Alphabet, Dell
 ```
 
 ## Batch 4: Forecast Sentences + Key Quotes (all parallel)
 
-**`pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`), fire all 7 simultaneously:
+**`pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`), fire all 4 simultaneously:
 
 ```
-"Find forecast and guidance quotes for Apple from Q1 earnings call. DocumentIDs: doc_q1. Topic: forecast guidance outlook expectations. SpeakerTypes: Executives. Sentiment: positive. Size: 5"
-→ "We expect continued strength in Services, with revenue growth in the mid-teens..."
+"Find forecast and guidance quotes for Apple across all recent earnings calls. companiesIds: [4567]. transcriptsIds: [doc_q1, doc_q2, doc_q3, doc_q4]. Topic: forecast guidance outlook expectations. speakerTypes: Executives. DLSentiment: ['positive']. size: 8"
+→ "We expect continued strength in Services, with revenue growth in the mid-teens..." (Q1)
+→ "We're raising our full-year EPS guidance reflecting strong iPhone demand..." (Q2)
+→ "We anticipate some headwinds from FX and macro uncertainty in the December quarter..." (Q3)
+→ "We're very pleased with holiday performance and raising fiscal year guidance..." (Q4)
 
-"Find forecast and guidance quotes for Apple from Q2 earnings call. DocumentIDs: doc_q2. Topic: forecast guidance outlook expectations. SpeakerTypes: Executives. Sentiment: positive. Size: 5"
-→ "We're raising our full-year EPS guidance reflecting strong iPhone demand..."
-
-"Find forecast and guidance quotes for Apple from Q3 earnings call. DocumentIDs: doc_q3. Topic: forecast guidance outlook expectations. SpeakerTypes: Executives. Sentiment: positive. Size: 5"
-→ "We anticipate some headwinds from FX and macro uncertainty in the December quarter..."
-
-"Find forecast and guidance quotes for Apple from Q4 earnings call. DocumentIDs: doc_q4. Topic: forecast guidance outlook expectations. SpeakerTypes: Executives. Sentiment: positive. Size: 5"
-→ "We're very pleased with holiday performance and raising fiscal year guidance..."
-
-"Find most bullish executive quotes for Apple. SpeakerTypes: Executives. Sentiment: positive. Size: 10"
-"Find top risk and bearish quotes for Apple. Sentiment: negative. Size: 10"
-"Find notable analyst questions for Apple. SpeakerTypes: Analysts. Sections: EarningsCalls_Question. Size: 10"
+"Find most bullish executive quotes for Apple. companiesIds: [4567]. speakerTypes: Executives. DLSentiment: ['positive']. size: 10"
+"Find top risk and bearish quotes for Apple. companiesIds: [4567]. DLSentiment: ['negative']. size: 10"
+"Find notable analyst questions for Apple. companiesIds: [4567]. speakerTypes: Analysts. sections: EarningsCalls_Question. size: 10"
 ``` 
 
 ## Compile: Full Report
@@ -219,112 +205,6 @@ Thesis: BULLISH. Supported by (1) rising sentiment and investment scores across 
 | Q2 2025 | Jul 31   | 0.38      | RISING  | 0.65       | RISING  | +4.3%       | RISING  |
 | Q3 2025 | Oct 30   | 0.35      | FALLING | 0.68       | RISING  | -1.3%       | FALLING |
 | Q4 2025 | Jan 30   | 0.41      | RISING  | 0.71       | RISING  | +3.5%       | RISING  |
-
-Note: Q3 shows a divergence — investment score continued rising despite sentiment dip,
-and the stock fell. This was driven by macro FX concerns, not fundamental deterioration.
-
----
-
-## Management Forecast & Outlook
-
-| Quarter | Tone | Key Guidance |
-|---------|------|-------------|
-| Q1 2025 | Cautiously optimistic | Services growth mid-teens, steady iPhone |
-| Q2 2025 | Confident | Raised full-year EPS, strong iPhone demand |
-| Q3 2025 | Cautious | FX headwinds, macro uncertainty flagged |
-| Q4 2025 | Optimistic | Strong holiday, raised FY guidance again |
-
-**Forecast tone is IMPROVING. Guidance was RAISED in 2 of 4 quarters.**
-
----
-
-## Trending Topics
-
-| Trend | Score | Hits | % Change | Direction |
-|-------|-------|------|----------|-----------|
-| Apple Intelligence | 95 | 312 | +45% | RISING |
-| Vision Pro | 82 | 187 | -12% | DECLINING |
-| Services Revenue | 78 | 256 | +22% | RISING |
-| iPhone 17 | 71 | 198 | +38% | RISING |
-| China Market | 65 | 143 | -8% | DECLINING |
-| AI Integration | 62 | 167 | +55% | RISING |
-| Margin Expansion | 58 | 112 | +15% | RISING |
-| Capital Return | 54 | 98 | +3% | RISING |
-| Regulatory Risk | 51 | 89 | +18% | RISING |
-| Wearables Growth | 47 | 76 | -5% | DECLINING |
-
-**Key takeaways:**
-- Apple Intelligence and AI Integration are the fastest-rising topics (+45% and +55%), dominating executive commentary
-- Vision Pro discussion is declining (-12%), suggesting reduced emphasis after initial launch hype
-- China Market remains a watched topic but declining in mentions — potential risk fading or being avoided
-
----
-
-## Executive Sentiment & Management Commentary
-
-CEO vs CFO Comparison:
-| Role | Name | Sentiment Score | Sentences | vs Exec Avg (0.37) |
-|------|------|----------------|-----------|---------------------|
-| CEO  | Tim Cook | 0.42 | 187 | ABOVE (+0.05) |
-| CFO  | Luca Maestri | 0.35 | 156 | BELOW (-0.02) |
-
-**CEO is MORE BULLISH than CFO (0.42 vs 0.35).** This is typical — CEO focuses on
-vision and growth narrative while CFO tempers with financial realism.
-
-Top Executives by Volume:
-| Executive | Sentiment | Sentences |
-|-----------|-----------|-----------|
-| Tim Cook | 0.42 | 187 |
-| Luca Maestri | 0.35 | 156 |
-| Jeff Williams | 0.38 | 43 |
-| Deirdre O'Brien | 0.31 | 28 |
-
----
-
-## Analyst & Investor Sentiment
-
-Average analyst sentiment: 0.29
-Sentiment spread: 0.76 (most bullish 0.58 to most bearish -0.18)
-
-Most Bullish Analysts:
-| Analyst | Firm | Sentiment | Sentences |
-|---------|------|-----------|-----------|
-| Erik Woodring | Morgan Stanley | 0.58 | 32 |
-| Samik Chatterjee | JPMorgan | 0.51 | 28 |
-| Wamsi Mohan | Bank of America | 0.45 | 25 |
-
-Most Bearish Analysts:
-| Analyst | Firm | Sentiment | Sentences |
-|---------|------|-----------|-----------|
-| Rod Hall | Goldman Sachs | -0.18 | 22 |
-| Toni Sacconaghi | Bernstein | -0.12 | 35 |
-
-Most Bullish Firms:
-| Firm | Sentiment | Sentences |
-|------|-----------|-----------|
-| Morgan Stanley | 0.55 | 64 |
-| JPMorgan | 0.48 | 52 |
-
-Most Bearish Firms:
-| Firm | Sentiment | Sentences |
-|------|-----------|-----------|
-| Bernstein | -0.22 | 38 |
-| Goldman Sachs | -0.15 | 41 |
-
-EXECUTIVES vs ANALYSTS GAP:
-| Group | Avg Sentiment |
-|-------|--------------|
-| Executives | 0.37 |
-| Analysts | 0.29 |
-| **Gap** | **+0.08** |
-
-**Executives are MORE POSITIVE than analysts by 0.08.** Gap is modest — management
-tone is slightly more optimistic than street, but not alarmingly so. Suggests
-reasonable alignment between company narrative and analyst expectations.
-
----
-
-[... Sections 9-11 continue with Competitors, Risks, Appendix ...]
 ```
 
 ## Phase 8: Render
@@ -333,14 +213,13 @@ Delegate to `pronto-html-renderer` (`subagent_type: prontonlp-plugin:pronto-html
 
 ```
 report_type: company
-org: "acme"                         ← from getOrganization (Batch 1)
 filename: AAPL-report-20260419.html
 title: "Apple Inc. (AAPL) — Intelligence Report"
 subtitle: "Generated: Apr 19, 2026 · Sector: Information Technology · Market Cap: $3.2T"
 data:
   meta: { ticker: "AAPL", companyId: "4567", companyName: "Apple Inc.",
           sector: "Information Technology", asOfDate: "2026-04-19" }
-  kpi:  { investmentScore: 7.4, investmentScoreChange: +0.6,
+  kpi:  { investmentScore: 0.74, investmentScoreChange: +0.06,
           sentimentScore: 0.41, sentimentScoreChange: +0.09,
           stockChangeYTD: +12.3, stockChange6M: +18.7, stockChange1Y: +22.1 }
   quartersChart:
@@ -356,11 +235,11 @@ data:
                   ... ]
   stockChart: { dates: [...52 weekly dates...], prices: [...52 weekly prices...],
                 earningsCallIndices: [4, 17, 30, 43] }
-  competitors: [ { name: "Apple",      ticker: "AAPL", return1Y: 22.1, isTarget: true },
-                 { name: "Microsoft",  ticker: "MSFT", return1Y: 18.3, isTarget: false },
-                 { name: "Alphabet",   ticker: "GOOGL", return1Y: 16.7, isTarget: false },
-                 { name: "Samsung",    ticker: "005930", return1Y: 12.5, isTarget: false },
-                 { name: "Dell",       ticker: "DELL",  return1Y: 8.9,  isTarget: false } ]
+  peers: [ { name: "Apple",      ticker: "AAPL", return1Y: 22.1, isTarget: true },
+           { name: "Microsoft",  ticker: "MSFT", return1Y: 18.3, isTarget: false },
+           { name: "Alphabet",   ticker: "GOOGL", return1Y: 16.7, isTarget: false },
+           { name: "Samsung",    ticker: "005930", return1Y: 12.5, isTarget: false },
+           { name: "Dell",       ticker: "DELL",  return1Y: 8.9,  isTarget: false } ]
   trends: [ { name: "Apple Intelligence", score: 95, change: +45, hits: 312 },
             { name: "Vision Pro",         score: 82, change: -12, hits: 187 },
             { name: "Services Revenue",   score: 78, change: +22, hits: 241 } ]
@@ -370,11 +249,12 @@ data:
     analysts:   [ { name: "Analyst A", firm: "Goldman Sachs", sentiment: 0.65, sentenceCount: 12 },
                   { name: "Analyst B", firm: "Morgan Stanley", sentiment: 0.52, sentenceCount: 9 } ]
     gap: { execAvg: 0.37, analystAvg: 0.29, interpretation: "Executives are MORE POSITIVE than analysts by 0.08" }
-  quotes: [ { text: "...", speakerName: "Tim Cook", role: "CEO", company: "Apple",
-               date: "2026-01-29", refId: "AAPL_Q4_2025_044", section: "bull" }, ... ]
+  quotes: [ { text: "We expect continued strength in Services... [Source](https://acme.prontonlp.com/#/ref/$SENTID_AAPL_Q4_2025_044)",
+               speakerName: "Tim Cook", role: "CEO", company: "Apple", date: "2026-01-29", section: "bull" }, ... ]
   predictions: { revenue: [...], epsGaap: [...], ebitda: [...],
                  netIncomeGaap: [...], freeCashFlow: [...], capitalExpenditure: [...] }
-  risks: [ { title: "China Revenue Concentration", evidence: "...", refId: "AAPL_Q4_2025_112" } ]
+  risks: [ { title: "China Revenue Concentration",
+              evidence: "China revenue represents approximately 20% of total revenue... [Source](https://acme.prontonlp.com/#/ref/$SENTID_AAPL_Q4_2025_112)" } ]
 narrative:
   executiveSummary: "Apple sentiment is RISING — from 0.32 (Q1) to 0.41 (Q4)..."
   verdict: "Bullish — investment score rising, stock outperforming peers, CEO notably more positive than analysts."
@@ -386,9 +266,9 @@ narrative:
 
 | Batch | Calls | What |
 |-------|-------|------|
-| 1 | 3 | getCompanyDescription + getCompanyCompetitors + getOrganization |
-| 2 | 12 | docs + stock prices + 3 stock changes + 6 predictions + trends |
-| 3 | 19 | 4 analytics (per quarter) + 4 stock around calls + 5 speakers (all execs, CEO, CFO, analysts, firms) + 4 competitor changes |
-| 4 | 1 | pronto-search-summarizer (forecast + bull + bear + analyst Q&A searches) |
+| 1 | 2 | getCompanies(companyNameOrTicker) + getCompanyPeers |
+| 2 | 7 | getDocuments + getStockPrices(1Y) + getStockChange×3 + getCompanyConsensus(all metrics) + getTrends |
+| 3 | 12 | getAnalytics×4 (per quarter) + getStockPrices×4 (around calls) + getSpeakers(speaker)×4 (execs/CEO/CFO/analysts) + getSpeakers(company) + getDocumentSummary(risks, all quarters in 1 call) + getStockChange×1 (all peers in 1 call) |
+| 4 | 1 | pronto-search-summarizer (forecast all quarters in 1 call + bull + bear + analyst Q&A) |
 | 5 | 1 | pronto-html-renderer → writes AAPL-report-20260419.html |
-| **Total** | **~36** | **5 sequential batches, heavily parallelized** |
+| **Total** | **~23** | **5 sequential batches, heavily parallelized** |

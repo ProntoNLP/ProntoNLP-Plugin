@@ -33,9 +33,7 @@ Period label: "Past Year (Apr 2025 – Apr 2026)"
   "sectors": ["Information Technology"],
   "documentTypes": ["Earnings Calls"],
   "sortBy": ["investmentScore", "sentimentScore", "stockChange", "investmentScoreChange", "sentimentScoreChange"],
-  "limit": 10,
-  "sinceDay": "2025-04-05",
-  "untilDay": "2026-04-05"
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
 
@@ -54,8 +52,7 @@ Period label: "Past Year (Apr 2025 – Apr 2026)"
   "sortBy": "score",
   "sortOrder": "desc",
   "limit": 20,
-  "sinceDay": "2025-04-05",
-  "untilDay": "2026-04-05"
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
 
@@ -70,8 +67,7 @@ Period label: "Past Year (Apr 2025 – Apr 2026)"
   "sectors": ["Information Technology"],
   "documentTypes": ["Earnings Calls"],
   "analyticsType": ["scores", "eventTypes", "aspects", "patternSentiment", "importance"],
-  "sinceDay": "2025-04-05",
-  "untilDay": "2026-04-05"
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
 
@@ -88,49 +84,53 @@ Period label: "Past Year (Apr 2025 – Apr 2026)"
 
 ## Step 3: Batch 2 — Topic & Event Breakdown (fired simultaneously)
 
-### Call A: `searchTopCompanies` — GrowthDriver event
+### Call A: `getCompanies` — GrowthDriver event
 ```json
 {
   "sectors": ["Information Technology"],
   "eventTypes": ["GrowthDriver"],
-  "limit": 10,
-  "sinceDay": "2025-04-05",
-  "untilDay": "2026-04-05"
+  "companySearchMode": "byDocuments",
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
 Result: NVDA (#1, 0.71), MSFT (#2, 0.63), AVGO (#3, 0.58)
 
-### Call B: `searchTopCompanies` — RiskFactor event
+### Call B: `getCompanies` — RiskFactor event
 ```json
 {
   "sectors": ["Information Technology"],
   "eventTypes": ["RiskFactor"],
-  "limit": 10,
-  "sinceDay": "2025-04-05",
-  "untilDay": "2026-04-05"
+  "companySearchMode": "byDocuments",
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
 Result: INTC (#1, −0.31), AMD (#2, −0.18), QCOM (#3, −0.14)
 
-### Call C: `searchTopCompanies` — AI Agents topic
+### Call C: `getCompanies` — AI Agents topic
 ```json
 {
   "sectors": ["Information Technology"],
   "topicSearchQuery": "AI Agents",
-  "limit": 10,
-  "sinceDay": "2025-04-05",
-  "untilDay": "2026-04-05"
+  "companySearchMode": "byDocuments",
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
 Result: MSFT (#1, 0.68), GOOGL (#2, 0.61), NVDA (#3, 0.59)
 
-### Call D: `searchSectors` — AI Agents & Data Center cross-sector
+### Call D: `getSectors` — AI Agents cross-sector (one call per topic)
 ```json
 {
-  "searchQueries": ["AI Agents", "Data Center Infrastructure"],
+  "topicSearchQuery": "AI Agents",
   "documentTypes": ["Earnings Calls"],
-  "sinceDay": "2025-04-05",
-  "untilDay": "2026-04-05"
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
+}
+```
+### Call E: `getSectors` — Data Center Infrastructure cross-sector
+```json
+{
+  "topicSearchQuery": "Data Center Infrastructure",
+  "documentTypes": ["Earnings Calls"],
+  "dateRange": { "gte": "now-1y/d", "lte": "now" }
 }
 ```
 Result: Information Technology leads by 3.2× vs next sector (Industrials); Healthcare is #3
@@ -139,13 +139,13 @@ Result: Information Technology leads by 3.2× vs next sector (Industrials); Heal
 
 ## Step 4: Batch 3 — Speaker Intelligence (fired simultaneously, top 2 companies)
 
-Calls for NVDA and MSFT:
-- `getSpeakers` (Executives, desc) — NVDA
-- `getSpeakers` (Analysts, desc) — NVDA
-- `getSpeakers` (Executives, desc) — MSFT
-- `getSpeakers` (Analysts, desc) — MSFT
-- `getSpeakerCompanies` (Analysts, desc) — NVDA
-- `getSpeakerCompanies` (Analysts, desc) — MSFT
+Calls for NVDA (id: `<NVDA_ID>`) and MSFT (id: `<MSFT_ID>`):
+- `getSpeakers(entityType: 'speaker', companiesIds: ['<NVDA_ID>'], speakerTypes: ['Executives'], sortBy: 'sentiment', sortOrder: 'desc')`
+- `getSpeakers(entityType: 'speaker', companiesIds: ['<NVDA_ID>'], speakerTypes: ['Analysts'], sortBy: 'sentiment', sortOrder: 'desc')`
+- `getSpeakers(entityType: 'speaker', companiesIds: ['<MSFT_ID>'], speakerTypes: ['Executives'], sortBy: 'sentiment', sortOrder: 'desc')`
+- `getSpeakers(entityType: 'speaker', companiesIds: ['<MSFT_ID>'], speakerTypes: ['Analysts'], sortBy: 'sentiment', sortOrder: 'desc')`
+- `getSpeakers(entityType: 'company', companiesIds: ['<NVDA_ID>'], speakerTypes: ['Analysts'], sortBy: 'sentiment', sortOrder: 'desc')`
+- `getSpeakers(entityType: 'company', companiesIds: ['<MSFT_ID>'], speakerTypes: ['Analysts'], sortBy: 'sentiment', sortOrder: 'desc')`
 
 **Saved from response:**
 - Most bullish exec: Jensen Huang, CEO, NVDA (0.81)
@@ -161,10 +161,10 @@ Calls for NVDA and MSFT:
 
 **`pronto-search-summarizer`** (subagent_type: `prontonlp-plugin:pronto-search-summarizer`), all 4 in parallel:
 ```
-"Find bullish quotes about AI Agents for NVIDIA. Sentiment: positive. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
-"Find risk quotes about Export Controls for NVIDIA. Sentiment: negative. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
-"Find bullish quotes about AI Agents for Microsoft. Sentiment: positive. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
-"Find notable analyst questions for Microsoft. Sections: EarningsCalls_Question. Size: 3. SinceDay: 2025-04-06. UntilDay: 2026-04-06"
+"Find bullish quotes about AI Agents for NVIDIA. companiesIds: [<NVDA_ID>]. DLSentiment: ['positive']. size: 3. dateRange: {gte: '2025-04-06', lte: '2026-04-06'}"
+"Find risk quotes about Export Controls for NVIDIA. companiesIds: [<NVDA_ID>]. DLSentiment: ['negative']. size: 3. dateRange: {gte: '2025-04-06', lte: '2026-04-06'}"
+"Find bullish quotes about AI Agents for Microsoft. companiesIds: [<MSFT_ID>]. DLSentiment: ['positive']. size: 3. dateRange: {gte: '2025-04-06', lte: '2026-04-06'}"
+"Find notable analyst questions for Microsoft. companiesIds: [<MSFT_ID>]. sections: EarningsCalls_Question. size: 3. dateRange: {gte: '2025-04-06', lte: '2026-04-06'}"
 ```
 
 **Saved quotes:**

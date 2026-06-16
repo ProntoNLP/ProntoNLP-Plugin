@@ -6,14 +6,19 @@ Reference documentation for the shared rendering contract. The `pronto-html-rend
 
 ## Citation & Company Links
 
-| Kind | Format |
-|------|--------|
-| Evidence / quote citation | `https://{org}.prontonlp.com/#/ref/<FULL_ID>` |
-| Company name link | `https://{org}.prontonlp.com/#/ref/$COMPANY<numericId>` |
+Citation links are **pre-embedded by the platform** in every API result field before the plugin sees them. The renderer must output them verbatim — never construct or strip URLs.
 
-- `{org}` is always resolved by the calling skill via `getOrganization`. Never hardcode.
-- Every quote rendered must have a `[source]` citation link unless the quote explicitly carries no `refId`.
-- Never emit a bare ID or an unsubstituted `{org}` token into the final HTML.
+| Field | What arrives |
+|-------|-------------|
+| `quotes[].text` | `"The revenue growth was strong. [Source](https://org.prontonlp.com/#/ref/$SENTID_...)"` |
+| `document.title` | `"[Apple Q4 FY2025 Earnings Call](https://org.prontonlp.com/#/ref/$DOCID_...)"` |
+| `speaker.speakerName` | `"[Tim Cook](https://org.prontonlp.com/#/ref/$SPEAKER_...)"` |
+| `speaker.companyName` | `"[Apple Inc.](https://org.prontonlp.com/#/ref/$COMPANY_...)"` |
+
+- **Render markdown links verbatim** — convert `[Label](url)` to `<a href="url">Label</a>`. Never strip or re-wrap the embedded link.
+- **No `org` field needed** — `org` is resolved by the MCP server and baked into the URL already. Skills must not pass `org` in the payload and renderers must not construct URLs.
+- **No `refId` construction** — citation links are pre-embedded in data fields. Never construct URLs from raw IDs.
+- Every quote rendered must have the `[Source](url)` citation that came with the text — never omit it, never add a second one.
 
 ---
 
@@ -97,6 +102,5 @@ Forbidden: every MCP tool, every other agent, `Bash`, `Edit`, `Glob`, `Grep`, `W
 ## Forbidden Across All Skills
 
 Never call these from inside any skill — they are user-triggered visualizations only:
-- `getMindMap`
-- `getTermHeatmap`
-- `deep-research`
+- `showDocumentMindMap`
+- `deepResearch`
