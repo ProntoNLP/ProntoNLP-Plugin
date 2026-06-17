@@ -44,11 +44,11 @@ Then ask: *"Ready to generate the topic research report. Reply **yes** to contin
 Execute all data collection in one parallel batch: 5 tool calls + the search summarizer agent.
 
 **Required tools (only these):**
-1. `getTopicOvertime` (replaces `getTrendAnalysis(view: 'overtime')`)
-2. `getSectors` (replaces `getTrendAnalysis(view: 'sectors')`)
-3. `getCompanies` with `companySearchMode: 'byDocuments'` (replaces `getTrendAnalysis(view: 'companies')`)
-4. `getDocuments` (replaces `getTrendAnalysis(view: 'documents')`)
-5. `getTopicNetwork` (replaces `getTrendAnalysis(view: 'network')`)
+1. `getTopicOvertime`
+2. `getSectors`
+3. `getCompanies` with `companySearchMode: 'byDocuments'`
+4. `getDocuments`
+5. `getTopicNetwork`
 6. `pronto-search-summarizer` (subagent)
 
 **Common params (pass to all 5 calls):**

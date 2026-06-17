@@ -113,7 +113,7 @@ Then ask: *"Ready to generate the report. Reply **yes** to continue, or clarify 
 - `getTrends` has **no `query` parameter** — scope with `sectors`.
 - `getCompanies(companySearchMode: 'byDocuments', eventTypes: [...])`: **one event type per call**.
 - `getSpeakers(entityType: 'speaker')` and `getSpeakers(entityType: 'company')` require `companiesIds` — resolve top company IDs from Batch 1 `getTopMovers`.
-- `getSectors` requires `topicSearchQuery` — one topic per call (replace the old `searchSectors` multi-query pattern).
+- `getSectors` requires `topicSearchQuery` — one topic per call.
 
 ---
 

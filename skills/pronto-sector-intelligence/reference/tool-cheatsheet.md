@@ -117,7 +117,7 @@ Always use **exact strings** — tools will not match approximate names.
 
 ---
 
-### 4. `getCompanies` (replaces `searchTopCompanies`)
+### 4. `getCompanies`
 
 **Purpose:** Companies most associated with a specific topic or event type within the sector.
 
@@ -145,7 +145,7 @@ Always use **exact strings** — tools will not match approximate names.
 
 ---
 
-### 5. `getSectors` (replaces `searchSectors`)
+### 5. `getSectors`
 
 **Purpose:** Cross-sector topic distribution — which sectors are discussing a theme most.
 
@@ -263,11 +263,8 @@ Run for top 2–3 companies by investment score.
 
 ---
 
-## Key Tool Name Changes (vs old API)
+## Key Parameter Rules
 
-| Old | New |
-|-----|-----|
-| `searchTopCompanies` | `getCompanies(companySearchMode: 'byDocuments')` |
-| `searchSectors` | `getSectors` (one query per call) |
-| `search` | `searchSentences` |
+| Wrong | Correct |
+|-------|---------|
 | `companyName` param in getSpeakers | `companiesIds: [id]` |
